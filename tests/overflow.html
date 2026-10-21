@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Test helper: lists every code listing on a page whose content is wider than its box. -->
+<html><head><meta charset="utf-8"></head><body style="margin:0">
+<iframe id="f" style="border:0;width:100vw;height:100vh"></iframe>
+<script>
+  const q = new URLSearchParams(location.search);
+  const f = document.getElementById('f');
+  f.src = '../' + q.get('page');
+  f.onload = () => setTimeout(() => {
+    const d = f.contentDocument;
+    d.querySelectorAll('details').forEach((x) => (x.open = true));
+    d.querySelectorAll('pre.code').forEach((pre) => {
+      const title = pre.parentElement.querySelector('.code-title');
+      if (pre.scrollWidth > pre.clientWidth + 1)
+        console.log('OVERFLOW', q.get('page'), (title ? title.textContent : '?').slice(0, 40), 'content', pre.scrollWidth, 'box', pre.clientWidth);
+    });
+    d.querySelectorAll('section.bench .scroll-x').forEach((el) => {
+      if (el.scrollWidth > el.clientWidth + 1) {
+        const b = el.closest('section.bench').querySelector('.bench-head .title');
+        console.log('TABLE-OVERFLOW', q.get('page'), b ? b.textContent.slice(0, 30) : '?', el.scrollWidth, el.clientWidth);
+      }
+    });
+    console.log('STACKED', q.get('page'), d.querySelectorAll('.two.stack').length, 'of', d.querySelectorAll('.two').length);
+  }, 1500);
+</script>
+</body></html>

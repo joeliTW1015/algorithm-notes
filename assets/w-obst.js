@@ -106,14 +106,12 @@
     const player = new StepPlayer({ code: { set: (n) => cd.set(OB_LINE[n] || n) }, render });
     const B = bench('逐步執行', 'Bottom-up 填 e、w、root 三張表',
       h('div', { class: 'inputs' }, h('label', null, '範例', preset), h('label', null, 'p1 … pn', pIn), h('label', null, 'q0 … qn', qIn), go, err),
-      h('div', { class: 'bench-cols' },
-        h('div', null,
-          h('div', { class: 'table-cap' }, 'e[i, j]：keys k_i…k_j 的最佳期望成本（列 i，行 j）'), tE,
-          h('div', { class: 'two', style: 'margin-top:10px' },
-            h('div', null, h('div', { class: 'table-cap' }, 'w[i, j]：機率總和'), tW),
-            h('div', null, h('div', { class: 'table-cap' }, 'root[i, j]'), tR)),
-          legend('cur', 'read', ['win', '目前最佳 root']), cands),
-        cd.el),
+      h('div', { class: 'table-row' },
+        h('div', null, h('div', { class: 'table-cap' }, 'e[i, j]：k_i…k_j 的最佳期望成本'), tE),
+        h('div', null, h('div', { class: 'table-cap' }, 'w[i, j]：機率總和'), tW),
+        h('div', null, h('div', { class: 'table-cap' }, 'root[i, j]'), tR)),
+      legend('cur', 'read', ['win', '目前最佳 root']),
+      h('div', { class: 'bench-cols', style: 'margin-top:12px' }, cands, cd.el),
       player.el, sol);
     el.replaceWith(B.el);
     player.keys(B.el);
@@ -181,7 +179,7 @@
             h('td', { class: 'mono small' }, `e[${st.i},${r - 1}] + e[${r + 1},${st.j}] + w[${st.i},${st.j}] = ${f2(st.e[st.i][r - 1])} + ${f2(st.e[r + 1][st.j])} + ${f2(st.w[st.i][st.j])}`),
             h('td', { class: 'num' }, h('b', null, f2(t)))));
         }
-        cands.replaceChildren(h('div', { class: 'table-cap', style: 'text-align:left;margin-top:12px' }, `e[${st.i}, ${st.j}] 的候選 root`),
+        cands.replaceChildren(h('div', { class: 'table-cap', style: 'text-align:left' }, `e[${st.i}, ${st.j}] 的候選 root`),
           rows.length ? h('table', { class: 'plain', style: 'margin:0' }, rows) : h('p', { class: 'small muted' }, '先算 w，接著試每個 root。'));
       } else cands.replaceChildren();
     }

@@ -301,6 +301,21 @@
       if (pre.dataset.on) pre.dataset.on.split(',').forEach((n) => c.el.querySelectorAll('.ln')[Number(n) - 1].classList.add('on'));
       pre.replaceWith(c.el);
     });
+    // Code listings shown side by side get the full panel width; if a listing still
+    // doesn't fit, stack the pair so nothing needs horizontal scrolling.
+    const pairs = [...document.querySelectorAll('main .two')].filter((el) => el.querySelector('pre.code'));
+    pairs.forEach((el) => { if (el.parentElement.classList.contains('prose')) el.classList.add('code-pair'); });
+    function fitPairs() {
+      pairs.forEach((el) => {
+        el.classList.remove('stack');
+        const tight = [...el.querySelectorAll('pre.code')].some((pre) => pre.scrollWidth > pre.clientWidth + 1);
+        if (tight) el.classList.add('stack');
+      });
+    }
+    fitPairs();
+    if (document.fonts) document.fonts.ready.then(fitPairs);
+    let rt;
+    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fitPairs, 120); });
     // Mount any widgets declared with data-widget, then typeset math.
     document.querySelectorAll('[data-widget]').forEach((el) => {
       const fn = window.Widgets && window.Widgets[el.dataset.widget];

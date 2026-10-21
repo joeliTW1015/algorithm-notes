@@ -25,7 +25,7 @@
 
   --side-w: 268px;
   --text-w: 780px;
-  --wide-w: 1080px;
+  --wide-w: 1200px;
   --radius: 6px;
 }
 
@@ -71,11 +71,14 @@ a:hover { text-decoration-thickness: 2px; }
 main { padding: 48px 56px 120px; min-width: 0; }
 .prose { max-width: var(--text-w); margin: 0 auto; }
 .wide { max-width: var(--wide-w); margin-left: auto; margin-right: auto; }
-.prose > .wide, .prose > .bench {
+.prose > .wide, .prose > .bench, .prose > .code-pair {
   --bw: min(var(--wide-w), calc(100vw - var(--side-w) - 112px));
   width: var(--bw); max-width: none; margin-left: calc(50% - var(--bw) / 2);
 }
-@media (max-width: 900px) { .prose > .wide, .prose > .bench { width: auto; margin-left: 0; } }
+/* Side-by-side listings that still overflow at full width are stacked instead (set by core.js). */
+.prose > .code-pair.stack { width: auto; margin-left: 0; }
+.two.stack { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 900px) { .prose > .wide, .prose > .bench, .prose > .code-pair { width: auto; margin-left: 0; } }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
@@ -98,7 +101,7 @@ p { margin: 12px 0; }
 ul, ol { padding-left: 1.4em; }
 li { margin: 4px 0; }
 code, .mono { font-family: var(--f-mono); font-size: 0.9em; font-variant-ligatures: none; }
-table.dp, .inputs input { font-variant-ligatures: none; }
+table.dp, .inputs input, code { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }
 :not(pre) > code { background: var(--paper-2); border: 1px solid var(--grid); padding: 1px 5px; border-radius: 4px; }
 strong { font-weight: 700; }
 mark { background: var(--hl); color: inherit; padding: 0 3px; border-radius: 2px; }
@@ -145,9 +148,11 @@ hr { border: 0; border-top: 1.5px dashed var(--rule); margin: 32px 0; }
 .bench-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 10px 16px; border-bottom: 1.5px solid var(--ink); background: var(--paper-2); border-radius: var(--radius) var(--radius) 0 0; }
 .bench-head .label { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
 .bench-head .title { font-family: var(--f-display); font-weight: 700; font-size: 17px; }
-.bench-body { padding: 16px; }
-.bench-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 340px); gap: 16px; align-items: start; }
-@media (max-width: 860px) { .bench-cols { grid-template-columns: 1fr; } }
+.bench-body { padding: 16px; container-type: inline-size; }
+.bench-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, max-content); gap: 16px; align-items: start; }
+@container (max-width: 860px) { .bench-cols { grid-template-columns: minmax(0, 1fr); } }
+.table-row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-start; }
+.table-row > * { min-width: 0; max-width: 100%; }
 .scroll-x { overflow-x: auto; padding-bottom: 4px; }
 
 /* Inputs */
@@ -188,7 +193,7 @@ button:disabled { opacity: .45; cursor: default; }
 .say b { background: var(--hl); padding: 0 3px; border-radius: 2px; }
 
 /* Pseudocode */
-.code { font-variant-ligatures: none; background: #fff; border: 1.5px solid var(--ink); border-radius: var(--radius); font: 13px/1.6 var(--f-mono); padding: 8px 0; overflow-x: auto; margin: 0; }
+.code { background: #fff; border: 1.5px solid var(--ink); border-radius: var(--radius); font: 13px/1.6 var(--f-mono); padding: 8px 0; overflow-x: auto; margin: 0; }
 .code .ln { display: block; padding: 0 12px 0 0; white-space: pre; }
 .code .ln::before { content: attr(data-n); display: inline-block; width: 30px; padding-right: 10px; text-align: right; color: var(--ink-faint); }
 .code .ln.on { background: var(--hl); }
@@ -310,3 +315,7 @@ footer.site { max-width: var(--text-w); margin: 90px auto 0; padding-top: 16px; 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* Show >=, ==, -> literally in code (JetBrains Mono would merge them into ≥, ═, →).
+   Kept last so no `font:` shorthand resets it. */
+.code, .code *, code, table.dp, .inputs input { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }

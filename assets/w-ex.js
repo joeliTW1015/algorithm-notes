@@ -67,7 +67,7 @@
 
   /* 14.1-4: number of calls when the loop only goes to floor(n/2). */
   W.rodHalf = function (el) {
-    const N = 14;
+    const N = 12;
     const T = [1], H = [1, 1];
     for (let n = 1; n <= N; n++) T[n] = 2 ** n;
     for (let n = 2; n <= N; n++) { let s = 1; for (let i = 1; i <= Math.floor(n / 2); i++) s += H[i] + H[n - i]; H[n] = s; }
