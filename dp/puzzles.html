@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>海盜分金 & 腦力激盪 · Dynamic Programming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-puzzle.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="puzzles"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Lecture 14-3 · 課堂思考題</p>
+<h1>海盜分金 & 外遇村</h1>
+<p class="lede">兩題都不是填表，但思考方式和 DP 一樣：<strong>先解最小的情況，再用小情況的答案推出大情況</strong>（backward induction）。</p>
+
+<h2 id="pirates" data-short="海盜分金">Sharing Gold Coins：海盜分金</h2>
+<div class="note"><span class="tag">題目</span>5 個海盜（Rank-1 到 Rank-5）找到 1000 枚金幣。由 Rank-1 先提出分配方式：
+<ul style="margin-bottom:0">
+  <li>若<strong>至少一半</strong>的人（含提案者）同意，就照這個提案分；</li>
+  <li>否則 Rank-1 出局，換 Rank-2 對剩下的人提案，規則相同……</li>
+</ul>
+所有海盜都很聰明。誰會拿到最多金幣？為什麼？</div>
+
+<h3>需要先講清楚的假設</h3>
+<ul>
+  <li>每個海盜只想拿最多金幣；能預測其他人的行為（都夠聰明）。</li>
+  <li>「至少一半」包含提案者自己那一票。</li>
+  <li>如果投贊成和反對拿到的一樣多，就<strong>投反對</strong>（課堂常見設定；換成投贊成時答案也會變，互動區可以切換）。</li>
+</ul>
+
+<h3>從最小的子問題開始倒推</h3>
+<ol class="steps">
+  <li><strong>只剩 Rank-5</strong>：1 人，自己同意就過半 → (R5) = (1000)。</li>
+  <li><strong>剩 Rank-4、5</strong>：2 人需要 1 票，Rank-4 自己就夠 → (R4, R5) = (1000, 0)。Rank-5 什麼都拿不到。</li>
+  <li><strong>剩 Rank-3、4、5</strong>：3 人需要 2 票。Rank-3 要再拉 1 票：如果否決，Rank-5 會拿 0（上一步），所以給 Rank-5 <strong>1 枚</strong>就能收買 → (999, 0, 1)。</li>
+  <li><strong>剩 Rank-2…5</strong>：4 人需要 2 票。否決後 Rank-4 會拿 0（上一步），給 1 枚收買 → (999, 0, 1, 0)。</li>
+  <li><strong>全部 5 人</strong>：需要 3 票，Rank-1 要再拉 2 票。否決後拿 0 的是 Rank-3 和 Rank-5（上一步），各給 1 枚 → <mark>(998, 0, 1, 0, 1)</mark>。</li>
+</ol>
+<table class="plain">
+  <tr><th>剩下的人</th><th class="num">R1</th><th class="num">R2</th><th class="num">R3</th><th class="num">R4</th><th class="num">R5</th></tr>
+  <tr><td>R5</td><td></td><td></td><td></td><td></td><td class="num">1000</td></tr>
+  <tr><td>R4–R5</td><td></td><td></td><td></td><td class="num">1000</td><td class="num">0</td></tr>
+  <tr><td>R3–R5</td><td></td><td></td><td class="num">999</td><td class="num">0</td><td class="num">1</td></tr>
+  <tr><td>R2–R5</td><td></td><td class="num">999</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr>
+  <tr style="background:var(--win-soft)"><td><b>R1–R5</b></td><td class="num"><b>998</b></td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">1</td></tr>
+</table>
+<p><strong>答案：Rank-1 拿最多（998 枚）</strong>。直覺上第一個提案的人最危險，但因為他可以算出每個子問題的結果，只要用最少的代價收買「否決後會吃虧」的人就好。</p>
+<div data-widget="pirates"></div>
+<div class="note key"><span class="tag">和 DP 的關係</span>子問題是「剩下 \(k\) 個海盜時的分配」，答案只依賴「剩 \(k-1\) 個」的子問題。由小到大算，每一步只需查上一步的表——這就是 bottom-up。若從 Rank-1 直接往下想（top-down 不存結果），每個人都要重新推理一遍後面所有人的反應。</div>
+
+<h2 id="village" data-short="外遇村">Brainstorm：外遇村</h2>
+<div class="note"><span class="tag">題目</span>外遇村有 50 對夫妻，丈夫全都外遇。每個妻子都知道其他所有外遇的男人，就是不知道自己的先生有沒有外遇；妻子之間不交換訊息。村規：妻子若能證明自己的先生外遇，就必須在當天晚上 12:00 殺死他。有一天，公認不會說謊的皇后宣布「至少有一位丈夫不忠」。結果會發生什麼事？</div>
+
+<p><strong>答案：前 49 個晚上什麼事都沒發生；第 50 個晚上，50 位妻子同時殺死自己的丈夫。</strong></p>
+
+<h3>對外遇丈夫的人數 \(m\) 做歸納</h3>
+<p>主張：若有 \(m\) 個外遇丈夫，他們的妻子會在皇后宣布後的<strong>第 \(m\) 晚</strong>同時動手，之前都不會。</p>
+<ol class="steps">
+  <li><strong>\(m=1\)</strong>：那位妻子看不到任何外遇的男人，但皇后說至少有一個 → 一定是自己的先生，<strong>第 1 晚</strong>動手。</li>
+  <li><strong>\(m=2\)</strong>：外遇丈夫的妻子各看到 1 個。她想：「如果我先生是忠實的，那就只有 1 個，那個人的妻子第 1 晚就會動手。」第 1 晚沒事 → 外遇的不只 1 個 → 是我先生。兩人在<strong>第 2 晚</strong>動手。</li>
+  <li><strong>一般 \(m\)</strong>：假設「\(m-1\) 個時會在第 \(m-1\) 晚動手」成立。外遇丈夫的妻子看到 \(m-1\) 個；若第 \(m-1\) 晚沒有人動手，她就知道外遇的不是 \(m-1\) 個而是 \(m\) 個，包含自己先生 → 第 \(m\) 晚動手。</li>
+  <li><strong>\(m=50\)</strong>：第 50 晚，50 位妻子同時動手。</li>
+</ol>
+<div data-widget="village"></div>
+<div class="note"><span class="tag">皇后到底說了什麼新東西？</span>每個妻子早就看到 49 個外遇的男人，「至少有一個」對她不是新資訊。新的是<strong>common knowledge</strong>：大家都知道、大家都知道大家都知道……這一層一層的知識讓 \(m=1\) 的 base case 成立，歸納才能一路推到 50。沒有皇后的宣布，推理鏈的起點不存在，永遠不會有人動手。</div>
+<div class="note key"><span class="tag">和 DP 的關係</span>這是數學歸納法：用「\(m-1\) 的答案」推出「\(m\) 的答案」。DP 的遞迴式也是同樣的結構，只是把每個小答案存在表裡。</div>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片（Lecture 14-3 最後的思考題）。</footer>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LCS 最長共同子序列 · Dynamic Programming III</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-lcs.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="lcs"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Lecture 14-3 · Dynamic Programming III</p>
+<h1>Longest Common Subsequence</h1>
+<p class="lede">兩個字串最長的共同子序列（LCS）。子問題是「兩個前綴」，表格是二維的 \((m+1)\times(n+1)\)，每格只看左、上、左上三個鄰居，總共 \(\Theta(mn)\)。</p>
+
+<h2 id="subseq" data-short="Subsequence 定義">什麼是 subsequence？</h2>
+<p>設 \(S=s_1s_2\cdots s_m\)。任何形如 \(s_{i_1}s_{i_2}\cdots s_{i_k}\)、且 \(i_1&lt;i_2&lt;\cdots&lt;i_k\) 的字串都是 \(S\) 的 <strong>subsequence</strong>：從 \(S\) 刪掉一些字元、<mark>保持剩下字元的順序</mark>，不要求連續。</p>
+<p>例：\(S=\) farmers，則 fame、arm、mrs、farmers 都是 \(S\) 的 subsequence。</p>
+<div data-widget="subseqCheck"></div>
+<div class="note"><span class="tag">別搞混</span><strong>Substring</strong>（子字串）要求連續；<strong>subsequence</strong>（子序列）不用連續。“arm” 在 farmers 中兩者皆是；“fame” 只是 subsequence。</div>
+
+<h2 id="def" data-short="LCS 定義">Longest common subsequence</h2>
+<ul>
+  <li>若一個字串同時是 \(S\) 和 \(T\) 的 subsequence，它就是 \(S, T\) 的 <strong>common subsequence</strong>。</li>
+  <li>其中最長的就是 <strong>longest common subsequence (LCS)</strong>。LCS 可能不只一個。</li>
+</ul>
+<p>例：\(S=\) algorithms、\(T=\) logarithms。aim、lots、ohms、grit 都是 common subsequence；最長的是 <strong>lorithms</strong> 和 <strong>lgrithms</strong>（長度 8）。</p>
+<p><strong>暴力法</strong>：\(S\) 有 \(2^m\) 個 subsequence，每個花 \(O(n)\) 檢查是否也是 \(T\) 的 subsequence → \(O(n2^m)\)，太慢。</p>
+
+<h2 id="substructure" data-short="Optimal substructure">Optimal substructure</h2>
+<p>記號：\(S_{1,i}=s_1\cdots s_i\)（\(S\) 的長度 \(i\) 前綴），\(T_{1,j}=t_1\cdots t_j\)。</p>
+<div class="note key"><span class="tag">Lemma</span>設 \(X=x_1x_2\cdots x_k\) 是 \(S_{1,i}\) 和 \(T_{1,j}\) 的一個 LCS。
+<ul style="margin-bottom:0">
+  <li>若 \(s_i=t_j\)：則 \(x_k=s_i=t_j\)，且 \(x_1\cdots x_{k-1}\) 是 \(S_{1,i-1}\) 和 \(T_{1,j-1}\) 的 LCS。</li>
+  <li>若 \(s_i\ne t_j\)：則 \(X\) 是 (i) \(S_{1,i}\) 與 \(T_{1,j-1}\) 的 LCS，或 (ii) \(S_{1,i-1}\) 與 \(T_{1,j}\) 的 LCS。</li>
+</ul>
+</div>
+<h3>證明</h3>
+<ol class="steps">
+  <li><strong>\(s_i=t_j\) 時 \(x_k=s_i\)</strong>：如果 \(x_k\ne s_i\)，把 \(s_i\)（\(=t_j\)）接在 \(X\) 後面，得到長度 \(k+1\) 的 common subsequence，和 \(X\) 最長矛盾。</li>
+  <li><strong>前面 \(k-1\) 個是子問題的 LCS</strong>：\(x_1\cdots x_{k-1}\) 顯然是 \(S_{1,i-1}, T_{1,j-1}\) 的 common subsequence。若那兩個前綴有更長（\(\ge k\)）的 common subsequence \(W\)，則 \(W\) 接上 \(s_i\) 長度 \(\ge k+1\)，矛盾（cut-and-paste）。</li>
+  <li><strong>\(s_i\ne t_j\) 時</strong>：\(x_k\) 不可能同時等於 \(s_i\) 和 \(t_j\)。若 \(x_k\ne s_i\)，\(X\) 根本沒用到 \(s_i\)，所以 \(X\) 是 \(S_{1,i-1}, T_{1,j}\) 的 common subsequence；它也必須是最長的，否則換掉就能讓原本的 LCS 更長。\(x_k\ne t_j\) 的情況對稱。</li>
+</ol>
+
+<h3>遞迴式</h3>
+<p>令 \(len_{i,j}\)（課本記作 \(c[i,j]\)）為 \(S_{1,i}\) 和 \(T_{1,j}\) 的 LCS 長度：</p>
+<div class="formula">$$len_{i,j}=\begin{cases}0 & i=0 \text{ 或 } j=0\\[2pt] len_{i-1,j-1}+1 & i,j\ge1 \text{ 且 } s_i=t_j\\[2pt] \max\{\,len_{i,j-1},\; len_{i-1,j}\,\} & i,j\ge1 \text{ 且 } s_i\ne t_j\end{cases}$$</div>
+
+<h2 id="naive" data-short="直接遞迴 O(2^(m+n))">直接遞迴</h2>
+<pre data-code="Compute_L(i, j)          // 求 len[i, j]">
+if i == 0 or j == 0
+    return 0                // base case
+if s_i == t_j
+    return Compute_L(i-1, j-1) + 1
+else
+    return max{Compute_L(i-1, j), Compute_L(i, j-1)}
+</pre>
+<ul>
+  <li>最壞情況每次呼叫都分成兩支，深度最多 \(m+n\) → \(O(2^{m+n})\)。</li>
+  <li><strong>Overlapping subproblems</strong>：\(\text{Compute\_L}(i, j-1)\) 和 \(\text{Compute\_L}(i-1, j)\) 都會呼叫 \(\text{Compute\_L}(i-1, j-1)\)，重複非常多。但不同的子問題只有 \((m+1)(n+1)\) 個。</li>
+</ul>
+
+<h2 id="bottomup" data-short="Bottom-up 逐步填表">Bottom-up：一列一列填</h2>
+<pre data-code="BottomUp_L()              // 投影片版本">
+for all i and j, set L[i, 0] = L[0, j] = 0
+for i = 1 to m
+    compute L[i, j] for all j = 1..n
+    // 只用到 L[i-1, j-1], L[i-1, j], L[i, j-1]
+return L[m, n]
+</pre>
+<p>每格 \(O(1)\)，共 \((m+1)(n+1)\) 格 → <mark>\(\Theta(mn)\)</mark>。下面是投影片的例子：\(S=\) DIRTYROOM（\(m=9\)，列），\(T=\) DORMITORY（\(n=9\)，行）。表格同時填數字（\(c\) 表）和箭頭（\(b\) 表）。可以改成任何字串：</p>
+<div data-widget="lcsTable" data-x="DIRTYROOM" data-y="DORMITORY"></div>
+
+<h3 id="arrows">箭頭的意義（\(b\) 表）</h3>
+<ul>
+  <li><strong>↖</strong>：\(x_i=y_j\)，這個字元屬於 LCS，往左上 \((i-1,j-1)\) 走。</li>
+  <li><strong>↑</strong>：答案來自上面 \(c[i-1,j]\)（丟掉 \(x_i\)）。</li>
+  <li><strong>←</strong>：答案來自左邊 \(c[i,j-1]\)（丟掉 \(y_j\)）。</li>
+  <li>從 \(c[m,n]\) 沿箭頭走回邊界，把 ↖ 格子的字元<strong>倒過來</strong>讀，就是一個 LCS。時間 \(O(m+n)\)。</li>
+</ul>
+<div class="note warn"><span class="tag">投影片對照</span>投影片最後的回溯圖得到 <strong>DITY</strong>；照課本虛擬碼（平手時用 ≥ 走 ↑）回溯會得到 <strong>DIRY</strong>。兩個都是長度 4 的 LCS（這題共有 DIRY、DITO、DITR、DITY、DRTO、DRTR、DRTY 七個）。差別在平手時的方向：投影片的箭頭表有 5 格（\(b[4,8], b[4,9], b[5,7], b[5,8], b[9,6]\)）上方和左方都是 3，卻畫成 ←，和其他格「平手往 ↑」的規則不一致。考試時照虛擬碼的規則畫即可，並說明平手的處理方式。</div>
+
+<h3 id="code">完整虛擬碼</h3>
+<div class="two">
+<pre data-code="LCS-LENGTH(X, Y)">
+m = X.length
+n = Y.length
+for i = 1 to m
+    c[i, 0] = 0
+for j = 0 to n
+    c[0, j] = 0
+for i = 1 to m
+    for j = 1 to n
+        if x_i == y_j
+            c[i, j] = c[i-1, j-1] + 1
+            b[i, j] = "↖"
+        elseif c[i-1, j] ≥ c[i, j-1]   // 也可用 >
+            c[i, j] = c[i-1, j]
+            b[i, j] = "↑"
+        else c[i, j] = c[i, j-1]
+            b[i, j] = "←"
+return c and b
+</pre>
+<pre data-code="PRINT-LCS(b, X, i, j)">
+if i == 0 or j == 0
+    return                  // LCS 是空的
+if b[i, j] == "↖"
+    PRINT-LCS(b, X, i-1, j-1)
+    print x_i               // 遞迴回來後才印 → 順序正確
+elseif b[i, j] == "↑"
+    PRINT-LCS(b, X, i-1, j)
+else PRINT-LCS(b, X, i, j-1)
+</pre>
+</div>
+<p>第 12 行用 ≥ 或 > 都正確，只會影響平手時選哪個方向，也就是會印出<em>哪一個</em> LCS。</p>
+
+<h2 id="remarks" data-short="延伸">延伸</h2>
+<ul>
+  <li><strong>不用 \(b\) 表也能回溯</strong>：在 \((i,j)\) 時直接比較 \(x_i, y_j\) 和 \(c\) 的鄰居就知道從哪來，見<a href="exercises.html#ex-14-4-2">習題 14.4-2</a>。</li>
+  <li><strong>Memoized 版本</strong>：在 Compute_L 加查表，只算需要的格子，\(O(mn)\)，見<a href="exercises.html#ex-14-4-3">習題 14.4-3</a>。</li>
+  <li><strong>省空間</strong>：如果只要長度，算第 \(i\) 列只需要第 \(i-1\) 列，只保留兩列（甚至一列加一個變數）即可，空間 \(O(\min(m,n))\)。</li>
+  <li><strong>LIS</strong>：最長遞增子序列可以化成 LCS（把序列和排序後的自己做 LCS），也可以直接 DP，見<a href="practice.html#lis">Practice</a> 和<a href="exercises.html#ex-14-4-5">習題 14.4-5</a>。</li>
+</ul>
+
+<h2 id="practice" data-short="本講練習">本講練習</h2>
+<ul>
+  <li>課本習題 <a href="exercises.html#ex-14-4-2">14.4-2</a>、<a href="exercises.html#ex-14-4-3">14.4-3</a>、<a href="exercises.html#ex-14-4-5">14.4-5</a></li>
+  <li>下一個主題：<a href="obst.html">Optimal Binary Search Tree</a></li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>何時用 DP：兩大性質 · Dynamic Programming II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-misc.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="elements"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Lecture 14-2 · Elements of dynamic programming</p>
+<h1>何時該用 DP？</h1>
+<p class="lede">看過 rod cutting 和 matrix-chain 之後，把共通點抽出來：一個問題要同時具備兩個性質，DP 才會又對又快。這一頁也說明一個常見陷阱——看起來像 DP、其實不是的問題。</p>
+
+<h2 id="two" data-short="兩大性質">兩大性質</h2>
+<div class="note key"><span class="tag">重點</span>
+<ol style="margin:6px 0 0">
+  <li><strong>Optimal substructure</strong>：問題的最佳解包含子問題的最佳解。（有它才能寫出遞迴式；例：matrix-chain。）</li>
+  <li><strong>Overlapping subproblems</strong>：遞迴演算法會一再遇到同一個子問題。（有它 DP 才有加速效果。）</li>
+</ol>
+</div>
+
+<h2 id="substructure" data-short="Optimal substructure">Optimal substructure</h2>
+<h3>找出 optimal substructure 的固定套路</h3>
+<ol class="recipe">
+  <li><b>做一個選擇</b>：說明解法的第一步是做某個選擇（第一刀切在哪、最後一次相乘的分割點 k、BST 的 root 是誰……），選完之後剩下一個或多個子問題。</li>
+  <li><b>假設已知最佳選擇</b>：先不管怎麼找到它，假設有人告訴你最佳解做了哪個選擇。</li>
+  <li><b>描述子問題</b>：做了這個選擇之後，剩下哪些子問題？子問題的空間要盡量簡單（例如「長度 \(i\) 的鋼條」、「區間 \([i,j]\)」、「前綴 \(X_i, Y_j\)」）。</li>
+  <li><b>Cut-and-paste 證明</b>：如果最佳解裡某個子問題的解不是最佳的，把它「剪掉」換成更好的解，整體就變得更好——矛盾。</li>
+</ol>
+
+<h3>不同問題的差異：子問題數 × 選擇數</h3>
+<p>Optimal substructure 會在兩方面因題而異：(1) 最佳解用到<strong>幾個</strong>子問題；(2) 決定用哪個子問題時有<strong>幾種選擇</strong>。大致上 <mark>執行時間 ≈ 子問題總數 × 每個子問題的選擇數</mark>。</p>
+<table class="plain">
+  <tr><th>問題</th><th>子問題</th><th class="num">子問題數</th><th>一個解用到</th><th class="num">選擇數</th><th>時間</th></tr>
+  <tr><td>Rod cutting</td><td>\(r_j\)：長 \(j\) 的鋼條</td><td class="num">\(\Theta(n)\)</td><td>1 個（\(r_{j-i}\)）</td><td class="num">\(j\)</td><td>\(\Theta(n^2)\)</td></tr>
+  <tr><td>Matrix-chain</td><td>\(m[i,j]\)：\(A_i\cdots A_j\)</td><td class="num">\(\Theta(n^2)\)</td><td>2 個（左右兩半）</td><td class="num">\(j-i\)</td><td>\(\Theta(n^3)\)</td></tr>
+  <tr><td>LCS</td><td>\(c[i,j]\)：前綴 \(X_i, Y_j\)</td><td class="num">\(\Theta(mn)\)</td><td>1 個</td><td class="num">≤ 2</td><td>\(\Theta(mn)\)</td></tr>
+  <tr><td>Optimal BST</td><td>\(e[i,j]\)：keys \(k_i..k_j\)</td><td class="num">\(\Theta(n^2)\)</td><td>2 個（左右子樹）</td><td class="num">\(j-i+1\)</td><td>\(\Theta(n^3)\)</td></tr>
+</table>
+
+<h2 id="overlap" data-short="Overlapping subproblems">Overlapping subproblems</h2>
+<p>當遞迴演算法一直重複解<strong>同一個</strong>子問題，就叫 overlapping subproblems。對照 divide-and-conquer：merge sort 每一層產生的都是<em>全新的</em>子問題，沒有重疊，所以 memoization 幫不上忙（見<a href="exercises.html#ex-14-3-2">習題 14.3-2</a>）。</p>
+<p>最經典的例子是 Fibonacci：\(F_n=F_{n-1}+F_{n-2}\)。</p>
+<div data-widget="fibTree" data-n="5"></div>
+<p>兩種解決方法：</p>
+<ol>
+  <li><strong>Bottom-up</strong>：決定好順序，從小的子問題開始填表。</li>
+  <li><strong>Memoization</strong>：保留「自然但沒效率」的遞迴寫法，但把每個子問題的答案記下來（memo），再遇到時直接查表。</li>
+</ol>
+<div class="note"><span class="tag">拼字</span>是 <strong>memo</strong>ization（備忘錄），不是 memorization。投影片寫作 “Memorization”。</div>
+
+<h3>重建最佳解</h3>
+<p>通常把每個子問題做的<strong>選擇</strong>另外存一張表（rod cutting 的 \(s[j]\)、matrix-chain 的 \(s[i,j]\)、LCS 的 \(b[i,j]\)、OBST 的 \(root[i,j]\)）。重建時每一步 \(O(1)\) 查表，不必重新比較所有選擇。</p>
+
+<h2 id="refine" data-short="陷阱：最短 vs 最長路徑">陷阱：不要誤以為有 optimal substructure</h2>
+<p>給一個有向圖 \(G=(V,E)\) 和兩點 \(u, v\)：</p>
+<ul>
+  <li><strong>Unweighted shortest path</strong>：找 \(u\) 到 \(v\) 邊數最少的路徑 → 有 optimal substructure，<span style="color:var(--win);font-weight:700">適合 DP</span>。</li>
+  <li><strong>Unweighted longest simple path</strong>：找 \(u\) 到 \(v\) 邊數最多的 <em>simple path</em>（不重複經過頂點）→ <span style="color:var(--warn);font-weight:700">沒有 optimal substructure，不適合 DP</span>。</li>
+</ul>
+
+<h3 id="shortest">最短路徑：有 optimal substructure</h3>
+<p>設 \(p\) 是 \(u\leadsto v\) 的最短路徑，\(w\) 是 \(p\) 上任一點，把 \(p\) 拆成 \(u\overset{p_1}{\leadsto} w\overset{p_2}{\leadsto} v\)。那麼 \(p_1\) 一定是 \(u\leadsto w\) 的最短路徑。</p>
+<p><strong>證明</strong>：若有更短的 \(p_1'\)，則 \(u\overset{p_1'}{\leadsto}w\overset{p_2}{\leadsto}v\) 比 \(p\) 短（就算 \(p_1'\) 和 \(p_2\) 共用頂點而形成迴圈，把迴圈拿掉只會更短），與 \(p\) 最短矛盾。∎</p>
+
+<h3 id="longest">最長簡單路徑：沒有 optimal substructure</h3>
+<div data-widget="pathDemo"></div>
+<ul>
+  <li>\(q\to r\to t\) 是 \(q\) 到 \(t\) 的一條最長簡單路徑（2 條邊）。</li>
+  <li>但它的子路徑 \(q\to r\) <strong>不是</strong> \(q\) 到 \(r\) 的最長簡單路徑：\(q\to s\to t\to r\)（3 條邊）更長。</li>
+  <li>\(r\to t\) 也不是 \(r\) 到 \(t\) 的最長：\(r\to q\to s\to t\) 更長。</li>
+  <li>更糟的是：把兩個子問題的最佳解接起來是 \(q\to s\to t\to r\to q\to s\to t\)，<strong>重複經過頂點</strong>，連合法解都不是。</li>
+</ul>
+<div class="note key"><span class="tag">為什麼差這麼多</span>關鍵在<strong>子問題是否 independent</strong>。最短路徑的兩段 \(p_1, p_2\) 不會互相搶頂點（若共用頂點就能抄捷徑，更短）。最長簡單路徑的兩段會搶同一批頂點：前半段用掉的頂點，後半段就不能再用——一個子問題的解會限制另一個子問題能用的「資源」。<a href="exercises.html#ex-14-3-5">習題 14.3-5</a> 的「限量鋼條」也是同樣的問題。</div>
+<p>事實上，最長簡單路徑是 NP-complete，目前沒有已知的多項式時間演算法。</p>
+
+<h2 id="recipe" data-short="DP 四步驟">設計 DP 的四個步驟（CLRS）</h2>
+<ol class="recipe">
+  <li><b>Characterize</b> the structure of an optimal solution：找出 optimal substructure。</li>
+  <li><b>Recursively define</b> the value of an optimal solution：寫出遞迴式（含 base case）。</li>
+  <li><b>Compute</b> the value, typically bottom-up：決定填表順序（或用 memoization）。</li>
+  <li><b>Construct</b> an optimal solution from computed information：存下每一步的選擇，回溯出解。</li>
+</ol>
+
+<h2 id="practice" data-short="本講練習">本講練習</h2>
+<ul>
+  <li>課本習題 <a href="exercises.html#ex-14-3-2">14.3-2</a>、<a href="exercises.html#ex-14-3-3">14.3-3</a>、<a href="exercises.html#ex-14-3-4">14.3-4</a>、<a href="exercises.html#ex-14-3-5">14.3-5</a></li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

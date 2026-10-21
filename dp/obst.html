@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optimal Binary Search Tree 最佳搜尋樹 · Dynamic Programming III</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-obst.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="obst"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Lecture 14-3 · Dynamic Programming III</p>
+<h1>Optimal Binary Search Tree</h1>
+<p class="lede">每個字被查詢的機率不同，查不到的範圍也有各自的機率。要建一棵二元搜尋樹，讓<strong>期望</strong>的比較次數最少。結構和 matrix-chain 幾乎一樣：區間 \([i,j]\) 當子問題，列舉 root 當選擇。</p>
+
+<h2 id="motivation" data-short="動機：翻譯程式">動機：寫一個翻譯程式</h2>
+<ul>
+  <li>現實中不同的字被查的頻率不同，例如 apple 可能比 pizza 常被查。</li>
+  <li><strong>查不到</strong>的情況也有不同頻率，例如很少人會查介於 (hotdog, pizza) 之間的字。</li>
+</ul>
+<p>假設 Google 的朋友給你下面的機率（綠色 = 查不到、落在某個範圍）：</p>
+<table class="plain">
+  <tr><th>查詢</th><th class="num">機率</th><th>記號</th><th>查詢</th><th class="num">機率</th><th>記號</th></tr>
+  <tr><td style="background:var(--win-soft)">&lt; apple</td><td class="num">0.01</td><td>\(q_0\)</td><td>= hotdog</td><td class="num">0.02</td><td>\(p_4\)</td></tr>
+  <tr><td>= apple</td><td class="num">0.21</td><td>\(p_1\)</td><td style="background:var(--win-soft)">(hotdog, pizza)</td><td class="num">0.04</td><td>\(q_4\)</td></tr>
+  <tr><td style="background:var(--win-soft)">(apple, banana)</td><td class="num">0.10</td><td>\(q_1\)</td><td>= pizza</td><td class="num">0.04</td><td>\(p_5\)</td></tr>
+  <tr><td>= banana</td><td class="num">0.18</td><td>\(p_2\)</td><td style="background:var(--win-soft)">(pizza, spaghetti)</td><td class="num">0.11</td><td>\(q_5\)</td></tr>
+  <tr><td style="background:var(--win-soft)">(banana, burger)</td><td class="num">0.05</td><td>\(q_2\)</td><td>= spaghetti</td><td class="num">0.07</td><td>\(p_6\)</td></tr>
+  <tr><td>= burger</td><td class="num">0.01</td><td>\(p_3\)</td><td style="background:var(--win-soft)">&gt; spaghetti</td><td class="num">0.04</td><td>\(q_6\)</td></tr>
+  <tr><td style="background:var(--win-soft)">(burger, hotdog)</td><td class="num">0.12</td><td>\(q_3\)</td><td></td><td></td><td></td></tr>
+</table>
+<p>直覺：<mark>越常被查的字應該越靠近 root</mark>。投影片給的這棵樹期望表現比較好：</p>
+<div data-widget="bstSpec" data-spec='["k2",["k1","d0","d1"],["k5",["k4",["k3","d2","d3"],"d4"],["k6","d5","d6"]]]' data-names="apple,banana,burger,hotdog,pizza,spaghetti" data-caption="投影片的翻譯字典樹（方框是查不到的範圍 d0…d6）"></div>
+<p>用下面的 DP 算一下會發現：這棵樹的期望成本是 <strong>2.93</strong>，剛好就是最佳解（可以在<a href="#bottomup">逐步執行</a>選「翻譯字典」範例驗證）。</p>
+
+<h2 id="model" data-short="期望搜尋時間">把問題寫清楚：期望搜尋時間</h2>
+<ul>
+  <li>\(n\) 個 keys \(k_1&lt;k_2&lt;\cdots&lt;k_n\)，對應樹的 <strong>internal nodes</strong>。</li>
+  <li>\(n+1\) 個 <strong>dummy keys</strong> \(d_0&lt;d_1&lt;\cdots&lt;d_n\) 代表查不到的範圍：\(d_0\) 是 \(&lt;k_1\)，\(d_i\) 是 \((k_i, k_{i+1})\)，\(d_n\) 是 \(&gt;k_n\)。Dummy keys 對應<strong>樹葉</strong>。</li>
+  <li>\(p_i=\Pr(\text{查 } k_i)\)、\(q_j=\Pr(\text{查的字落在 } d_j)\)，且 \(\sum_i p_i+\sum_j q_j=1\)。</li>
+</ul>
+<div data-widget="bstSpec" data-spec='["k2",["k1","d0","d1"],["k5",["k4",["k3","d2","d3"],"d4"],["k6","d5","d6"]]]' data-caption="Modified search tree for six keys：每個 key 都是內部節點，每個 dummy key 都是葉子"></div>
+<div class="note key"><span class="tag">Lemma</span>在加了 dummy leaves 的樹上，查 \(k_i\) 的時間 = node-depth\((k_i)\)；查一個落在 \(d_j\) 的字，時間 = node-depth\((d_j)\)。（root 的深度算 1，也就是比較次數。）</div>
+<div class="formula">$$\text{Expected search time}=\sum_{i=1}^{n}p_i\cdot\text{depth}(k_i)+\sum_{j=0}^{n}q_j\cdot\text{depth}(d_j)$$</div>
+<p class="small muted">課本 4th ed. 讓 root 深度為 0，寫成 \(\sum (\text{depth}+1)p_i+\sum(\text{depth}+1)q_j\)，是同一個值。</p>
+
+<h3 id="compare">例：兩棵樹的成本（投影片 p.32）</h3>
+<div data-widget="bstCompare"></div>
+<p>投影片上 (a) 的算式：\(0.1+(0.15+0.1)\times2+(0.05+0.1+0.05+0.2)\times3+(0.05+0.05+0.05+0.1)\times4=0.1+0.5+1.2+1.0=2.8\)。</p>
+<div class="note"><span class="tag">觀察</span>最佳解不一定最矮，root 也不一定是機率最大的 key（\(p_5=0.20\) 最大，但 root 是 \(k_2\)）。所以「貪婪地把機率最大的放 root」不會成功，要靠 DP。</div>
+
+<h2 id="question" data-short="問題">問題</h2>
+<p>給定 \(p_i, q_j\)，建一棵期望搜尋時間最小的 BST，稱為 <strong>optimal binary search tree</strong>。暴力法要試所有 BST，\(n\) 個節點的 BST 有 Catalan number 種（\(\Omega(4^n/n^{3/2})\)），不可行。</p>
+
+<h2 id="substructure" data-short="Optimal substructure">Optimal substructure</h2>
+<div class="note key"><span class="tag">Lemma</span>設 \(T\) 是 keys \((k_i,\dots,k_j;\ d_{i-1},\dots,d_j)\) 的最佳 BST，root 是 \(k_r\)，左右子樹為 \(L, R\)。則
+<ul style="margin-bottom:0">
+  <li>\(L\) 必須是 \((k_i,\dots,k_{r-1};\ d_{i-1},\dots,d_{r-1})\) 的最佳 BST；</li>
+  <li>\(R\) 必須是 \((k_{r+1},\dots,k_j;\ d_r,\dots,d_j)\) 的最佳 BST。</li>
+</ul></div>
+<p><strong>證明（cut-and-paste）</strong>：如果 \(L\) 不是最佳，換成更好的 \(L'\)，整棵樹的期望成本會變小，和 \(T\) 最佳矛盾。\(R\) 同理。注意：當 \(r=i\) 時，左子樹沒有 key，只剩 dummy key \(d_{i-1}\)；\(r=j\) 時右子樹只剩 \(d_j\)。</p>
+
+<h3>定義與遞迴式</h3>
+<ul>
+  <li>\(E_{i,j}\)：keys \((k_i,\dots,k_j;\ d_{i-1},\dots,d_j)\) 在最佳 BST 中的期望時間。</li>
+  <li>空子樹（只有一個 dummy key）：\(E_{i,i-1}=q_{i-1}\)，\(E_{j+1,j}=q_j\)。</li>
+  <li>\(w_{i,j}=\sum_{s=i}^{j}p_s+\sum_{t=i-1}^{j}q_t\)：這些 keys 的機率總和。</li>
+</ul>
+<div class="formula">$$E_{i,j}=\begin{cases}q_{i-1} & j=i-1\\[2pt] \displaystyle\min_{i\le r\le j}\bigl\{\,E_{i,r-1}+E_{r+1,j}+w_{i,j}\,\bigr\} & j\ge i\end{cases}$$</div>
+<h3>為什麼要加 \(w_{i,j}\)？</h3>
+<ol class="steps">
+  <li>把左右兩棵最佳子樹掛到 \(k_r\) 底下時，子樹中<strong>每個節點的深度都 +1</strong>。</li>
+  <li>深度 +1 讓期望值增加「子樹所有節點的機率總和」：左子樹增加 \(w_{i,r-1}\)，右子樹增加 \(w_{r+1,j}\)。</li>
+  <li>root \(k_r\) 本身深度 1，貢獻 \(p_r\)。</li>
+  <li>合起來：\(E_{i,r-1}+w_{i,r-1}+E_{r+1,j}+w_{r+1,j}+p_r=E_{i,r-1}+E_{r+1,j}+w_{i,j}\)，因為 \(w_{i,r-1}+p_r+w_{r+1,j}=w_{i,j}\)。</li>
+</ol>
+
+<h2 id="naive" data-short="直接遞迴">直接遞迴</h2>
+<pre data-code="Compute_E(i, j)          // 求 E[i, j]">
+if i == j + 1
+    return q_j              // 只有 dummy key d_j
+min = ∞
+for r = i to j
+    g = Compute_E(i, r-1) + Compute_E(r+1, j) + w[i, j]
+    if g < min
+        min = g
+return min
+</pre>
+<ul>
+  <li><strong>時間</strong>：令 \(C(n)\) 為 \(n\) 個 keys 時的呼叫次數。\(C(0)=1\)；root 試 \(r=1..n\)，左右各遞迴一次：
+    $$C(n)=1+\sum_{r=1}^{n}\bigl(C(r-1)+C(n-r)\bigr)=1+2\sum_{k=0}^{n-1}C(k).$$
+    把 \(C(n)\) 和 \(C(n-1)\) 的式子相減：\(C(n)-C(n-1)=2C(n-1)\)，所以 \(C(n)=3C(n-1)=3^n\) → <strong>\(\Omega(3^n)\)</strong>。</li>
+  <li>另一方面它最多把每一棵 BST 都檢查一次 → \(O\!\left(\binom{2n-2}{n-1}/n\right)\)（Catalan number）。</li>
+  <li><strong>Overlapping subproblems</strong>：\(\text{Compute\_E}(i,j)\) 和 \(\text{Compute\_E}(i,j+1)\) 共同需要 \(\text{Compute\_E}(i,i-1),\dots,\text{Compute\_E}(i,j-1)\)。不同的子問題只有 \(\Theta(n^2)\) 個。</li>
+</ul>
+
+<h2 id="bottomup" data-short="Bottom-up 逐步填表">Bottom-up</h2>
+<ul>
+  <li>開一張 2D 表 \(E\) 存 \(E_{i,j}\)，另一張 \(W\) 存 \(w_{i,j}\)。</li>
+  <li>\(W\) 可以用 \(w_{i,j}=w_{i,j-1}+p_j+q_j\) 每格 \(O(1)\) 算出（base：\(w_{i,i-1}=q_{i-1}\)）。</li>
+  <li>依區間長度 \(j-i=0,1,\dots,n-1\) 填 \(E\)；同時用 \(root[i,j]\) 記錄最佳 root。</li>
+  <li><strong>\(\Theta(n^3)\)</strong>：\(\Theta(n^2)\) 個子問題，每個試 \(O(n)\) 個 root（和 matrix-chain 同樣的分析）。</li>
+</ul>
+<pre data-code="BottomUp_E()              // 投影片版本">
+fill all entries of W
+for i = 0 to n
+    E[i+1, i] = q_i
+for length = 0 to n - 1
+    for i = 1 to n - length
+        compute E[i, i+length]
+        // 用 W 和 |x-y| < length 的 E[x, y]
+return E[1, n]
+</pre>
+<div data-widget="obstTable" data-preset="clrs"></div>
+
+<h3 id="hand" data-short="手算">手算前幾格（投影片 p.43）</h3>
+<p>資料：\(p=(0.15, 0.10, 0.05, 0.10, 0.20)\)，\(q=(0.05, 0.10, 0.05, 0.05, 0.05, 0.10)\)。</p>
+<ol class="steps">
+  <li>\(w_{1,1}=q_0+p_1+q_1=0.05+0.15+0.10=0.30\)，\(e(1,1)=e(1,0)+e(2,1)+w_{1,1}=0.05+0.10+0.30=\mathbf{0.45}\)。</li>
+  <li>\(w_{2,2}=q_1+p_2+q_2=0.10+0.10+0.05=0.25\)，\(e(2,2)=e(2,1)+e(3,2)+w_{2,2}=0.10+0.05+0.25=\mathbf{0.40}\)。</li>
+  <li>\(w_{1,2}=w_{1,1}+p_2+q_2=0.30+0.10+0.05=0.45\)。兩個候選 root：
+    $$e(1,2)=\min\begin{cases}r=1:\ e(1,0)+e(2,2)+w_{1,2}=0.05+0.40+0.45=\mathbf{0.90}\\ r=2:\ e(1,1)+e(3,2)+w_{1,2}=0.45+0.05+0.45=0.95\end{cases}$$
+    所以 \(e(1,2)=0.90\)，\(root[1,2]=1\)。</li>
+  <li>…依長度繼續填，最後
+    $$e(1,5)=\min\{e(1,0)+e(2,5),\ e(1,1)+e(3,5),\ e(1,2)+e(4,5),\ e(1,3)+e(5,5),\ e(1,4)+e(6,5)\}+w_{1,5}$$
+    \(w_{1,5}=1.00\)，五個候選分別是 3.05、<strong>2.75</strong>、2.80、<strong>2.75</strong>、2.85，最小值 2.75。</li>
+</ol>
+<div class="note"><span class="tag">平手</span>\(r=2\) 和 \(r=4\) 都得到 2.75，代表有兩棵不同的最佳 BST。虛擬碼用嚴格的 <code>&lt;</code>，所以保留先找到的 \(r=2\)，和課本 Figure 14.9(b) 一致。</div>
+
+<h2 id="remarks" data-short="延伸">延伸</h2>
+<ul>
+  <li><strong>建出樹</strong>：用 \(root\) 表遞迴：\(root[1,n]\) 是根，左子樹查 \(root[1, r-1]\)、右子樹查 \(root[r+1, n]\)（課本習題 14.5-1）。上面互動區最後就是這樣畫出來的。</li>
+  <li><strong>Memoized 版本</strong>：在 Compute_E 加查表即可，\(O(n^3)\)。</li>
+  <li><strong>Knuth 的加速</strong>：可以證明 \(root[i,j-1]\le root[i,j]\le root[i+1,j]\)，只要在這個範圍內找 root，總時間降到 \(\Theta(n^2)\)（課本習題 14.5-4，選讀）。</li>
+</ul>
+
+<h2 id="practice" data-short="本講練習">本講練習</h2>
+<ul>
+  <li>課本習題 <a href="exercises.html#ex-14-5-2">14.5-2</a>（7 個 keys 實際算一次）、<a href="exercises.html#ex-14-5-3">14.5-3</a>（不存 w 表會怎樣）</li>
+  <li><a href="puzzles.html">海盜分金 & 腦力激盪</a>（Lecture 14-3 最後的思考題）</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

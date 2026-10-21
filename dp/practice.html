@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice at Home & 作業 · Dynamic Programming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-practice.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="practice"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">投影片上的 Practice at Home 與 Homework</p>
+<h1>Practice & 作業詳解</h1>
+<p class="lede">每一題都照同一套流程解：<strong>定義子問題 → 寫遞迴式（含 base case）→ 決定填表順序 → 分析時間空間 → 還原解</strong>。先自己想過遞迴式，再展開解答會比較有效。</p>
+
+<h2 id="sushi" data-short="壽司（Lecture 14-1）">壽司：價格遞增、總價最大</h2>
+<p class="eyebrow">Practice at Home · Lecture 14-1</p>
+<div class="note"><span class="tag">題目</span>Peter 的壽司店有 \(n\) 盤壽司排成一列，價格都不同。你要<strong>由左到右</strong>挑選，而且每次挑的下一盤必須比上一盤<strong>貴</strong>。設計 \(O(n^2)\) 演算法讓總價最大。</div>
+<p>換句話說：在序列 \(c_1,\dots,c_n\) 中找一個<strong>嚴格遞增的子序列</strong>，使元素和最大（maximum-sum increasing subsequence）。</p>
+<ol class="steps">
+  <li><strong>子問題</strong>：\(S[i]\) = 「最後一盤是第 \(i\) 盤」的所有合法選法中，總價的最大值。<em>關鍵是固定結尾</em>：知道最後一盤是誰，才能判斷下一盤能不能接。</li>
+  <li><strong>遞迴式</strong>：第 \(i\) 盤前面那一盤，要嘛不存在（只拿 \(i\)），要嘛是某個 \(j&lt;i\) 且 \(c_j&lt;c_i\)：
+    $$S[i]=c_i+\max\bigl(\{0\}\cup\{\,S[j] : j\lt i,\ c_j\lt c_i\,\}\bigr)$$</li>
+  <li><strong>Optimal substructure</strong>：若最佳選法是 \(\dots, j, i\)，那拿掉 \(i\) 後的部分必須是「以 \(j\) 結尾」的最佳選法，否則換掉就更好（cut-and-paste）。</li>
+  <li><strong>順序</strong>：\(i=1,2,\dots,n\)（\(S[i]\) 只依賴左邊的 \(S[j]\)）。答案是 \(\max_i S[i]\)（最後一盤可以是任何一盤）。</li>
+  <li><strong>時間</strong>：每個 \(i\) 檢查 \(i-1\) 個 \(j\)，共 \(\sum (i-1)=n(n-1)/2=O(n^2)\)。空間 \(O(n)\)。另存 \(prev[i]\)（取到最大值的 \(j\)）就能回溯出要拿哪些盤。</li>
+</ol>
+<div data-widget="incSubseq" data-mode="sum" data-a="3 9 2 5 7 4 8"></div>
+<pre data-code="MAX-SUSHI(c, n)">
+for i = 1 to n
+    S[i] = c[i];  prev[i] = NIL     // 只拿第 i 盤
+    for j = 1 to i - 1
+        if c[j] < c[i] and S[j] + c[i] > S[i]
+            S[i] = S[j] + c[i];  prev[i] = j
+best = argmax_i S[i]
+return S[best] and trace prev[] back from best
+</pre>
+<div class="note warn"><span class="tag">常見錯誤</span>用「\(S[i]\) = 前 \(i\) 盤裡的最佳解」當子問題會卡住：你不知道那個最佳解最後一盤多貴，就沒辦法判斷第 \(i+1\) 盤能不能接上。定義子問題時要把「接下來的決策需要知道的資訊」放進去。</div>
+
+<h2 id="stairs" data-short="爬樓梯（Lecture 14-1）">爬樓梯：一次 1、2 或 3 階</h2>
+<p class="eyebrow">Practice at Home · Lecture 14-1</p>
+<div class="note"><span class="tag">題目</span>樓梯有 \(n\) 階，Jack 一步可以走 1、2 或 3 階。令 \(F_k\) 為走上 \(k\) 階的方法數，寫出 \(F_k\) 的遞迴式，並說明 \(F_n\) 可以在 \(O(n)\) 時間算出。<span class="muted">（投影片題目中途把 Jack 寫成 John，是同一個人。）</span></div>
+<ol class="steps">
+  <li><strong>看最後一步</strong>：走上第 \(k\) 階的最後一步，一定是 1、2 或 3 階其中之一。這三種情況<strong>互斥</strong>且<strong>涵蓋所有走法</strong>。</li>
+  <li><strong>每種情況的數量</strong>：最後一步走 \(m\) 階 ⇔ 先用任意方式走到第 \(k-m\) 階，有 \(F_{k-m}\) 種。</li>
+  <li><strong>遞迴式</strong>（加法原理）：
+    $$F_k=F_{k-1}+F_{k-2}+F_{k-3}\quad(k\ge3),\qquad F_0=1,\ F_1=1,\ F_2=2$$
+    （\(F_0=1\) 代表「已經在地面、不用走」這一種；有了它，\(F_1=F_0\)、\(F_2=F_1+F_0\) 也符合同一個式子。）</li>
+  <li><strong>\(O(n)\)</strong>：由 \(k=3\) 算到 \(n\)，每個 \(F_k\) 是三個已知值相加，\(O(1)\)，總共 \(O(n)\)。只需要保留最後三個值，空間 \(O(1)\)。</li>
+  <li><strong>為什麼不能直接遞迴</strong>：直接遞迴的呼叫數本身就滿足類似的遞迴式，會指數成長（\(\approx 1.84^n\)）；因為 \(F_{k-1}, F_{k-2}, F_{k-3}\) 又會重複呼叫同樣的子問題——典型的 overlapping subproblems。</li>
+</ol>
+<div data-widget="stairs"></div>
+
+<h2 id="lis" data-short="LIS（Lecture 14-1）">最長遞增子序列（LIS）</h2>
+<p class="eyebrow">Practice at Home · Lecture 14-1（也是課本習題 14.4-5）</p>
+<div class="note"><span class="tag">題目</span>\(A[1..n]\) 是 \(n\) 個相異整數，求最長遞增子序列的長度（不必連續）。例：11, 17, 5, 8, 6, 4, 7, 12, 3 的 LIS 是 5, 6, 7, 12。分析最壞情況的時間與空間。</div>
+<ol class="steps">
+  <li><strong>子問題</strong>：\(L[i]\) = 以 \(A[i]\) <strong>結尾</strong>的最長遞增子序列長度（和壽司題同樣的技巧）。</li>
+  <li><strong>遞迴式</strong>：
+    $$L[i]=1+\max\bigl(\{0\}\cup\{\,L[j]: j\lt i,\ A[j]\lt A[i]\,\}\bigr)$$</li>
+  <li><strong>答案</strong>：\(\max_{1\le i\le n}L[i]\)。用 \(prev[i]\) 記錄接在誰後面，就能印出序列。</li>
+  <li><strong>時間</strong>：雙層迴圈，最壞 \(\Theta(n^2)\)（不管輸入長怎樣都要比較 \(n(n-1)/2\) 次）。<strong>空間</strong>：\(L\) 與 \(prev\) 兩個陣列，\(\Theta(n)\)。</li>
+</ol>
+<div data-widget="incSubseq" data-mode="len" data-a="11 17 5 8 6 4 7 12 3"></div>
+<p>例子的表：</p>
+<table class="plain">
+  <tr><th>\(i\)</th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td><td class="num">9</td></tr>
+  <tr><th>\(A[i]\)</th><td class="num">11</td><td class="num">17</td><td class="num">5</td><td class="num">8</td><td class="num">6</td><td class="num">4</td><td class="num">7</td><td class="num">12</td><td class="num">3</td></tr>
+  <tr><th>\(L[i]\)</th><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td class="num">1</td><td class="num">3</td><td class="num">4</td><td class="num">1</td></tr>
+</table>
+<p>\(L[8]=4\) 最大，沿 \(prev\) 回溯：\(12\leftarrow7\leftarrow6\leftarrow5\)，所以 LIS = 5, 6, 7, 12。（\(L[7]=3\) 也可以從 5, 6 或 4 接上來，最長的是接在 \(A[5]=6\) 後面。）</p>
+<div class="note"><span class="tag">其他解法</span>(1) 把 \(A\) 排序得到 \(A'\)，LIS = LCS\((A, A')\)，\(O(n^2)\)。(2) 課本 14.4-6 的 \(O(n\lg n)\)：維護「長度為 \(k\) 的遞增子序列最小可能的結尾」陣列，它是遞增的，可以二分搜尋。</div>
+
+<h2 id="mwis" data-short="作業：樹上獨立集">作業 1：樹上的最大權重獨立集</h2>
+<p class="eyebrow">Homework · Lecture 14-2</p>
+<div class="note"><span class="tag">題目</span>\(G=(V,E)\) 是一棵樹（連通、無環的無向圖），每個頂點有正權重 \(w(i)\)。\(I\subseteq V\) 是 <strong>independent set</strong> 若 \(I\) 中任兩點都不相鄰；\(w(I)=\sum_{i\in I}w(i)\)。用 DP 找出最大權重獨立集。</div>
+<ol class="steps">
+  <li><strong>先把樹變成有根樹</strong>：任選一點當 root，每個點 \(v\) 有自己的子樹 \(T_v\)。子問題就是「\(T_v\) 裡的最佳獨立集」。</li>
+  <li><strong>需要知道 \(v\) 有沒有被選</strong>（因為它決定了小孩能不能選），所以每個點算兩個值：
+    <ul>
+      <li>\(in(v)\)：\(v\) <strong>在</strong>獨立集中時，\(T_v\) 的最大權重；</li>
+      <li>\(out(v)\)：\(v\) <strong>不在</strong>獨立集中時，\(T_v\) 的最大權重。</li>
+    </ul></li>
+  <li><strong>遞迴式</strong>（\(C(v)\) = \(v\) 的小孩們）：
+    $$in(v)=w(v)+\sum_{c\in C(v)}out(c),\qquad out(v)=\sum_{c\in C(v)}\max\{\,in(c),\ out(c)\,\}$$
+    葉子：\(in(v)=w(v)\)、\(out(v)=0\)。答案：\(\max\{in(root), out(root)\}\)。</li>
+  <li><strong>正確性</strong>：選了 \(v\)，所有小孩都不能選；但孫子不受 \(v\) 影響，交給 \(out(c)\) 處理。沒選 \(v\)，小孩們之間互不相鄰（樹上兄弟之間沒有邊），每棵子樹可以<strong>獨立</strong>取最好的情況——子問題互相獨立，所以 optimal substructure 成立。</li>
+  <li><strong>順序與時間</strong>：用 post-order（DFS 回來時才算）保證小孩先算好。每個點的工作量和它的小孩數成正比，加總 = 邊數 = \(n-1\)，所以 <strong>\(O(n)\)</strong>。</li>
+  <li><strong>還原解</strong>：從 root 往下：若父節點被選，自己不能選；否則看 \(in(v)\ge out(v)\) 決定選不選。</li>
+</ol>
+<div data-widget="treeMWIS"></div>
+<pre data-code="TREE-MWIS(v)              // 回傳 (in(v), out(v))">
+in = w(v);  out = 0
+for each child c of v
+    (ci, co) = TREE-MWIS(c)
+    in  = in + co             // 選了 v，c 不能選
+    out = out + max(ci, co)   // 沒選 v，c 自由選
+return (in, out)
+</pre>
+<div class="note warn"><span class="tag">陷阱</span>「隔層選」（選所有偶數層或所有奇數層）不一定最佳，貪婪地「先選權重最大的點」也不一定最佳。用上面的「隨機產生」多試幾棵樹就能看到反例。</div>
+
+<h2 id="tiling" data-short="作業：k×n 鋪磚">作業 2：k × n 棋盤鋪 k × 1 長條</h2>
+<p class="eyebrow">Homework · Lecture 14-2</p>
+<div class="note"><span class="tag">題目</span>用 \(n\) 個 \(k\times1\) 或 \(1\times k\) 的長條完全覆蓋 \(k\times n\) 的棋盤（\(k\) 列、\(n\) 行），有幾種方法？例如 \(k=2, n=3\) 有 3 種：(a) 最左行直放、其餘兩條橫放；(b) 最右行直放、其餘橫放；(c) 每一行都直放。設計 \(O(n)\) 演算法。</div>
+<ol class="steps">
+  <li><strong>看最左邊那一行</strong>（\(k\) 個格子）。它只能用兩種方式覆蓋：
+    <ul>
+      <li><strong>一條直放</strong>（\(k\times1\)）蓋滿這一行 → 剩下 \(k\times(n-1)\)。</li>
+      <li><strong>橫放</strong>：只要這一行有一格是被橫條蓋住，因為它是最左行，那條橫條就從這行開始往右延伸 \(k\) 格。這一行其他格子也不能再放直條（直條要佔滿整行），所以<strong>這一行的 \(k\) 格全都是橫條</strong>，\(k\) 條橫條疊成一個 \(k\times k\) 方塊 → 剩下 \(k\times(n-k)\)。</li>
+    </ul></li>
+  <li><strong>遞迴式</strong>（兩種情況互斥）：
+    $$f(n)=f(n-1)+f(n-k)\quad(n\ge k),\qquad f(0)=f(1)=\cdots=f(k-1)=1$$
+    （\(n&lt;k\) 時橫條放不下，只能全部直放，1 種；\(f(0)=1\) 是空棋盤。）</li>
+  <li><strong>驗證</strong>：\(k=2\)：\(f(0)=f(1)=1,\ f(2)=2,\ f(3)=f(2)+f(1)=3\) ✓（\(k=2\) 時就是 Fibonacci）。</li>
+  <li><strong>\(O(n)\)</strong>：由 \(f(k)\) 算到 \(f(n)\)，每項一次加法。只保留最後 \(k\) 個值的話，空間 \(O(k)\)。</li>
+  <li><strong>特例</strong>：\(k=1\) 時直條和橫條都是 \(1\times1\)，只有 1 種鋪法，不能套用遞迴式（會重複計算成 \(2^n\)）。</li>
+</ol>
+<div data-widget="tiling"></div>
+<pre data-code="COUNT-TILINGS(k, n)">
+if k == 1
+    return 1
+let f[0:n] be a new array
+for i = 0 to n
+    if i < k
+        f[i] = 1
+    else f[i] = f[i - 1] + f[i - k]
+return f[n]
+</pre>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matrix-Chain Multiplication 矩陣鏈乘 · Dynamic Programming II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-mcm.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="mcm"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Lecture 14-2 · Dynamic Programming II</p>
+<h1>Matrix-Chain Multiplication 矩陣鏈乘</h1>
+<p class="lede">連乘 \(A_1A_2\cdots A_n\) 時，括號怎麼加不影響答案，卻可能讓計算量差上百倍。目標：找出乘法次數最少的括號方式。這是第一個「區間型」DP：子問題是一段連續的區間 \([i, j]\)。</p>
+
+<h2 id="cost" data-short="矩陣相乘的成本">兩個矩陣相乘要幾次乘法？</h2>
+<ul>
+  <li>\(A\) 是 \(p\times q\)、\(B\) 是 \(q\times r\)，則 \(C=AB\) 是 \(p\times r\)。</li>
+  <li>\(C\) 的每一格是「\(A\) 的一列」和「\(B\) 的一行」做內積，要 \(q\) 次乘法。</li>
+  <li>\(C\) 有 \(pr\) 格，所以總共 <mark>\(pqr\) 次純量乘法</mark>。</li>
+</ul>
+<p>投影片的例子：\(A\) 是 \(2\times 3\)、\(B\) 是 \(3\times 2\)，那 \(c_{1,2}\) 怎麼算？取 \(A\) 第 1 列和 \(B\) 第 2 行：</p>
+<div class="formula">$$c_{1,2}=a_{1,1}b_{1,2}+a_{1,2}b_{2,2}+a_{1,3}b_{3,2}$$</div>
+<p>3 次乘法（\(q=3\)），而 \(C\) 有 \(2\times2=4\) 格，總共 \(2\cdot3\cdot2=12\) 次。</p>
+
+<h2 id="assoc" data-short="括號影響成本">結合律：括號不影響結果，但影響成本</h2>
+<p>矩陣乘法滿足結合律 \(((A_1A_2)A_3)=(A_1(A_2A_3))\)，所以任何括號方式算出來都一樣。例如 4 個矩陣有 5 種：</p>
+<p class="mono small" style="text-align:center">(A1((A2A3)A4)) = (A1(A2(A3A4))) = ((A1A2)(A3A4)) = (((A1A2)A3)A4) = ((A1(A2A3))A4)</p>
+<p><strong>為什麼要在意？</strong>不同的計算順序，乘法次數可能差很多。投影片的例子：\(A_1, A_2, A_3\) 分別是 \(1\times100\)、\(100\times1\)、\(1\times100\)：</p>
+<ul>
+  <li>\(((A_1A_2)A_3)\)：先算 \(A_1A_2\)，\(1\cdot100\cdot1=100\) 次，得到 \(1\times1\)；再乘 \(A_3\)，\(1\cdot1\cdot100=100\) 次。<strong>共 200 次</strong>。</li>
+  <li>\((A_1(A_2A_3))\)：先算 \(A_2A_3\)，\(100\cdot1\cdot100=10{,}000\) 次，得到 \(100\times100\)；再算 \(A_1\) 乘它，\(1\cdot100\cdot100=10{,}000\) 次。<strong>共 20,000 次</strong>，是前者的 100 倍。</li>
+</ul>
+<div data-widget="mcmAll" data-dims="1 100 1 100"></div>
+
+<h2 id="count" data-short="括號方式有幾種">有幾種括號方式？Catalan number</h2>
+<p>令 \(P(n)\) 為 \(n\) 個矩陣的括號方式數。最外層一定是把 \(A_1\cdots A_k\) 和 \(A_{k+1}\cdots A_n\) 相乘，左邊 \(P(k)\) 種、右邊 \(P(n-k)\) 種：</p>
+<div class="formula">$$P(n)=\begin{cases}1 & n=1\\[2pt]\displaystyle\sum_{k=1}^{n-1}P(k)\,P(n-k) & n\ge2\end{cases}
+\;=\;\frac{1}{n}\binom{2n-2}{n-1}\;=\;\Omega\!\left(\frac{4^n}{n^{3/2}}\right)$$</div>
+<table class="plain">
+  <tr><th>\(n\)</th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td><td class="num">10</td><td class="num">15</td></tr>
+  <tr><th>\(P(n)\)</th><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">5</td><td class="num">14</td><td class="num">42</td><td class="num">132</td><td class="num">429</td><td class="num">4862</td><td class="num">2674440</td></tr>
+</table>
+<p>\(P(n)\) 就是第 \(n-1\) 個 <strong>Catalan number</strong>。暴力法把每一種括號都試一遍（每種的成本頂多算一次），時間是 \(O\!\left(\binom{2n-2}{n-1}/n\right)\)，指數級。</p>
+
+<h2 id="substructure" data-short="Optimal substructure">Optimal substructure</h2>
+<div class="note key"><span class="tag">Lemma</span>假設乘 \(B_1B_2\cdots B_n\) 的最佳方式是：(i) 先算 \(B_1\cdots B_x\)，(ii) 再算 \(B_{x+1}\cdots B_n\)，(iii) 最後把兩者相乘。那麼 (i) 和 (ii) <strong>也必須各自用最少的乘法次數</strong>算出來。</div>
+<p><strong>證明（cut-and-paste）</strong>：總成本 = (i) 的成本 + (ii) 的成本 + 最後一次相乘的成本。最後一次的成本只和維度有關，跟 (i)、(ii) 內部怎麼加括號無關。如果 (i) 有更便宜的算法，把它換進來，總成本就會變小，和「最佳」矛盾。(ii) 同理。∎</p>
+
+<h3>寫出遞迴式</h3>
+<p>令 \(f_{i,j}\)（課本記作 \(m[i,j]\)）為算出 \(A_iA_{i+1}\cdots A_j\) 的最少乘法次數；\(A_k\) 是 \(r_k\times c_k\)，用課本的記法就是 \(p_{k-1}\times p_k\)，所以 \(r_i c_k c_j = p_{i-1}p_kp_j\)。</p>
+<div class="formula">$$f_{i,j}=\begin{cases}0 & i=j\\[2pt]\displaystyle\min_{i\le k\lt j}\bigl\{\,f_{i,k}+f_{k+1,j}+p_{i-1}\,p_k\,p_j\,\bigr\} & i\lt j\end{cases}$$</div>
+<ul>
+  <li>\(k\) 是「最後一次相乘」的分割點：左邊是 \(A_i\cdots A_k\)（\(p_{i-1}\times p_k\)），右邊是 \(A_{k+1}\cdots A_j\)（\(p_k\times p_j\)）。</li>
+  <li>兩者相乘的成本是 \(p_{i-1}\,p_k\,p_j\)。</li>
+  <li>對每個 \(k\) 都試一次，取最小值。</li>
+</ul>
+
+<h2 id="naive" data-short="直接遞迴 Ω(2ⁿ)">直接遞迴：指數時間</h2>
+<div class="two">
+<pre data-code="Compute_F(i, j)          // 投影片版本">
+if i == j
+    return 0
+m[i, j] = ∞
+for k = i to j - 1
+    g = Compute_F(i, k) + Compute_F(k+1, j) + p[i-1]·p[k]·p[j]
+    if g < m[i, j]
+        m[i, j] = g
+return m[i, j]
+</pre>
+<pre data-code="RECURSIVE-MATRIX-CHAIN(p, i, j)">
+if i == j
+    return 0
+m[i, j] = ∞
+for k = i to j - 1
+    q = RMC(p, i, k) + RMC(p, k+1, j) + p[i-1]·p[k]·p[j]
+    if q < m[i, j]
+        m[i, j] = q
+return m[i, j]
+</pre>
+</div>
+<p>兩段程式是同一件事。下面是 <code>RMC(p, 1, 4)</code> 的遞迴樹，灰色虛線的子樹都是在重算已經算過的 \((i,j)\)：</p>
+<div data-widget="mcmTree" data-n="4"></div>
+
+<h3 id="omega">為什麼是 \(\Omega(2^n)\)？（substitution method，也是習題 14.2-3）</h3>
+<p>令 \(T(n)\) 為 <code>RMC</code> 處理 \(n\) 個矩陣所需時間（每行程式至少花 1 單位）。</p>
+<ol class="steps">
+  <li><strong>列出遞迴式</strong>：第 1–3 行花 1，迴圈每一圈遞迴兩次再加 1：
+    $$T(1)\ge1,\qquad T(n)\ge 1+\sum_{k=1}^{n-1}\bigl(T(k)+T(n-k)+1\bigr)\quad(n>1)$$</li>
+  <li><strong>整理</strong>：\(k\) 跑過 \(1\dots n-1\) 時，\(T(k)\) 和 \(T(n-k)\) 都恰好把 \(T(1),\dots,T(n-1)\) 各列一次；常數項是 \(1+(n-1)=n\)：
+    $$T(n)\ge 2\sum_{i=1}^{n-1}T(i)+n$$</li>
+  <li><strong>猜答案</strong>：\(T(n)\ge 2^{n-1}\)。Base case：\(T(1)\ge1=2^0\) ✓。</li>
+  <li><strong>代入</strong>：假設對所有 \(i&lt;n\) 成立，
+    $$T(n)\ge 2\sum_{i=1}^{n-1}2^{i-1}+n = 2(2^{n-1}-1)+n = 2^n+n-2 \ge 2^{n-1}.$$</li>
+  <li><strong>結論</strong>：\(T(n)\ge 2^{n-1}\)，所以 \(T(n)=\Omega(2^n)\)。</li>
+</ol>
+
+<h2 id="overlap" data-short="Overlapping subproblems">Overlapping subproblems</h2>
+<p>算 \(f_{i,j}\) 和 \(f_{i,j+1}\) 時，兩者都需要 \(f_{i,i}, f_{i,i+1},\dots,f_{i,j-1}\)，這些子問題被重複計算。但不同的子問題只有 \(\binom{n}{2}+n=\Theta(n^2)\) 個（每對 \(1\le i\le j\le n\) 一個）。<mark>子問題少、重複多</mark>，正是 DP 的時機。</p>
+
+<h2 id="bottomup" data-short="Bottom-up 填表">Bottom-up：依 chain length 由短到長</h2>
+<p>觀察：\(f_{i,j}\) 只依賴「更短」的區間 \(f_{x,y}\)（\(y-x &lt; j-i\)）。所以先填所有長度 1 的區間（對角線，全是 0），再填長度 2、長度 3……最後是長度 \(n\) 的 \(f_{1,n}\)。</p>
+<div class="two">
+<pre data-code="BottomUp_F(p)            // 投影片版本">
+n = p.length - 1        // A_i 是 p[i-1] × p[i]
+for i = 1 to n
+    F[i, i] = 0
+for length = 1 to n - 1
+    for i = 1 to n - length
+        compute F[i, i+length]   // Θ(n)
+        // 只用到 |x-y| < length 的 F[x, y]
+return F[1, n]
+</pre>
+<div>
+<p style="margin-top:0"><strong>為什麼是 \(\Theta(n^3)\)？</strong></p>
+<ul>
+  <li>三層迴圈 \(l, i, k\)，每層最多 \(n\) 次 → \(O(n^3)\)。</li>
+  <li>精確地數：長度 \(l\) 的區間有 \(n-l+1\) 個，每個試 \(l-1\) 個 \(k\)：
+  $$\sum_{l=2}^{n}(n-l+1)(l-1)=\frac{n^3-n}{6}=\Theta(n^3).$$</li>
+  <li>直觀：\(\Theta(n^2)\) 個子問題 × 每個 \(O(n)\) 個選擇。</li>
+  <li>空間 \(\Theta(n^2)\)（m 和 s 兩張表）。</li>
+</ul>
+</div>
+</div>
+<p>下面用投影片 / 課本的例子（6 個矩陣，\(p = \langle 30,35,15,5,10,20,25\rangle\)）一步一步填。可以改成自己的維度：</p>
+<table class="plain">
+  <tr><th>矩陣</th><th>\(A_1\)</th><th>\(A_2\)</th><th>\(A_3\)</th><th>\(A_4\)</th><th>\(A_5\)</th><th>\(A_6\)</th></tr>
+  <tr><th>維度</th><td>30×35</td><td>35×15</td><td>15×5</td><td>5×10</td><td>10×20</td><td>20×25</td></tr>
+  <tr><th>記號</th><td>\(p_0\times p_1\)</td><td>\(p_1\times p_2\)</td><td>\(p_2\times p_3\)</td><td>\(p_3\times p_4\)</td><td>\(p_4\times p_5\)</td><td>\(p_5\times p_6\)</td></tr>
+</table>
+<div data-widget="mcmBottomUp" data-dims="30 35 15 5 10 20 25"></div>
+<div class="note"><span class="tag">對照投影片</span>投影片（課本 Figure 14.5）把 m 表<strong>旋轉 45°</strong> 畫成菱形：最底下一排是對角線 \(m[i,i]=0\)，往上每一排是 chain length 加 1，最上面的頂點是 \(m[1,6]=15125\)。上面的方形表是同一張表，只是沒有旋轉；左下半部（\(j&lt;i\)）不使用。</div>
+
+<h3 id="m25">手算一格：\(m[2,5]\)（投影片 p.17）</h3>
+<p>\(A_2\cdots A_5\)，\(k\in\{2,3,4\}\)，需要 \(p_1=35, p_2=15, p_3=5, p_4=10, p_5=20\)：</p>
+<div class="formula">$$m[2,5]=\min\begin{cases}
+m[2,2]+m[3,5]+p_1p_2p_5 = 0+2500+35\cdot15\cdot20 = 13000\\
+m[2,3]+m[4,5]+p_1p_3p_5 = 2625+1000+35\cdot5\cdot20 = \mathbf{7125}\\
+m[2,4]+m[5,5]+p_1p_4p_5 = 4375+0+35\cdot10\cdot20 = 11375
+\end{cases}$$</div>
+<p>\(m[2,5]=7125\)，最小值出現在 \(k=3\)，所以 \(s[2,5]=3\)。</p>
+<div class="note warn"><span class="tag">投影片勘誤</span>投影片第三項寫成「=11374」，正確是 \(4375+0+7000=11375\)；不影響答案 7125。</div>
+
+<h3 id="parens">還原括號</h3>
+<pre data-code="PRINT-OPTIMAL-PARENS(s, i, j)">
+if i == j
+    print "A"_i
+else print "("
+    PRINT-OPTIMAL-PARENS(s, i, s[i, j])
+    PRINT-OPTIMAL-PARENS(s, s[i, j] + 1, j)
+    print ")"
+</pre>
+<p>例子中 \(s[1,6]=3\) → \((A_1A_2A_3)(A_4A_5A_6)\)；\(s[1,3]=1\) → \(A_1(A_2A_3)\)；\(s[4,6]=5\) → \((A_4A_5)A_6\)。最佳解 <mark>\(((A_1(A_2A_3))((A_4A_5)A_6))\)</mark>，15125 次。</p>
+
+<h2 id="memo" data-short="Top-down + memoization">Top-down：memoization</h2>
+<p>只要對 <code>RECURSIVE-MATRIX-CHAIN</code> 做小改動，就能得到 \(O(n^3)\) 的 memoized 版本：</p>
+<div class="two">
+<pre data-code="MEMOIZED-MATRIX-CHAIN(p)">
+n = p.length - 1
+for i = 1 to n
+    for j = i to n
+        m[i, j] = ∞          // ∞ = 還沒算
+return LOOKUP-CHAIN(m, p, 1, n)
+</pre>
+<pre data-code="LOOKUP-CHAIN(m, p, i, j)">
+if m[i, j] < ∞               // 算過了
+    return m[i, j]
+if i == j
+    m[i, j] = 0
+else for k = i to j - 1
+    q = LC(m,p,i,k) + LC(m,p,k+1,j) + p[i-1]·p[k]·p[j]
+    if q < m[i, j]
+        m[i, j] = q
+return m[i, j]
+</pre>
+</div>
+<ul>
+  <li><strong>為什麼是 \(O(n^3)\)</strong>：每個 \(m[i,j]\) 只會在第一次被呼叫時真的計算（之後都在第 1–2 行就回傳）。\(\Theta(n^2)\) 個表格項目，每個計算時跑 \(O(n)\) 圈迴圈 → \(O(n^3)\)。查表的呼叫也是 \(O(n^3)\) 次，每次 \(O(1)\)。</li>
+  <li>在上面的遞迴樹打勾「用 memoization」可以看到樹被剪成多小。</li>
+</ul>
+
+<h3>Memoization vs. bottom-up</h3>
+<table class="plain">
+  <tr><th></th><th>Top-down + memo</th><th>Bottom-up</th></tr>
+  <tr><td>寫法</td><td>照遞迴式寫，加上查表 / 存表</td><td>自己決定填表順序（依賴的格子先填）</td></tr>
+  <tr><td>會算哪些子問題</td><td>只算真的需要的</td><td>全部都算</td></tr>
+  <tr><td>常數</td><td>有遞迴呼叫的額外開銷</td><td>迴圈，常數通常較小</td></tr>
+  <tr><td>漸近時間</td><td colspan="2">通常相同（本題都是 \(\Theta(n^3)\)）</td></tr>
+</table>
+
+<h2 id="practice" data-short="本講練習">本講練習</h2>
+<ul>
+  <li><a href="elements.html">何時用 DP：兩大性質、最短 vs 最長路徑</a>（這一講的後半段）</li>
+  <li>課本習題：<a href="exercises.html#ex-14-2-1">14.2-1</a>、<a href="exercises.html#ex-14-2-3">14.2-3</a>、<a href="exercises.html#ex-14-2-5">14.2-5</a>、<a href="exercises.html#ex-14-3-2">14.3-2</a>、<a href="exercises.html#ex-14-3-3">14.3-3</a>、<a href="exercises.html#ex-14-3-4">14.3-4</a>、<a href="exercises.html#ex-14-3-5">14.3-5</a></li>
+  <li>作業：<a href="practice.html#mwis">樹上的最大權獨立集</a>、<a href="practice.html#tiling">k × n 棋盤鋪 k × 1 長條</a></li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

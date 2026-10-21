@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>課本習題 14.x 詳解 · Dynamic Programming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-rod.js"></script>
+<script defer src="../assets/w-mcm.js"></script>
+<script defer src="../assets/w-lcs.js"></script>
+<script defer src="../assets/w-obst.js"></script>
+<script defer src="../assets/w-misc.js"></script>
+<script defer src="../assets/w-practice.js"></script>
+<script defer src="../assets/w-ex.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="exercises"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Practice at Home · CLRS 4th ed. Chapter 14</p>
+<h1>課本習題詳解</h1>
+<p class="lede">投影片指定的 16 題課本習題。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p><button type="button" id="toggle-all">全部展開</button></p>
+
+<h2 id="s14-1" data-short="14.1 Rod cutting">14.1 Rod cutting</h2>
+
+<section class="ex" id="ex-14-1-2">
+<header><span class="id">14.1-2</span><span class="t">「密度優先」的貪婪法不一定最佳</span></header>
+<div class="q">定義長度 \(i\) 的密度為 \(p_i/i\)。貪婪策略：每次切下密度最大的那一段（長度 \(i\le\) 剩餘長度），剩下的繼續用同樣策略。舉反例說明它不一定最佳。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>想法</strong>：貪婪法只看「單位價格」，但切下最高密度那段後，剩下的長度可能很難賣。讓密度最高的長度 3 剩下一段很便宜的 1。</li>
+  <li><strong>反例</strong>：\(n=4\)，\(p_1=1, p_2=20, p_3=33, p_4=36\)。密度分別是 1、10、<strong>11</strong>、9。</li>
+  <li><strong>貪婪</strong>：先切密度最高的長度 3（33 元），剩 1 只能賣 1 元 → 總共 <strong>34</strong>。</li>
+  <li><strong>最佳</strong>：切成 2 + 2 → 20 + 20 = <strong>40</strong> &gt; 34。所以貪婪法不一定最佳。∎</li>
+</ol>
+<div data-widget="rodGreedy"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-1-3">
+<header><span class="id">14.1-3</span><span class="t">每切一刀有固定成本 c</span></header>
+<div class="q">每切一刀要付固定成本 \(c\)，收益 = 各段價格總和 − 刀費。設計這個變形的 DP 演算法。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>子問題不變</strong>：\(r_j\) = 長 \(j\) 的鋼條扣掉刀費後的最大收益。</li>
+  <li><strong>選擇</strong>：第一段長 \(i\)。若 \(i=j\)（不切）沒有刀費；若 \(i&lt;j\) 要切一刀，付 \(c\)，剩下的 \(j-i\) 自己的刀費已經算在 \(r_{j-i}\) 裡。
+    $$r_j=\max\Bigl(p_j,\ \max_{1\le i\lt j}\{\,p_i+r_{j-i}-c\,\}\Bigr),\qquad r_0=0$$</li>
+  <li><strong>注意</strong>：不能寫成 \(\max_{1\le i\le j}\{p_i+r_{j-i}\}-c\)，那樣連「不切」也被扣了刀費。</li>
+  <li><strong>時間</strong>仍然 \(\Theta(n^2)\)。</li>
+</ol>
+<pre data-code="MODIFIED-CUT-ROD(p, n, c)">
+let r[0:n] be a new array
+r[0] = 0
+for j = 1 to n
+    q = p[j]                      // 不切：沒有刀費
+    for i = 1 to j - 1
+        q = max(q, p[i] + r[j - i] - c)
+    r[j] = q
+return r[n]
+</pre>
+<div data-widget="rodCost"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-1-4">
+<header><span class="id">14.1-4</span><span class="t">迴圈只跑到 ⌊n/2⌋</span></header>
+<div class="q">把 CUT-ROD 和 MEMOIZED-CUT-ROD-AUX 的 for 迴圈改成只跑到 \(\lfloor n/2\rfloor\)。還需要改什麼？執行時間有什麼影響？</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>為什麼可以只跑一半</strong>：用「切成兩段、兩段都用最佳解」的拆法（\(r_n=\max\{p_n, r_1+r_{n-1}, \dots\}\)），\(r_i+r_{n-i}\) 和 \(r_{n-i}+r_i\) 是同一個值，只要試 \(i\le\lfloor n/2\rfloor\)。</li>
+  <li><strong>需要的改動</strong>：
+    <ul>
+      <li>左段不能再用 \(p_i\)（「不再切」），要改成 \(r_i\)（左段也可以切）：候選變成 \(r_i+r_{n-i}\)。</li>
+      <li>「完全不切」的情況 \(p_n\) 不會被迴圈涵蓋（迴圈只到 \(n/2\)），要另外處理：先令 \(q=p_n\)。</li>
+    </ul></li>
+  <li><strong>CUT-ROD</strong>：每圈遞迴兩次，呼叫次數仍是指數級 \(\Theta(2^n)\)，見下表。</li>
+  <li><strong>MEMOIZED</strong>：每個子問題仍只算一次，迴圈長度減半，但每圈查兩個表格 → 仍然 \(\Theta(n^2)\)，常數大致相同。</li>
+</ol>
+<pre data-code="CUT-ROD-HALF(p, n)">
+if n == 0
+    return 0
+q = p[n]                          // 不切
+for i = 1 to ⌊n/2⌋
+    q = max(q, CUT-ROD-HALF(p, i) + CUT-ROD-HALF(p, n - i))
+return q
+</pre>
+<div data-widget="rodHalf"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-1-6">
+<header><span class="id">14.1-6</span><span class="t">Fibonacci 的 O(n) DP 與 subproblem graph</span></header>
+<div class="q">給一個 \(O(n)\) 的 DP 演算法計算第 \(n\) 個 Fibonacci 數（\(F_0=0, F_1=1, F_i=F_{i-1}+F_{i-2}\)）。畫出 subproblem graph，它有幾個頂點、幾條邊？</div>
+<details><summary>詳解</summary><div class="a">
+<pre data-code="FIB(n)">
+if n ≤ 1
+    return n
+let f[0:n] be a new array
+f[0] = 0;  f[1] = 1
+for i = 2 to n
+    f[i] = f[i - 1] + f[i - 2]
+return f[n]
+</pre>
+<ul>
+  <li><strong>時間</strong>：迴圈 \(n-1\) 次，每次 \(O(1)\) → \(O(n)\)。（只保留最後兩個值，空間 \(O(1)\)。）</li>
+  <li><strong>Subproblem graph</strong>：頂點 \(F_0, F_1, \dots, F_n\)，共 <strong>\(n+1\)</strong> 個；每個 \(F_i\)（\(i\ge2\)）有兩條邊指向 \(F_{i-1}\)、\(F_{i-2}\)，共 <strong>\(2(n-1)\)</strong> 條邊（\(n\ge1\)）。</li>
+  <li>時間 = \(O(V+E)=O(n)\)，和上面的分析一致。</li>
+</ul>
+<div data-widget="fibGraph"></div>
+</div></details>
+</section>
+
+<h2 id="s14-2" data-short="14.2 Matrix-chain">14.2 Matrix-chain multiplication</h2>
+
+<section class="ex" id="ex-14-2-1">
+<header><span class="id">14.2-1</span><span class="t">找出最佳括號</span></header>
+<div class="q">維度序列 \(\langle 5, 10, 3, 12, 5, 50, 6\rangle\)，找出最佳括號方式。</div>
+<details><summary>詳解</summary><div class="a">
+<p>6 個矩陣：\(A_1: 5\times10,\ A_2: 10\times3,\ A_3: 3\times12,\ A_4: 12\times5,\ A_5: 5\times50,\ A_6: 50\times6\)。</p>
+<ol class="steps">
+  <li><strong>長度 2</strong>：\(m[1,2]=5\cdot10\cdot3=150\)，\(m[2,3]=10\cdot3\cdot12=360\)，\(m[3,4]=3\cdot12\cdot5=180\)，\(m[4,5]=12\cdot5\cdot50=3000\)，\(m[5,6]=5\cdot50\cdot6=1500\)。</li>
+  <li><strong>長度 3</strong>：例如 \(m[1,3]=\min\{0+360+5\cdot10\cdot12,\ 150+0+5\cdot3\cdot12\}=\min\{960, 330\}=330\)（\(k=2\)）。同理 \(m[2,4]=330, m[3,5]=930, m[4,6]=1860\)。</li>
+  <li><strong>長度 4、5</strong>：\(m[1,4]=405, m[2,5]=2430, m[3,6]=1770\)；\(m[1,5]=1655, m[2,6]=1950\)。</li>
+  <li><strong>長度 6</strong>：
+    $$m[1,6]=\min_k\{\dots\}=m[1,2]+m[3,6]+5\cdot3\cdot6=150+1770+90=\mathbf{2010}\quad(k=2)$$</li>
+  <li><strong>還原</strong>：\(s[1,6]=2\) → \((A_1A_2)(A_3\cdots A_6)\)；\(s[3,6]=4\) → \((A_3A_4)(A_5A_6)\)。</li>
+</ol>
+<p>答案：<mark>\(((A_1A_2)((A_3A_4)(A_5A_6)))\)</mark>，共 2010 次純量乘法。下面可以逐步驗證每一格：</p>
+<div data-widget="mcmBottomUp" data-dims="5 10 3 12 5 50 6"></div>
+<table class="plain small">
+  <tr><th>\(m[i,j]\)</th><th class="num">j=1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th></tr>
+  <tr><th>i=1</th><td class="num">0</td><td class="num">150</td><td class="num">330</td><td class="num">405</td><td class="num">1655</td><td class="num">2010</td></tr>
+  <tr><th>2</th><td></td><td class="num">0</td><td class="num">360</td><td class="num">330</td><td class="num">2430</td><td class="num">1950</td></tr>
+  <tr><th>3</th><td></td><td></td><td class="num">0</td><td class="num">180</td><td class="num">930</td><td class="num">1770</td></tr>
+  <tr><th>4</th><td></td><td></td><td></td><td class="num">0</td><td class="num">3000</td><td class="num">1860</td></tr>
+  <tr><th>5</th><td></td><td></td><td></td><td></td><td class="num">0</td><td class="num">1500</td></tr>
+</table>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-2-3">
+<header><span class="id">14.2-3</span><span class="t">用 substitution method 證明 Ω(2ⁿ)</span></header>
+<div class="q">證明括號方式數的遞迴式 \(P(n)=\sum_{k=1}^{n-1}P(k)P(n-k)\)（\(P(1)=1\)）的解是 \(\Omega(2^n)\)。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>猜測</strong>：\(P(n)\ge 2^{n-2}\)（\(n\ge2\)），也就是 \(\Omega(2^n)\)。先檢查小的值：\(P(2)=1=2^0\)，\(P(3)=2=2^1\)，\(P(4)=5\ge4\)，\(P(5)=14\ge8\) ✓。</li>
+  <li><strong>歸納假設</strong>：對所有 \(2\le k&lt;n\)，\(P(k)\ge2^{k-2}\)；另外 \(P(1)=1\)。</li>
+  <li><strong>只取兩項就夠</strong>：所有項都非負，取 \(k=1\) 與 \(k=n-1\) 兩項（\(n\ge4\) 時兩項不同）：
+    $$P(n)\ge P(1)P(n-1)+P(n-1)P(1)=2P(n-1)\ge2\cdot2^{n-3}=2^{n-2}.$$</li>
+  <li><strong>結論</strong>：\(P(n)\ge2^{n-2}=\tfrac14\cdot2^n\)，所以 \(P(n)=\Omega(2^n)\)。∎</li>
+</ol>
+<div class="note"><span class="tag">另一個版本</span>投影片把同一個方法用在 RECURSIVE-MATRIX-CHAIN 的時間 \(T(n)\ge2\sum_{i=1}^{n-1}T(i)+n\)，證明 \(T(n)\ge2^{n-1}\)。完整推導在 <a href="matrix-chain.html#omega">Matrix-Chain 頁</a>。</div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-2-5">
+<header><span class="id">14.2-5</span><span class="t">表格被讀取的總次數 = (n³ − n)/3</span></header>
+<div class="q">令 \(R(i,j)\) 為 MATRIX-CHAIN-ORDER 計算其他格子時讀取 \(m[i,j]\) 的次數。證明 \(\sum_{i=1}^{n}\sum_{j=i}^{n}R(i,j)=\dfrac{n^3-n}{3}\)。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>換個角度數</strong>：與其問「每格被讀幾次」，不如問「每次計算讀幾格」。計算 \(m[i,j]\)（長度 \(l=j-i+1\)）時，迴圈 \(k=i..j-1\) 共 \(l-1\) 圈，每圈讀 \(m[i,k]\) 和 \(m[k+1,j]\) 兩格 → 讀 \(2(l-1)\) 次。</li>
+  <li><strong>長度 \(l\) 的格子有 \(n-l+1\) 個</strong>，所以
+    $$\sum R(i,j)=\sum_{l=2}^{n}(n-l+1)\cdot2(l-1)=2\sum_{t=1}^{n-1}(n-t)\,t\qquad(t=l-1).$$</li>
+  <li><strong>用 \(\sum t=\frac{(n-1)n}{2}\)、\(\sum t^2=\frac{(n-1)n(2n-1)}{6}\)</strong>：
+    $$2\Bigl[n\cdot\frac{(n-1)n}{2}-\frac{(n-1)n(2n-1)}{6}\Bigr]=\frac{n(n-1)\bigl(3n-(2n-1)\bigr)}{3}=\frac{n(n-1)(n+1)}{3}=\frac{n^3-n}{3}.\ ∎$$</li>
+</ol>
+<div data-widget="mcmRefs"></div>
+</div></details>
+</section>
+
+<h2 id="s14-3" data-short="14.3 Elements of DP">14.3 Elements of dynamic programming</h2>
+
+<section class="ex" id="ex-14-3-2">
+<header><span class="id">14.3-2</span><span class="t">Merge sort 的遞迴樹：memoization 沒用</span></header>
+<div class="q">畫出 MERGE-SORT 在 16 個元素的陣列上的遞迴樹，解釋為什麼 memoization 無法加速像 merge sort 這樣好的 divide-and-conquer 演算法。</div>
+<details><summary>詳解</summary><div class="a">
+<div data-widget="mergeTree"></div>
+<ul>
+  <li>每個節點是一個子陣列區間 \(A[p..r]\)，樹中 <strong>31 個節點、31 個不同的區間</strong>，沒有任何子問題出現兩次。</li>
+  <li>Memoization 只有在「同一個子問題被問第二次」時才省時間。Merge sort <strong>沒有 overlapping subproblems</strong>，每次遞迴都產生全新的子問題，所以查表永遠查不到，只是白白多花記憶體。</li>
+  <li>換句話說：merge sort 有 optimal substructure 類似的結構（大問題由子問題組成），但缺少 DP 的第二個條件。</li>
+</ul>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-3-3">
+<header><span class="id">14.3-3</span><span class="t">改成「最多」乘法次數，還有 optimal substructure 嗎？</span></header>
+<div class="q">矩陣鏈乘的反向版本：加括號使純量乘法次數<strong>最多</strong>。這個問題有 optimal substructure 嗎？</div>
+<details><summary>詳解</summary><div class="a">
+<p><strong>有。</strong></p>
+<ol class="steps">
+  <li>設 \(A_i\cdots A_j\) 的「最大成本」括號，最後一次相乘切在 \(k\)。總成本 = 左半成本 + 右半成本 + \(p_{i-1}p_kp_j\)。</li>
+  <li>最後一項只和 \(i, k, j\) 有關；左右兩半的括號方式<strong>互不影響</strong>（子問題獨立，不共用任何資源）。</li>
+  <li>Cut-and-paste：若左半不是「最大成本」的括號，換成更大的，總成本變大，矛盾。右半同理。</li>
+  <li>所以把 min 換成 max 即可：\(m[i,j]=\max_{i\le k\lt j}\{m[i,k]+m[k+1,j]+p_{i-1}p_kp_j\}\)。</li>
+</ol>
+<p>和最長簡單路徑不同：那裡的子問題會搶同一批頂點，這裡不會。</p>
+<div data-widget="mcmBottomUp" data-dims="30 35 15 5 10 20 25" data-mode="max"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-3-4">
+<header><span class="id">14.3-4</span><span class="t">先選 k 再解子問題的貪婪法</span></header>
+<div class="q">有人主張不用解完所有子問題：在 \(A_i\cdots A_j\) 中，直接選讓 \(p_{i-1}p_kp_j\) 最小的 \(k\) 當分割點，再遞迴處理兩邊。找一個讓這個貪婪法得到非最佳解的例子。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>反例</strong>：\(\langle1,2,3,4\rangle\)，即 \(A_1: 1\times2,\ A_2: 2\times3,\ A_3: 3\times4\)。</li>
+  <li><strong>貪婪</strong>：\(k=1\) 時 \(p_0p_1p_3=1\cdot2\cdot4=8\)；\(k=2\) 時 \(p_0p_2p_3=1\cdot3\cdot4=12\)。選 \(k=1\) → \(A_1(A_2A_3)\)：先算 \(A_2A_3\) 要 \(2\cdot3\cdot4=24\)，再加 8 → <strong>32</strong>。</li>
+  <li><strong>最佳</strong>：\((A_1A_2)A_3\)：\(1\cdot2\cdot3+1\cdot3\cdot4=6+12=\mathbf{18}\)。</li>
+  <li><strong>原因</strong>：貪婪法只看「最後一次相乘」的成本，忽略了這個選擇讓子問題變得多貴。</li>
+</ol>
+<div data-widget="mcmGreedy"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-3-5">
+<header><span class="id">14.3-5</span><span class="t">限量的鋼條：optimal substructure 失效</span></header>
+<div class="q">鋼條切割加上限制：長度 \(i\) 的段最多只能切出 \(l_i\) 段。說明 14.1 節的 optimal substructure 不再成立。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>原本的論證</strong>：切下第一段 \(i\) 後，剩下的 \(n-i\) 用「長 \(n-i\) 的最佳解」，兩者獨立。</li>
+  <li><strong>加了限制之後</strong>：第一段用掉了一個長度 \(i\) 的名額，剩下那段可用的名額就變了。「長 \(n-i\) 的最佳解」可能也想用長度 \(i\)，名額卻不夠——子問題<strong>不再獨立</strong>，它們共用同一批「名額」資源。</li>
+  <li><strong>具體例子</strong>：用投影片價格，\(n=4\)，\(l_2=1\)（長度 2 最多一段），其他不限。
+    <ul>
+      <li>無限制時，\(r_2=5\)（不切），\(r_4=10\)（2 + 2）。</li>
+      <li>套原本的遞迴式：\(r_4\ge p_2+r_2=5+5=10\)，但 2 + 2 違反 \(l_2=1\)，<strong>不是合法解</strong>。</li>
+      <li>實際最佳：4（9 元）或 1 + 3（1 + 8 = 9 元）→ 9。最佳解 1 + 3 的子段「長 3」用的是 \(r_3=8\)，這次碰巧合法；但遞迴式本身已經不能保證正確。</li>
+    </ul></li>
+  <li><strong>結論</strong>：子問題「長 \(j\) 的最佳解」不足以描述狀態，還需要知道剩下的名額，所以原本的 optimal substructure 不成立（和最長簡單路徑同樣的問題：子問題互相搶資源）。</li>
+</ol>
+</div></details>
+</section>
+
+<h2 id="s14-4" data-short="14.4 LCS">14.4 Longest common subsequence</h2>
+
+<section class="ex" id="ex-14-4-2">
+<header><span class="id">14.4-2</span><span class="t">不用 b 表，在 O(m + n) 時間印出 LCS</span></header>
+<div class="q">只用完成的 \(c\) 表和原本的 \(X, Y\)（不用 \(b\) 表），在 \(O(m+n)\) 時間重建一個 LCS。</div>
+<details><summary>詳解</summary><div class="a">
+<p>\(b[i,j]\) 只是記錄「\(c[i,j]\) 從哪來」，而這件事可以在 \(O(1)\) 時間從 \(c\) 表和 \(x_i, y_j\) 重新判斷：</p>
+<pre data-code="PRINT-LCS-NO-B(c, X, Y, i, j)">
+if i == 0 or j == 0
+    return
+if x_i == y_j                          // 原本的 "↖"
+    PRINT-LCS-NO-B(c, X, Y, i - 1, j - 1)
+    print x_i
+elseif c[i - 1, j] ≥ c[i, j - 1]       // 原本的 "↑"
+    PRINT-LCS-NO-B(c, X, Y, i - 1, j)
+else                                   // 原本的 "←"
+    PRINT-LCS-NO-B(c, X, Y, i, j - 1)
+</pre>
+<ul>
+  <li><strong>正確性</strong>：判斷條件和 LCS-LENGTH 第 9、12 行一模一樣，所以走的路徑和用 \(b\) 表完全相同。</li>
+  <li><strong>時間</strong>：每次遞迴 \(i\) 或 \(j\) 至少減 1，最多 \(m+n\) 次，每次 \(O(1)\) → \(O(m+n)\)。</li>
+</ul>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-4-3">
+<header><span class="id">14.4-3</span><span class="t">Memoized 版本的 LCS-LENGTH</span></header>
+<div class="q">寫出 \(O(mn)\) 的 memoized LCS-LENGTH。</div>
+<details><summary>詳解</summary><div class="a">
+<div class="two">
+<pre data-code="MEMOIZED-LCS-LENGTH(X, Y)">
+m = X.length;  n = Y.length
+let c[0:m, 0:n] be a new table
+for i = 0 to m
+    for j = 0 to n
+        c[i, j] = -1          // -1 = 還沒算
+return LOOKUP-LCS(c, X, Y, m, n)
+</pre>
+<pre data-code="LOOKUP-LCS(c, X, Y, i, j)">
+if c[i, j] > -1               // 算過了
+    return c[i, j]
+if i == 0 or j == 0
+    c[i, j] = 0
+elseif x_i == y_j
+    c[i, j] = LOOKUP-LCS(c, X, Y, i-1, j-1) + 1
+else c[i, j] = max(LOOKUP-LCS(c, X, Y, i-1, j),
+                   LOOKUP-LCS(c, X, Y, i, j-1))
+return c[i, j]
+</pre>
+</div>
+<ul>
+  <li><strong>時間</strong>：每格 \(c[i,j]\) 最多真的計算一次，計算時最多再發出 2 個呼叫，所以總呼叫數 \(\le 1+2(m+1)(n+1)\)，每次 \(O(1)\)（不算遞迴） → \(O(mn)\)。初始化也是 \(O(mn)\)。</li>
+  <li>它常常只會碰到一部分的格子：</li>
+</ul>
+<div data-widget="lcsMemo"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-4-5">
+<header><span class="id">14.4-5</span><span class="t">O(n²) 的最長遞增子序列</span></header>
+<div class="q">給 \(O(n^2)\) 演算法，找 \(n\) 個數的序列中最長的 monotonically increasing subsequence。</div>
+<details><summary>詳解</summary><div class="a">
+<p>就是 <a href="practice.html#lis">Practice 的 LIS</a>。課本的 “monotonically increasing” 允許相等（\(\le\)），所以條件改成 \(A[j]\le A[i]\)。</p>
+<pre data-code="LIS(A, n)">
+for i = 1 to n
+    L[i] = 1;  prev[i] = NIL
+    for j = 1 to i - 1
+        if A[j] ≤ A[i] and L[j] + 1 > L[i]
+            L[i] = L[j] + 1;  prev[i] = j
+best = argmax_i L[i]
+// 沿 prev 從 best 往回走，倒過來印就是答案
+</pre>
+<ul>
+  <li><strong>正確性</strong>：以 \(A[i]\) 結尾的最長子序列，拿掉 \(A[i]\) 後一定是「以某個 \(A[j]\le A[i]\)、\(j&lt;i\) 結尾」的最長子序列（cut-and-paste）。</li>
+  <li><strong>時間</strong> \(\Theta(n^2)\)，<strong>空間</strong> \(\Theta(n)\)。</li>
+  <li><strong>另解</strong>：令 \(A'\) = \(A\) 排序後的結果，答案 = LCS\((A, A')\)，也是 \(O(n^2)\)。</li>
+</ul>
+<div data-widget="incSubseq" data-mode="len" data-a="3 1 4 1 5 9 2 6 5 3 5 8"></div>
+<p class="small muted">互動元件用的是嚴格遞增（\(&lt;\)）；改成 \(\le\) 只需要改比較條件。</p>
+</div></details>
+</section>
+
+<h2 id="s14-5" data-short="14.5 Optimal BST">14.5 Optimal binary search trees</h2>
+
+<section class="ex" id="ex-14-5-2">
+<header><span class="id">14.5-2</span><span class="t">7 個 keys 的最佳 BST</span></header>
+<div class="q">求 \(n=7\)、下列機率的最佳 BST 的成本與結構。</div>
+<div class="q">
+<table class="plain small">
+  <tr><th>\(i\)</th><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td></tr>
+  <tr><th>\(p_i\)</th><td></td><td class="num">0.04</td><td class="num">0.06</td><td class="num">0.08</td><td class="num">0.02</td><td class="num">0.10</td><td class="num">0.12</td><td class="num">0.14</td></tr>
+  <tr><th>\(q_i\)</th><td class="num">0.06</td><td class="num">0.06</td><td class="num">0.06</td><td class="num">0.06</td><td class="num">0.05</td><td class="num">0.05</td><td class="num">0.05</td><td class="num">0.05</td></tr>
+</table>
+</div>
+<details><summary>詳解</summary><div class="a">
+<p><strong>答案：期望成本 3.12</strong>，結構如下（用 root 表遞迴還原）：</p>
+<ul class="mono small">
+  <li>k5 是 root</li>
+  <li>k2 是 k5 的左小孩；k1 是 k2 的左小孩（d0、d1 是 k1 的小孩）；k3 是 k2 的右小孩</li>
+  <li>d2 是 k3 的左小孩；k4 是 k3 的右小孩（d3、d4 是 k4 的小孩）</li>
+  <li>k7 是 k5 的右小孩；k6 是 k7 的左小孩（d5、d6 是 k6 的小孩）；d7 是 k7 的右小孩</li>
+</ul>
+<p>按 ▶ 可以看每一格怎麼算，最後會畫出整棵樹並逐層算出 3.12：</p>
+<div data-widget="obstTable" data-preset="ex"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-14-5-3">
+<header><span class="id">14.5-3</span><span class="t">不存 w 表，每次直接加總</span></header>
+<div class="q">如果不維護 \(w[i,j]\) 表，而是在第 9 行用定義 \(w(i,j)=\sum_{l=i}^{j}p_l+\sum_{l=i-1}^{j}q_l\) 直接算，OPTIMAL-BST 的漸近時間會改變嗎？</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li>直接加總 \(w(i,j)\) 要 \(\Theta(j-i+1)\) 時間（\(2(j-i)+3\) 項）。</li>
+  <li>第 9 行在 \(r\) 迴圈<strong>外面</strong>，每個 \((i,j)\) 只執行一次。額外成本：
+    $$\sum_{l=1}^{n}(n-l+1)\cdot\Theta(l)=\Theta(n^3).$$</li>
+  <li>原本的演算法本來就是 \(\Theta(n^3)\)（\(r\) 迴圈），多一個 \(\Theta(n^3)\) 不改變漸近時間：<strong>仍然 \(\Theta(n^3)\)</strong>，只是常數變大。</li>
+  <li><strong>注意</strong>：如果把直接加總放在 \(r\) 迴圈<em>裡面</em>（每試一個 root 就重算一次），額外成本就是 \(\sum(n-l+1)\cdot l\cdot\Theta(l)=\Theta(n^4)\)。</li>
+</ol>
+</div></details>
+</section>
+
+</article>
+<footer class="site">題目改寫自 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章習題，詳解為自行整理。</footer>
+</main>
+</div>
+<script>
+  document.getElementById('toggle-all').addEventListener('click', function () {
+    var all = document.querySelectorAll('.ex details');
+    var open = this.textContent === '全部展開';
+    all.forEach(function (d) { d.open = open; });
+    this.textContent = open ? '全部收合' : '全部展開';
+  });
+</script>
+</body>
+</html>

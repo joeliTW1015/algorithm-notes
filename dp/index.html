@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch14 Dynamic Programming · 互動筆記</title>
+<meta name="description" content="演算法課 Ch14 Dynamic Programming 互動式筆記：Rod cutting、Matrix-chain、LCS、Optimal BST，逐步填表動畫與習題詳解。">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-hub.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="hub"></aside>
+<main>
+<article class="prose">
+
+<div class="hero wide">
+  <div>
+    <p class="eyebrow">Chapter 14 · Dynamic Programming</p>
+    <h1>把遞迴<span class="hl">攤平成一張表</span></h1>
+    <p class="lede">“Programming” 在這裡的意思是 tabular method。每個子問題只解一次，答案寫進表格，之後查表就好。右邊就是 LCS 的表，一格一格填，最後沿箭頭走回來。</p>
+    <p class="small muted">每一頁都有可以一步一步執行的互動表格（鍵盤 ← → 也能操作），以及投影片所有例題、作業和指定習題的詳解。</p>
+  </div>
+  <div data-widget="heroTable"></div>
+</div>
+
+<h2 id="map" data-short="主題地圖">主題地圖</h2>
+<div class="cards">
+  <a class="card" href="rod-cutting.html"><span class="k">Lecture 14-1</span><h3>Rod Cutting</h3><p>從 \(2^n\) 的遞迴到 \(\Theta(n^2)\) 的表；memoization vs bottom-up；subproblem graph；記錄選擇還原解。</p></a>
+  <a class="card" href="matrix-chain.html"><span class="k">Lecture 14-2</span><h3>Matrix-Chain</h3><p>括號怎麼加最省？Catalan number、區間 DP、\(\Theta(n^3)\) 填表、還原最佳括號。</p></a>
+  <a class="card" href="elements.html"><span class="k">Lecture 14-2</span><h3>何時用 DP</h3><p>Optimal substructure + overlapping subproblems；最短路徑可以、最長簡單路徑不行。</p></a>
+  <a class="card" href="lcs.html"><span class="k">Lecture 14-3</span><h3>LCS</h3><p>兩個前綴當子問題、↖↑← 箭頭表、回溯印出 LCS、\(\Theta(mn)\)。</p></a>
+  <a class="card" href="obst.html"><span class="k">Lecture 14-3</span><h3>Optimal BST</h3><p>有查詢機率的二元搜尋樹；e、w、root 三張表；為什麼要加 \(w_{i,j}\)。</p></a>
+  <a class="card" href="practice.html"><span class="k">練習</span><h3>Practice & 作業</h3><p>壽司、爬樓梯、LIS、樹上獨立集、k × n 鋪磚，全部附互動與詳解。</p></a>
+  <a class="card" href="exercises.html"><span class="k">練習</span><h3>課本習題</h3><p>14.1-2 到 14.5-3 共 16 題指定習題的完整推導。</p></a>
+  <a class="card" href="puzzles.html"><span class="k">思考題</span><h3>海盜分金 & 外遇村</h3><p>倒推法與歸納法：DP 思維的另一個樣子。</p></a>
+</div>
+
+<h2 id="recipe" data-short="DP 四步驟">設計 DP 的四個步驟</h2>
+<ol class="recipe">
+  <li><b>定義子問題</b>：找出 optimal substructure——做一個選擇之後，剩下的是哪些「同類型、更小」的問題？</li>
+  <li><b>寫遞迴式</b>：最佳值 = 在所有選擇中取 max / min（子問題的最佳值 + 這個選擇的成本），別忘了 base case。</li>
+  <li><b>決定計算順序</b>：bottom-up 讓被依賴的格子先填；或用 memoization 讓遞迴自己決定。</li>
+  <li><b>還原解</b>：另存每個子問題的最佳選擇（\(s\)、\(b\)、\(root\) 表），最後從答案那格往回追。</li>
+</ol>
+
+<h2 id="cheat" data-short="速查表">速查表</h2>
+<div class="wide scroll-x">
+<table class="plain" style="min-width:900px">
+  <tr><th>問題</th><th>子問題</th><th>遞迴式</th><th>填表順序</th><th>時間 / 空間</th><th>還原</th></tr>
+  <tr><td><a href="rod-cutting.html">Rod cutting</a></td><td>\(r_j\)：長 \(j\)</td><td>\(r_j=\max\limits_{1\le i\le j}(p_i+r_{j-i})\)，\(r_0=0\)</td><td>\(j=1..n\)</td><td>\(\Theta(n^2)\) / \(\Theta(n)\)</td><td>\(s[j]\)：第一段長度</td></tr>
+  <tr><td><a href="matrix-chain.html">Matrix-chain</a></td><td>\(m[i,j]\)：\(A_i..A_j\)</td><td>\(\min\limits_{i\le k\lt j}(m[i,k]+m[k+1,j]+p_{i-1}p_kp_j)\)，\(m[i,i]=0\)</td><td>依長度 \(l=2..n\)</td><td>\(\Theta(n^3)\) / \(\Theta(n^2)\)</td><td>\(s[i,j]\)：分割點 \(k\)</td></tr>
+  <tr><td><a href="lcs.html">LCS</a></td><td>\(c[i,j]\)：\(X_i, Y_j\) 前綴</td><td>相同：\(c[i-1,j-1]+1\)；不同：\(\max(c[i-1,j], c[i,j-1])\)</td><td>一列一列</td><td>\(\Theta(mn)\) / \(\Theta(mn)\)</td><td>\(b[i,j]\)：↖ ↑ ←</td></tr>
+  <tr><td><a href="obst.html">Optimal BST</a></td><td>\(e[i,j]\)：\(k_i..k_j\)</td><td>\(\min\limits_{i\le r\le j}(e[i,r-1]+e[r+1,j]+w[i,j])\)，\(e[i,i-1]=q_{i-1}\)</td><td>依長度 \(l=1..n\)</td><td>\(\Theta(n^3)\) / \(\Theta(n^2)\)</td><td>\(root[i,j]\)</td></tr>
+  <tr><td><a href="practice.html#lis">LIS</a></td><td>\(L[i]\)：以 \(A[i]\) 結尾</td><td>\(1+\max\{L[j]: j\lt i, A[j]\lt A[i]\}\)</td><td>\(i=1..n\)</td><td>\(\Theta(n^2)\) / \(\Theta(n)\)</td><td>\(prev[i]\)</td></tr>
+  <tr><td><a href="practice.html#mwis">樹上獨立集</a></td><td>\(in(v), out(v)\)</td><td>\(in=w(v)+\sum out(c)\)；\(out=\sum\max(in(c),out(c))\)</td><td>post-order</td><td>\(\Theta(n)\) / \(\Theta(n)\)</td><td>由根往下</td></tr>
+  <tr><td><a href="practice.html#tiling">k×n 鋪磚</a></td><td>\(f(n)\)</td><td>\(f(n)=f(n-1)+f(n-k)\)，\(f(0..k-1)=1\)</td><td>\(n\) 遞增</td><td>\(\Theta(n)\) / \(O(k)\)</td><td>—</td></tr>
+</table>
+</div>
+
+<h2 id="naive" data-short="直接遞迴的代價">直接遞迴會多慢？</h2>
+<table class="plain">
+  <tr><th>問題</th><th>直接遞迴</th><th>DP</th><th>為什麼差這麼多</th></tr>
+  <tr><td>Rod cutting</td><td>\(2^n\) 次呼叫</td><td>\(\Theta(n^2)\)</td><td>只有 \(n+1\) 種子問題</td></tr>
+  <tr><td>Matrix-chain</td><td>\(\Omega(2^n)\)</td><td>\(\Theta(n^3)\)</td><td>只有 \(\Theta(n^2)\) 種 \((i,j)\)</td></tr>
+  <tr><td>LCS</td><td>\(O(2^{m+n})\)</td><td>\(\Theta(mn)\)</td><td>只有 \((m+1)(n+1)\) 種前綴組合</td></tr>
+  <tr><td>Optimal BST</td><td>\(\Omega(3^n)\)</td><td>\(\Theta(n^3)\)</td><td>只有 \(\Theta(n^2)\) 種 \((i,j)\)</td></tr>
+</table>
+
+<h2 id="exam" data-short="考前檢查">考前檢查清單</h2>
+<ul>
+  <li>能用一句話定義子問題，並說明「做了什麼選擇、剩下哪些子問題」。</li>
+  <li>能寫出完整遞迴式，<strong>包括 base case</strong>。</li>
+  <li>能用 cut-and-paste 論證 optimal substructure。</li>
+  <li>能手動填一張小表，並<strong>回溯</strong>出解（括號、LCS 字串、BST 結構、切法）。</li>
+  <li>能分析時間：子問題數 × 每個子問題的選擇數；能說明直接遞迴為什麼是指數級（寫出 \(T(n)\) 遞迴式並代入）。</li>
+  <li>能分辨 memoization 和 bottom-up，各自的優缺點。</li>
+  <li>能舉出貪婪法失敗的反例（14.1-2、14.3-4），以及沒有 optimal substructure 的例子（最長簡單路徑、14.3-5）。</li>
+</ul>
+
+<h2 id="errata" data-short="投影片勘誤">投影片勘誤與對照</h2>
+<ul>
+  <li>Matrix-chain p.17：\(m[2,4]+m[5,5]+p_1p_4p_5\) 寫成「11374」，應為 11375（答案 7125 不變）。<a href="matrix-chain.html#m25">→</a></li>
+  <li>LCS 的箭頭表有 5 格平手卻畫成 ←，和「≥ 時往 ↑」的虛擬碼不一致，所以投影片回溯得到 DITY、照虛擬碼得到 DIRY；兩者都是正確的 LCS。<a href="lcs.html#arrows">→</a></li>
+  <li>Optimal BST 的 \(e(1,5)\)：root 選 \(k_2\) 和 \(k_4\) 都是 2.75，有兩棵最佳樹。<a href="obst.html#hand">→</a></li>
+  <li>投影片的 “Memorization” 應為 memoization；“Optima Substructure”、“Bottum-Up” 是拼字錯誤。</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片（Lecture 14-1、14-2、14-3）與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

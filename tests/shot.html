@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Test helper: shot.html?page=dp/lcs.html&bench=0&steps=30 loads a page, advances the
+     n-th step player, and scrolls to it, so a headless screenshot shows a mid-run state. -->
+<html><head><meta charset="utf-8"></head><body style="margin:0">
+<iframe id="f" style="border:0;width:100vw;height:100vh"></iframe>
+<script>
+  const q = new URLSearchParams(location.search);
+  const f = document.getElementById('f');
+  f.src = '../' + q.get('page');
+  f.onload = () => setTimeout(() => {
+    const d = f.contentDocument;
+    const benches = d.querySelectorAll('section.bench');
+    const b = benches[Number(q.get('bench') || 0)];
+    if (q.get('open')) d.querySelectorAll('details').forEach((x) => (x.open = true));
+    const next = b && [...b.querySelectorAll('.player button')].find((x) => x.getAttribute('aria-label') === '下一步');
+    for (let i = 0; i < Number(q.get('steps') || 0) && next; i++) next.click();
+    if (b) b.scrollIntoView();
+    f.contentWindow.scrollBy(0, Number(q.get('dy') || -10));
+  }, 1500);
+</script>
+</body></html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rod Cutting 鋼條切割 · Dynamic Programming I</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-rod.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-page="rod"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Lecture 14-1 · Dynamic Programming I</p>
+<h1>Rod Cutting 鋼條切割</h1>
+<p class="lede">用一個最簡單的最佳化問題，把 DP 的整套流程走一遍：先寫出遞迴式、發現它慢得離譜、找出原因（重複子問題），再用一張表把它變成 \(\Theta(n^2)\)。</p>
+
+<h2 id="what" data-short="DP 是什麼">DP 是什麼？</h2>
+<ul>
+  <li><strong>Divide-and-conquer</strong>：把大問題拆成<em>互不重疊</em>的小問題各自解決（例如 merge sort）。</li>
+  <li><strong>Dynamic programming</strong>：也是拆成小問題，但小問題之間<em>會重疊</em>——同一個子問題會被需要很多次。DP 的做法是每個子問題只解一次，把答案<mark>存進表格</mark>，之後直接查。</li>
+  <li>DP <strong>不是某一個演算法，而是一種技巧</strong>（跟 divide-and-conquer 一樣）。</li>
+  <li>名字裡的 “programming” 是早年「<strong>tabular method</strong>（填表法）」的意思，跟 linear programming 的 programming 同義，<em>不是</em>寫程式。</li>
+  <li>DP 通常用在 <strong>optimization problems</strong>：在很多可行解中找一個值最佳（最大或最小）的解。這一章兩種都會看到：rod cutting 是最大化、matrix-chain 和 optimal BST 是最小化。</li>
+</ul>
+
+<h2 id="problem" data-short="問題定義">問題定義</h2>
+<p>一根長 \(n\) 吋的鋼條，可以切成整數吋的小段（切割免費），每段依長度 \(i\) 賣 \(p_i\) 元。怎麼切收益最大？</p>
+<ul>
+  <li><strong>Input</strong>：長度 \(n\)，價格表 \(p_1, p_2, \dots, p_n\)。</li>
+  <li><strong>Output</strong>：最大收益 \(r_n\)＝各段價格總和的最大值（各段長度加起來要等於 \(n\)）。</li>
+</ul>
+<table class="plain">
+  <tr><th>長度 \(i\)</th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td><td class="num">9</td><td class="num">10</td></tr>
+  <tr><th>價格 \(p_i\)</th><td class="num">1</td><td class="num">5</td><td class="num">8</td><td class="num">9</td><td class="num">10</td><td class="num">17</td><td class="num">17</td><td class="num">20</td><td class="num">24</td><td class="num">30</td></tr>
+</table>
+<p>如果 \(p_n\) 夠大，最佳解可能是<strong>完全不切</strong>（例如 \(n=6\) 時直接賣 17 最好）。</p>
+
+<h2 id="brute" data-short="暴力枚舉">暴力法：有 \(2^{n-1}\) 種切法</h2>
+<p>長度 \(n\) 的鋼條有 \(n-1\) 個「1 吋刻度」，每個刻度都能選擇切或不切，所以總共 \(2^{n-1}\) 種切法。\(n=4\) 時有 8 種，最好的是切成 2+2，收益 \(p_2+p_2=10\)。</p>
+<div data-widget="rodAllCuts"></div>
+<p>用肉眼檢查前幾個長度，可以得到最佳收益 \(r_i\)：</p>
+<table class="plain">
+  <tr><th>\(i\)</th><th class="num">\(r_i\)</th><th>最佳切法</th></tr>
+  <tr><td>1</td><td class="num">1</td><td>1（不切）</td></tr>
+  <tr><td>2</td><td class="num">5</td><td>2（不切）</td></tr>
+  <tr><td>3</td><td class="num">8</td><td>3（不切）</td></tr>
+  <tr><td>4</td><td class="num">10</td><td>2 + 2</td></tr>
+  <tr><td>5</td><td class="num">13</td><td>2 + 3</td></tr>
+  <tr><td>6</td><td class="num">17</td><td>6（不切）</td></tr>
+  <tr><td>7</td><td class="num">18</td><td>1 + 6 或 2 + 2 + 3</td></tr>
+  <tr><td>8</td><td class="num">22</td><td>2 + 6</td></tr>
+</table>
+<p>指數級的枚舉在 \(n\) 稍大時就不可行，我們需要更聰明的方法。</p>
+
+<h2 id="recurrence" data-short="遞迴式">寫出遞迴式</h2>
+<h3>拆法一：切成兩段，兩段都用最佳解</h3>
+<p>最佳解要嘛不切（收益 \(p_n\)），要嘛在某處切一刀分成長 \(i\) 和 \(n-i\) 的兩段，兩段各自再用最佳切法：</p>
+<div class="formula">$$r_n=\max\{\,p_n,\; r_1+r_{n-1},\; r_2+r_{n-2},\; \dots,\; r_{n-1}+r_1\,\}$$</div>
+<p>這樣每個選擇會產生<strong>兩個</strong>子問題。</p>
+
+<h3>拆法二（比較簡單）：只看最左邊那一刀</h3>
+<p>任何一種切法都有「最左邊的一段」。假設它長 \(i\)：這一段<strong>不再切</strong>，直接賣 \(p_i\)；右邊剩下的長 \(n-i\) 那段才繼續用最佳切法。</p>
+<div class="formula">$$r_n=\max_{1\le i\le n}\{\,p_i + r_{n-i}\,\},\qquad r_0 = 0$$</div>
+<ul>
+  <li>\(i=n\) 的情況就是「不切」：\(p_n + r_0 = p_n\)。</li>
+  <li>每個選擇只剩<strong>一個</strong>子問題 \(r_{n-i}\)，比拆法一乾淨。後面的程式都用這個式子。</li>
+</ul>
+
+<h3 id="substructure">Optimal substructure</h3>
+<p>要解大小 \(n\) 的問題，只要解更小的子問題。切一刀之後剩下的部分，<mark>在最佳解中一定也是用最佳方式切的</mark>——否則把那部分換成更好的切法，整體收益會更高，矛盾（這叫 <strong>cut-and-paste</strong> 論證）。子問題之間彼此獨立，可以分開解。</p>
+
+<h2 id="naive" data-short="直接遞迴（很慢）">直接遞迴：CUT-ROD</h2>
+<pre data-code="CUT-ROD(p, n)">
+if n == 0
+    return 0
+q = -∞
+for i = 1 to n
+    q = max{q, p[i] + CUT-ROD(p, n - i)}
+return q
+</pre>
+<p>這個程式是對的，但非常慢：\(n=40\) 可能要跑超過一小時，而且 \(n\) 每加 1，時間大約變兩倍。原因是 <strong>CUT-ROD 一直重算已經算過的子問題</strong>。拉動下面的 \(n\)，看看遞迴樹長多大：</p>
+<div data-widget="rodTree"></div>
+
+<h3 id="tn">證明 \(T(n)=2^n\)（投影片上的 Exercise）</h3>
+<p>令 \(T(n)\) 為呼叫 <code>CUT-ROD(p, n)</code> 時，總共發生的呼叫次數（包含自己）。</p>
+<div class="formula">$$T(n)=\begin{cases}1 & n=0\\[2pt] 1+\displaystyle\sum_{j=0}^{n-1}T(j) & n\ge 1\end{cases}$$</div>
+<ol class="steps">
+  <li><strong>式子從哪來</strong>：「1」是這次呼叫本身；迴圈 \(i=1\dots n\) 分別呼叫 <code>CUT-ROD(p, n−i)</code>，也就是參數 \(j=n-i\) 跑過 \(0,1,\dots,n-1\) 各一次。</li>
+  <li><strong>Base case</strong>：\(T(0)=1=2^0\) ✓。</li>
+  <li><strong>Induction</strong>：假設 \(T(j)=2^j\) 對所有 \(j&lt;n\) 成立，則
+    $$T(n)=1+\sum_{j=0}^{n-1}2^j = 1+(2^n-1)=2^n.$$
+    （等比級數 \(1+2+\dots+2^{n-1}=2^n-1\)。）</li>
+  <li><strong>結論</strong>：呼叫次數是 \(2^n\)，執行時間是指數級。上面的互動圖中節點總數正好是 \(2^n\)。</li>
+</ol>
+<div class="note"><span class="tag">另一種看法</span>遞迴樹的每個「從根走到某節點的路徑」對應到一種切法的前綴，所以樹的葉子數 = \(2^{n-1}\) = 所有切法數，直接遞迴等於把所有切法都試過一遍。</div>
+
+<h2 id="dp" data-short="DP：存起來不重算">DP 解法：Store, don't recompute</h2>
+<ul>
+  <li>每個子問題只解<strong>一次</strong>，把答案存在表中，再遇到時直接查表。</li>
+  <li>這是 <strong>time-memory trade-off</strong>：多花記憶體，換來把指數時間降成多項式時間。</li>
+  <li>兩種寫法：<strong>top-down with memoization</strong>、<strong>bottom-up</strong>。</li>
+</ul>
+
+<div class="two">
+<div>
+<h3 style="margin-top:12px">1. Top-down with memoization</h3>
+<pre data-code="MEMOIZED-CUT-ROD(p, n)">
+let r[0:n] be a new array   // 存答案
+for i = 0 to n
+    r[i] = -∞               // -∞ 代表「還沒算」
+return MEMOIZED-CUT-ROD-AUX(p, n, r)
+</pre>
+<pre data-code="MEMOIZED-CUT-ROD-AUX(p, n, r)">
+if r[n] >= 0                // 算過了？
+    return r[n]             // 直接查表
+if n == 0
+    q = 0
+else q = -∞
+    for i = 1 to n
+        q = max{q, p[i] + MEMOIZED-CUT-ROD-AUX(p, n - i, r)}
+r[n] = q                    // 存起來
+return q
+</pre>
+<p class="small">保留原本遞迴的寫法，只是在「算之前先查表、算完存表」。</p>
+</div>
+<div>
+<h3 style="margin-top:12px">2. Bottom-up</h3>
+<pre data-code="BOTTOM-UP-CUT-ROD(p, n)">
+let r[0:n] be a new array
+r[0] = 0
+for j = 1 to n              // 長度由小到大
+    q = -∞
+    for i = 1 to j          // 第一刀的位置
+        q = max{q, p[i] + r[j - i]}
+    r[j] = q
+return r[n]
+</pre>
+<p class="small">按照子問題的大小由小到大解。算 \(r[j]\) 時，它需要的 \(r[0..j-1]\) 都已經在表裡了。</p>
+</div>
+</div>
+
+<h3 id="time">執行時間：兩者都是 \(\Theta(n^2)\)</h3>
+<ul>
+  <li>Bottom-up：雙層迴圈，內層跑 \(j\) 次，總共 \(\sum_{j=1}^{n} j = n(n+1)/2 = \Theta(n^2)\)。</li>
+  <li>Top-down：每個 \(r[n']\) 只會真的計算一次，計算 \(r[n']\) 時迴圈跑 \(n'\) 次，加總一樣是 \(\Theta(n^2)\)。</li>
+</ul>
+
+<h3 id="graph">Subproblem graph</h3>
+<ul>
+  <li>把遞迴樹中代表<strong>同一個子問題</strong>的節點全部合併成一個頂點，邊從 parent 指向 child，就是 subproblem graph（上面互動圖的右半部）。</li>
+  <li>頂點數 = 子問題數；計算一個子問題的時間通常和它的 <strong>out-degree</strong>（出邊數＝選擇數）成正比。</li>
+  <li>所以 DP 總時間通常 ≈ 頂點數 + 邊數。Rod cutting：\(n+1\) 個頂點、\(n(n+1)/2\) 條邊 → \(\Theta(n^2)\)。</li>
+  <li>Bottom-up 的計算順序就是 subproblem graph 的 <strong>reverse topological order</strong>（先算沒有出邊的子問題）。</li>
+</ul>
+
+<h2 id="extended" data-short="逐步填表 + 還原解">記錄選擇：EXTENDED-BOTTOM-UP-CUT-ROD</h2>
+<p>只知道最大收益還不夠，我們也想知道<em>怎麼切</em>。做法是多開一個表 \(s[j]\)，記下長度 \(j\) 的最佳<strong>第一刀</strong>長度，最後再用另一個程序把切法印出來。按 ▶ 一步步看（鍵盤 ← → 也可以）：</p>
+<div data-widget="rodBottomUp"></div>
+<pre data-code="PRINT-CUT-ROD-SOLUTION(p, n)">
+(r, s) = EXTENDED-BOTTOM-UP-CUT-ROD(p, n)
+while n > 0
+    print s[n]              // 印出第一段的長度
+    n = n - s[n]            // 剩下的部分繼續查
+</pre>
+<p>以投影片的價格為例，最後的表：</p>
+<table class="plain">
+  <tr><th>\(i\)</th><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td></tr>
+  <tr><th>\(r[i]\)</th><td class="num">0</td><td class="num">1</td><td class="num">5</td><td class="num">8</td><td class="num">10</td><td class="num">13</td><td class="num">17</td><td class="num">18</td><td class="num">22</td></tr>
+  <tr><th>\(s[i]\)</th><td></td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">2</td><td class="num">2</td><td class="num">6</td><td class="num">1</td><td class="num">2</td></tr>
+</table>
+<p>例如 \(n=7\)：\(s[7]=1\) → 切下 1，剩 6；\(s[6]=6\) → 整段賣。答案 1 + 6，收益 18。</p>
+
+<h2 id="properties" data-short="DP 的兩大性質">什麼問題適合 DP？</h2>
+<div class="note key"><span class="tag">重點</span>
+<ol style="margin:6px 0 0">
+  <li><strong>Optimal substructure</strong>（讓我們能寫出遞迴式）：問題的最佳解裡包含子問題的最佳解。</li>
+  <li><strong>Overlapping subproblems</strong>（讓我們能加速）：遞迴演算法會一再遇到同一個子問題。</li>
+</ol>
+</div>
+<p>只有 1 沒有 2：用 divide-and-conquer 就好（例如 merge sort，見<a href="exercises.html#ex-14-3-2">習題 14.3-2</a>）。只有 2 沒有 1：根本寫不出正確的遞迴式（見<a href="elements.html#longest">最長簡單路徑</a>）。</p>
+
+<h2 id="practice" data-short="本講練習">本講練習</h2>
+<ul>
+  <li>課本習題 <a href="exercises.html#ex-14-1-2">14.1-2</a>（貪婪法反例）、<a href="exercises.html#ex-14-1-3">14.1-3</a>（每刀有成本）、<a href="exercises.html#ex-14-1-4">14.1-4</a>（迴圈只跑到 n/2）、<a href="exercises.html#ex-14-1-6">14.1-6</a>（Fibonacci 與 subproblem graph）</li>
+  <li>Practice at Home：<a href="practice.html#sushi">壽司（遞增且總價最大）</a>、<a href="practice.html#stairs">爬樓梯（1/2/3 步）</a>、<a href="practice.html#lis">最長遞增子序列 LIS</a></li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch14 Dynamic Programming 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 14 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>
