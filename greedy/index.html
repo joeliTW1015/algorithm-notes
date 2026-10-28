@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ch15 Greedy Algorithms · 互動筆記</title>
+<meta name="description" content="演算法課 Ch15 Greedy Algorithms 互動式筆記：找零錢、活動選擇、背包問題、Huffman code，逐步動畫與習題詳解。">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-act.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="greedy" data-page="hub"></aside>
+<main>
+<article class="prose">
+
+<div class="hero wide">
+  <div>
+    <p class="eyebrow">Chapter 15 · Greedy Algorithms</p>
+    <h1>每一步都選<span class="hl">現在看起來最好的</span></h1>
+    <p class="lede">貪婪法不回頭、不比較所有子問題：做一個局部最佳的選擇，剩下一個子問題，再重複。難的不是寫程式，而是<strong>證明這樣做是對的</strong>——或者舉出反例說明它不對。右邊是活動選擇：依結束時間掃一遍就得到最佳解。</p>
+    <p class="small muted">每一頁都有可以一步一步執行的互動元件（鍵盤 ← → 也能操作），以及投影片所有例題、反例和指定習題的詳解。</p>
+  </div>
+  <div data-widget="heroActivity"></div>
+</div>
+
+<h2 id="map" data-short="主題地圖">主題地圖</h2>
+<div class="cards">
+  <a class="card" href="coin-change.html"><span class="k">p.3–8</span><h3>Coin Changing</h3><p>最直覺的貪婪：先拿最大的硬幣。什麼面額會失敗？貪婪法的兩大性質。</p></a>
+  <a class="card" href="activity.html"><span class="k">p.9–19</span><h3>Activity Selection</h3><p>最短、最早開始都會錯，最早結束才對；cut-and-paste 證明、\(O(n)\) 演算法。</p></a>
+  <a class="card" href="knapsack.html"><span class="k">p.20–24</span><h3>Knapsack</h3><p>可以切 → 密度優先就對；不能切（0-1）→ 貪婪失敗，要用 DP。</p></a>
+  <a class="card" href="huffman.html"><span class="k">p.25–43</span><h3>Huffman Code</h3><p>變長編碼、prefix code、編碼樹；每次合併最小的兩個，\(O(n\log n)\)。</p></a>
+  <a class="card" href="exercises.html"><span class="k">練習</span><h3>課本習題 & Problem 15-1</h3><p>投影片指定的 10 題習題、找零錢 Problem 15-1、貪婪求最大子陣列。</p></a>
+</div>
+
+<h2 id="recipe" data-short="設計步驟">設計並證明一個貪婪演算法</h2>
+<ol class="recipe">
+  <li><b>定一個貪婪選擇</b>：例如「最早結束的活動」、「密度最大的物品」、「頻率最小的兩個字元」。做了這個選擇後，只剩<strong>一個</strong>子問題。</li>
+  <li><b>證明 greedy-choice property</b>：<em>存在</em>某個最佳解包含這個貪婪選擇。標準手法是 <strong>exchange / cut-and-paste</strong>：拿任一最佳解 OPT，把它的某個元素換成貪婪選擇，證明仍然合法、而且不會變差。</li>
+  <li><b>證明 optimal substructure</b>：貪婪選擇 + 子問題的最佳解 = 原問題的最佳解。通常用反證：如果子問題的部分不是最佳，換成更好的就會讓整體比 OPT 更好，矛盾。</li>
+  <li><b>寫成迴圈並分析時間</b>：通常先排序（\(O(n\log n)\)）或用 priority queue，然後線性掃描。</li>
+</ol>
+
+<h2 id="cheat" data-short="速查表">速查表</h2>
+<div class="wide scroll-x">
+<table class="plain" style="min-width:900px">
+  <tr><th>問題</th><th>貪婪選擇</th><th>Greedy-choice 證明</th><th>子問題</th><th>時間</th><th>反例 / 注意</th></tr>
+  <tr><td><a href="coin-change.html">找零錢</a></td><td>不超過 \(x\) 的最大硬幣</td><td>只對特定面額成立（如 1, 2, 5, 10；1, 5, 10, 25；\(c^0..c^k\)）</td><td>找 \(x-c\) 元</td><td>\(O(k + \#\text{coins})\)</td><td>{1, 4, 5, 10} 找 8；一般面額用 DP \(O(nk)\)</td></tr>
+  <tr><td><a href="activity.html">活動選擇</a></td><td>最早結束的活動</td><td>把 OPT 中最早結束的換成 \(a_1\)</td><td>和它不衝突的活動</td><td>排好序 \(O(n)\)，否則 \(O(n\log n)\)</td><td>最短時間、最早開始、最少衝突都會錯</td></tr>
+  <tr><td><a href="knapsack.html">Fractional knapsack</a></td><td>密度 \(v/w\) 最大的，能拿多少拿多少</td><td>把 OPT 中其他物品的重量換成最密的</td><td>剩下的容量與物品</td><td>\(O(n\log n)\)，用 SELECT 可 \(O(n)\)</td><td>0-1 版本貪婪會錯（\(W=50\)：160 vs 220）</td></tr>
+  <tr><td><a href="huffman.html">Huffman code</a></td><td>頻率最小的兩個合併</td><td>最小的兩個可以是最深的兄弟葉子（swap）</td><td>把 \(c, c'\) 換成 \(f_c+f_{c'}\) 的新字元</td><td>\(O(n\log n)\)（min-heap）</td><td>同頻率時樹不唯一，但成本一樣</td></tr>
+</table>
+</div>
+
+<h2 id="vsdp" data-short="Greedy vs DP">Greedy 和 DP 有什麼不一樣？</h2>
+<table class="plain">
+  <tr><th></th><th>Dynamic programming</th><th>Greedy</th></tr>
+  <tr><td>共同點</td><td colspan="2">都需要 <strong>optimal substructure</strong>：最佳解裡包含子問題的最佳解。</td></tr>
+  <tr><td>何時做選擇</td><td>先把所有子問題都解完，<em>比較之後</em>才選（bottom-up）</td><td>先選（看起來最好的），<em>再</em>解剩下的那一個子問題（top-down）</td></tr>
+  <tr><td>子問題數</td><td>每個選擇可能留下多個子問題，全部要解</td><td>每次只剩一個子問題</td></tr>
+  <tr><td>額外條件</td><td>Overlapping subproblems（才值得存表）</td><td>Greedy-choice property（局部最佳 ⇒ 全域最佳）</td></tr>
+  <tr><td>例子</td><td>0-1 knapsack、rod cutting、LCS</td><td>Fractional knapsack、活動選擇、Huffman</td></tr>
+</table>
+<div class="note"><span class="tag">連到 Ch14</span>貪婪法能解的問題 DP 通常也能解（例如活動選擇可以寫成 \(c[i,j]=\max_k(c[i,k]+c[k,j]+1)\)，見 <a href="exercises.html#ex-15-1-5">15.1-5</a>），只是比較慢。反過來，Ch14 的 <a href="../dp/exercises.html#ex-14-1-2">14.1-2</a> 就是「貪婪法在 rod cutting 上失敗」的例子。</div>
+
+<h2 id="exam" data-short="考前檢查">考前檢查清單</h2>
+<ul>
+  <li>能說出 greedy-choice property 和 optimal substructure 的定義，以及兩者各自讓我們得到什麼（「第一步選對」、「之後遞迴下去也對」）。</li>
+  <li>能對活動選擇、fractional knapsack、Huffman 寫出 <strong>cut-and-paste 交換論證</strong>。</li>
+  <li>能舉出反例：找零錢 {1, 4, 5, 10}、活動選擇的最短時間 / 最早開始 / 最少衝突、0-1 knapsack 的密度優先。</li>
+  <li>能手動跑 GREEDY-ACTIVITY-SELECTOR 和 HUFFMAN（畫出每一輪的森林、寫出碼字、算 \(\sum f\cdot|w|\)）。</li>
+  <li>能分析時間：活動選擇 \(O(n)\)（已排序）、Huffman \(O(n\log n)\)（為什麼用 heap）、fractional knapsack \(O(n\log n)\) / \(O(n)\)。</li>
+  <li>能分辨 prefix code 與非 prefix code，說明為什麼 prefix code 能唯一解碼。</li>
+</ul>
+
+<h2 id="notes" data-short="投影片補充">投影片補充說明</h2>
+<ul>
+  <li>p.27 的編碼（a→0、b→100、…，232K bits）其實就是這組頻率的<strong>最佳</strong> prefix code：用 Huffman 算也是 232K。<a href="huffman.html#build">→</a></li>
+  <li>p.17「If finish times are sorted, running time = \(O(n)\)」：沒有排序時要先排序，總時間 \(O(n\log n)\)。</li>
+  <li>p.18 的最佳解不唯一：\(\{a_1,a_3,a_6,a_8\}\) 和 \(\{a_2,a_5,a_7,a_9\}\) 都是 4 個。後者正好是「最晚開始」貪婪（15.1-2）的結果。<a href="activity.html#run">→</a></li>
+  <li>p.21 說 0-1 knapsack 是 NP-complete，但 15.2-2 的 DP 是 \(O(nW)\)——不矛盾：\(W\) 的輸入長度只有 \(\lg W\) 位元，\(O(nW)\) 是 pseudo-polynomial。</li>
+  <li>p.42–43 同頻率時誰先取出會影響樹的形狀和碼字，但不影響總成本。本站的 tie-break（先放進 Q 的先取出）會畫出和投影片一模一樣的圖。</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch15 Greedy Algorithm 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 15 章。所有圖表都是重畫的互動版本。</footer>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coin Changing 找零錢 · Greedy Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-coin.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="greedy" data-page="coin"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch15 Greedy · 投影片 p.3–8</p>
+<h1>Coin Changing 找零錢</h1>
+<p class="lede">最直覺的貪婪法：每次都拿最大的硬幣。它在台灣、美國的硬幣上都對，但換一組面額就可能錯。從這個例子看出設計貪婪演算法要證明的兩件事。</p>
+
+<h2 id="problem" data-short="問題">問題</h2>
+<p>某個國家的硬幣面額是 <strong>$1, $2, $5, $10</strong>。設計一個演算法，對任意金額 \(x\)，用<strong>最少枚數</strong>的硬幣湊出 \(x\)。</p>
+
+<h2 id="greedy" data-short="貪婪找零">貪婪找零</h2>
+<pre data-code="GREEDY-CHANGE(x)">
+bag = ∅                     // 1. 空袋子
+while x > 0                 // 2.
+    c = 不超過 x 的最大硬幣
+    把 c 放進 bag
+    x = x - c
+return bag                  // 3.
+</pre>
+<ul>
+  <li>每一輪都拿 \(c\le x\)，最後總和一定剛好是 \(x\)（演算法正確地「湊出」\(x\)）。</li>
+  <li>每一步都做一個 <strong>greedy choice</strong>：拿最大的硬幣，因為它「看起來」最能減少枚數。這就是貪婪演算法。</li>
+</ul>
+<div data-widget="coinGreedy"></div>
+
+<h2 id="fail" data-short="貪婪會失敗">貪婪不一定對</h2>
+<p>換成面額 <strong>$1, $4, $5, $10</strong>，要找 <strong>$8</strong>：</p>
+<table class="plain">
+  <tr><th></th><th>找法</th><th class="num">枚數</th></tr>
+  <tr><td>貪婪</td><td>5 + 1 + 1 + 1</td><td class="num">4</td></tr>
+  <tr><td>最佳</td><td>4 + 4</td><td class="num">2</td></tr>
+</table>
+<p>先拿 $5 看起來最好，但拿了之後剩 $3 只能用 3 個 $1。下面把 \(x=1\dots N\) 全部比一遍，黃色就是貪婪失敗的金額：</p>
+<div data-widget="coinCompare"></div>
+<div class="note"><span class="tag">怎麼判斷</span>如果一組面額有反例，最小的反例一定小於「最大兩個面額的和」（Kozen &amp; Zaks, 1994）。所以只要檢查有限多個 \(x\) 就能判斷這組面額適不適合貪婪——上面的元件就是這樣判斷的。一般面額請用 DP（<a href="exercises.html#p15-1">Problem 15-1(d)</a>），\(O(nk)\)。</div>
+
+<h2 id="why" data-short="為什麼 1,2,5,10 可以">為什麼 $1, $2, $5, $10 時貪婪是對的</h2>
+<p>看任何一個<strong>最佳</strong>找法，它不可能包含以下組合（否則可以換成更少枚）：</p>
+<ul>
+  <li>兩個 $1 → 換成一個 $2；三個 $2 → 換成 $5 + $1；$2 + $2 + $1 → 換成 $5；兩個 $5 → 換成 $10。</li>
+</ul>
+<p>剩下能出現的組合中，$1、$2、$5 合計最多 $5 + $2 + $2 = 9 元，所以最佳解的 $10 個數一定是 \(\lfloor x/10\rfloor\)，跟貪婪一樣。同理 $1、$2 合計最多 $2 + $2 = 4 元，所以 $5 的個數也和貪婪一樣；最後 $1 最多一個，$2 的個數也一樣。也就是說，<strong>最佳解就是貪婪的找法</strong>。</p>
+
+<h2 id="design" data-short="兩大性質">設計貪婪演算法：兩大性質</h2>
+<div class="note key"><span class="tag">重點</span>
+<ol style="margin:6px 0 0">
+  <li><strong>Greedy-choice property</strong>：做局部最佳（貪婪）的選擇，能得到全域最佳解。</li>
+  <li><strong>Optimal substructure</strong>：問題的最佳解包含子問題的最佳解。</li>
+</ol>
+</div>
+<p>要證明一個貪婪演算法是對的，通常分兩步：</p>
+<ol class="steps">
+  <li><strong>某個最佳解包含貪婪選擇</strong> ⇒ 第一步選貪婪選擇不會錯。（通常用 cut-and-paste / exchange：把最佳解中的某個元素換成貪婪選擇，仍是最佳解。）</li>
+  <li><strong>Optimal substructure</strong> ⇒ 做完選擇後，剩下的子問題用同樣方法遞迴解就好，合起來仍然最佳。</li>
+</ol>
+<p>找零錢在 {1, 4, 5, 10} 時第 1 步就不成立：找 8 元的所有最佳解（只有 4+4）都不含 $5。</p>
+<p>接下來三個主題都是「貪婪真的對」的非平凡例子：<a href="activity.html">活動選擇</a>、<a href="knapsack.html">fractional knapsack</a>、<a href="huffman.html">Huffman code</a>。</p>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#p15-1">Problem 15-1</a>：25/10/5/1 的貪婪證明、\(c^0,\dots,c^k\) 面額、反例、\(O(nk)\) DP。</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch15 Greedy Algorithm 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 15 章。</footer>
+</main>
+</div>
+</body>
+</html>

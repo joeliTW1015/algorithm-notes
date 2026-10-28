@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knapsack 背包問題 · Greedy Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-knap.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="greedy" data-page="knapsack"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch15 Greedy · 投影片 p.20–24 · CLRS 15.2</p>
+<h1>Knapsack 背包問題</h1>
+<p class="lede">同一個問題，差在「物品能不能切」：可以切，密度優先的貪婪就是最佳；不能切，貪婪會錯，要回到 DP。這是區分 greedy 和 DP 最經典的例子。</p>
+
+<h2 id="01" data-short="0-1 knapsack">0-1 knapsack</h2>
+<ul>
+  <li>你是小偷，背包最多裝重量 \(W\)。店裡有 \(n\) 個物品，\(I_k\) 價值 \(v_k\)、重量 \(w_k\)。</li>
+  <li>每個物品<strong>整個拿或不拿</strong>（0-1）。目標：總重 \(\le W\) 下總價值最大。</li>
+  <li>直覺策略：(1) 最值錢的先拿；(2) 密度 \(v_k/w_k\) 最大的先拿。可惜這個問題是 <strong>NP-complete</strong>，不太可能有好的貪婪策略。</li>
+</ul>
+
+<h2 id="frac" data-short="Fractional knapsack">Fractional knapsack</h2>
+<ul>
+  <li>改成可以拿物品的一部分：拿 \(c\) 份（\(0\le c\le 1\)）的 \(I_k\)，價值 \(c\,v_k\)、重量 \(c\,w_k\)。</li>
+  <li>策略：<strong>密度最大的物品能拿多少拿多少</strong>，再換下一個密度最大的，直到背包滿。</li>
+  <li>Optimal substructure 很明顯：拿走一部分後，剩下的容量配剩下的物品，仍是同一種問題。</li>
+</ul>
+
+<h3 id="frac-proof">Greedy-choice property（cut-and-paste）</h3>
+<ol class="steps">
+  <li>令 \(I_1\) 為密度最大的物品，貪婪拿 \(\min(w_1, W)\) 的 \(I_1\)。令 OPT 為任一最佳解，它拿了 \(x_1\) 重量的 \(I_1\)。</li>
+  <li>若 \(x_1 = \min(w_1, W)\)，得證。否則 \(x_1&lt;\min(w_1,W)\)：OPT 中一定有重量 \(\delta&gt;0\) 是其他物品（不然背包沒滿，直接多拿 \(I_1\) 更好）。</li>
+  <li>把 OPT 中 \(\delta' = \min(\delta, \min(w_1,W)-x_1)\) 重量的其他物品換成同重量的 \(I_1\)：重量不變，價值變化 \(\delta'\bigl(\tfrac{v_1}{w_1}-\tfrac{v_k}{w_k}\bigr)\ge 0\)。</li>
+  <li>重複直到 \(x_1=\min(w_1,W)\)，得到一個仍最佳且包含貪婪選擇的解。∎</li>
+</ol>
+
+<h2 id="counter" data-short="0-1 的反例">為什麼 0-1 不能貪婪（p.24）</h2>
+<p>\(W=50\)：</p>
+<table class="plain">
+  <tr><th>物品</th><th class="num">價值</th><th class="num">重量</th><th class="num">密度</th></tr>
+  <tr><td>\(I_1\)</td><td class="num">60</td><td class="num">10</td><td class="num">6</td></tr>
+  <tr><td>\(I_2\)</td><td class="num">100</td><td class="num">20</td><td class="num">5</td></tr>
+  <tr><td>\(I_3\)</td><td class="num">120</td><td class="num">30</td><td class="num">4</td></tr>
+</table>
+<ul>
+  <li><strong>0-1 密度優先</strong>：拿 \(I_1\)、\(I_2\)（重 30），\(I_3\) 放不下 → <strong>$160</strong>。</li>
+  <li><strong>0-1 最佳</strong>：\(I_2\)、\(I_3\)（重 50）→ <strong>$220</strong>。</li>
+  <li><strong>Fractional</strong>：\(I_1\)、\(I_2\) 全拿，再拿 \(20/30\) 的 \(I_3\) → \(60+100+80=\) <strong>$240</strong>。</li>
+</ul>
+<p>0-1 的問題在於「拿了密度高的 \(I_1\)，剩下的 20 單位空間裝不滿」。要知道該不該拿 \(I_1\)，必須<strong>比較拿和不拿兩個子問題</strong>的結果——這正是 DP 做的事，貪婪沒有比較就先選了。</p>
+<div data-widget="knapsack"></div>
+
+<h2 id="dp01" data-short="0-1 用 DP">0-1 knapsack 的 DP（15.2-2）</h2>
+<p>\(K[i,w]\) = 只考慮前 \(i\) 個物品、容量 \(w\) 時的最大價值：</p>
+<div class="formula">$$K[i,w]=\begin{cases}0 & i=0\\ K[i-1,w] & w_i&gt;w\\ \max\bigl(K[i-1,w],\; v_i+K[i-1,\,w-w_i]\bigr) & \text{otherwise}\end{cases}$$</div>
+<p>表有 \((n+1)(W+1)\) 格、每格 \(O(1)\) → \(O(nW)\)。答案在 \(K[n,W]\)，往上回溯就知道拿了哪些。</p>
+<div data-widget="knap01Table"></div>
+<div class="note"><span class="tag">和 NP-complete 不矛盾</span>\(O(nW)\) 看起來是多項式，但輸入裡的 \(W\) 只佔 \(\lg W\) 個位元，\(W\) 對輸入長度是指數級。這種時間叫 <strong>pseudo-polynomial</strong>。</div>
+
+<h2 id="time" data-short="執行時間">執行時間</h2>
+<ul>
+  <li>Fractional：依密度排序 \(O(n\log n)\)，再掃一遍 \(O(n)\)。</li>
+  <li>不排序也行：用線性時間的 SELECT 找密度中位數，每次丟掉一半 → \(O(n)\)（<a href="exercises.html#ex-15-2-6">15.2-6</a>）。</li>
+</ul>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-15-2-2">15.2-2</a> 0-1 DP · <a href="exercises.html#ex-15-2-3">15.2-3</a> 輕的剛好比較值錢 · <a href="exercises.html#ex-15-2-6">15.2-6</a> \(O(n)\) fractional</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch15 Greedy Algorithm 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 15.2 節。</footer>
+</main>
+</div>
+</body>
+</html>

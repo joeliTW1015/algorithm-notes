@@ -154,4 +154,125 @@ check('LCS tie-break left', () => {
   assert.strictEqual(a.lcs, 'DRTO');
 });
 
+/* ---------- Ch15 Greedy ---------- */
+const GR = require('../assets/greedy.js');
+
+check('coin changing: slides', () => {
+  assert.deepStrictEqual(GR.coinGreedy([1, 2, 5, 10], 18).bag, [10, 5, 2, 1]);
+  assert.deepStrictEqual(GR.coinGreedy([1, 4, 5, 10], 8).bag, [5, 1, 1, 1]);
+  assert.deepStrictEqual(GR.coinDP([1, 4, 5, 10], 8).bag, [4, 4]);
+  assert.strictEqual(GR.coinCounterexample([1, 2, 5, 10]), null);
+  assert.strictEqual(GR.coinCounterexample([1, 5, 10, 25]), null);
+  assert.strictEqual(GR.coinCounterexample([1, 4, 5, 10]).x, 8);
+  assert.strictEqual(GR.coinCounterexample([1, 3, 4]).x, 6);
+  for (let c = 2; c <= 4; c++) for (let k = 1; k <= 3; k++) {
+    const coins = Array.from({ length: k + 1 }, (_, i) => c ** i);
+    assert.strictEqual(GR.coinCounterexample(coins, 200), null, `powers of ${c}`);
+  }
+});
+
+const SLIDE_ACTS = [[1, 3], [2, 5], [4, 7], [1, 8], [5, 9], [8, 10], [9, 11], [11, 14], [13, 16]]
+  .map(([s, f], i) => ({ id: 'a' + (i + 1), s, f }));
+
+check('activity selection: slide example', () => {
+  assert.deepStrictEqual(GR.activitySelector(SLIDE_ACTS).chosen, ['a1', 'a3', 'a6', 'a8']);
+  assert.deepStrictEqual(GR.activityByRule(SLIDE_ACTS, 'finish').chosen, ['a1', 'a3', 'a6', 'a8']);
+  assert.deepStrictEqual(GR.activityByRule(SLIDE_ACTS, 'lastStart').chosen, ['a9', 'a7', 'a5', 'a2']);
+});
+
+check('activity selection: counterexamples', () => {
+  const dur = [['A1', 290, 310], ['A2', 180, 300], ['A3', 305, 420]].map(([id, s, f]) => ({ id, s, f }));
+  assert.deepStrictEqual(GR.activityByRule(dur, 'duration').chosen, ['A1']);
+  assert.strictEqual(GR.activityByRule(dur, 'finish').chosen.length, 2);
+  const st = [['A1', 180, 600], ['A2', 190, 200], ['A3', 200, 210], ['A4', 210, 220], ['A5', 220, 230]].map(([id, s, f]) => ({ id, s, f }));
+  assert.deepStrictEqual(GR.activityByRule(st, 'start').chosen, ['A1']);
+  assert.strictEqual(GR.activityByRule(st, 'finish').chosen.length, 4);
+  const ov = [[0, 3], [4, 7], [8, 11], [12, 15], [2, 5], [6, 9], [10, 13], [2, 5], [2, 5], [2, 5], [10, 13], [10, 13], [10, 13]]
+    .map(([s, f], i) => ({ id: 'b' + (i + 1), s, f }));
+  assert.strictEqual(GR.activityByRule(ov, 'overlap').chosen.length, 3);
+  assert.strictEqual(GR.activityByRule(ov, 'finish').chosen.length, 4);
+});
+
+check('15.1-5 weighted activities', () => {
+  const acts = [['a', 0, 3, 5], ['b', 2, 5, 6], ['c', 4, 7, 5], ['d', 6, 9, 4], ['e', 1, 9, 20]].map(([id, s, f, v]) => ({ id, s, f, v }));
+  const res = GR.weightedActivities(acts);
+  assert.strictEqual(res.best, 20);
+  assert.deepStrictEqual(res.chosen, ['e']);
+  const res2 = GR.weightedActivities(SLIDE_ACTS.map((a) => ({ ...a, v: 1 })));
+  assert.strictEqual(res2.best, 4);
+});
+
+const SLIDE_ITEMS = [{ id: 'I1', v: 60, w: 10 }, { id: 'I2', v: 100, w: 20 }, { id: 'I3', v: 120, w: 30 }];
+
+check('knapsack: slides', () => {
+  assert.strictEqual(GR.fractionalKnapsack(SLIDE_ITEMS, 50).value, 240);
+  assert.strictEqual(GR.fractionalKnapsackLinear(SLIDE_ITEMS, 50).value, 240);
+  assert.deepStrictEqual(GR.greedy01(SLIDE_ITEMS, 50, 'density'), { chosen: ['I1', 'I2'], value: 160, weight: 30 });
+  const k = GR.knapsack01(SLIDE_ITEMS, 50);
+  assert.strictEqual(k.best, 220);
+  assert.deepStrictEqual(k.chosen, ['I2', 'I3']);
+  assert.strictEqual(k.unit, 10);
+});
+
+check('knapsack: linear fractional matches sorting version', () => {
+  let seed = 7;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let t = 0; t < 200; t++) {
+    const items = Array.from({ length: 1 + Math.floor(rnd() * 9) }, (_, i) => ({ id: 'x' + i, v: 1 + Math.floor(rnd() * 50), w: 1 + Math.floor(rnd() * 20) }));
+    const W = Math.floor(rnd() * 80);
+    assert.ok(Math.abs(GR.fractionalKnapsack(items, W).value - GR.fractionalKnapsackLinear(items, W).value) < 1e-6);
+    const brute = Math.max(...Array.from({ length: 1 << items.length }, (_, m) => {
+      let v = 0, w = 0;
+      items.forEach((it, i) => { if (m >> i & 1) { v += it.v; w += it.w; } });
+      return w <= W ? v : 0;
+    }));
+    assert.strictEqual(GR.knapsack01(items, W).best, brute);
+  }
+});
+
+const CLRS_FREQ = [['a', 45], ['b', 13], ['c', 12], ['d', 16], ['e', 9], ['f', 5]].map(([ch, f]) => ({ ch, f }));
+
+check('huffman: CLRS figure', () => {
+  const res = GR.huffman(CLRS_FREQ);
+  assert.deepStrictEqual(res.codes, { a: '0', b: '101', c: '100', d: '111', e: '1101', f: '1100' });
+  assert.strictEqual(res.cost, 224);
+  assert.strictEqual(GR.internalSum(res.root), 224);
+  const merges = res.steps.filter((s) => s.line === 8).map((s) => s.z.f);
+  assert.deepStrictEqual(merges, [14, 25, 30, 55, 100]);
+  const ser = GR.serializeTree(res.root);
+  assert.strictEqual(ser.shape, '10110011000');
+  assert.strictEqual(ser.leaves.join(''), 'acbfed');
+});
+
+check('huffman: slide encoding example is optimal', () => {
+  const fr = [['a', 45], ['b', 11], ['c', 11], ['d', 11], ['e', 11], ['f', 11]].map(([ch, f]) => ({ ch, f }));
+  assert.strictEqual(GR.huffman(fr).cost, 232);
+  const slide = { a: '0', b: '100', c: '101', d: '110', e: '1110', f: '1111' };
+  assert.strictEqual(GR.codeCost(slide, { a: 45, b: 11, c: 11, d: 11, e: 11, f: 11 }), 232);
+  assert.strictEqual(GR.prefixClash(slide), null);
+  assert.strictEqual(GR.decodePrefix('0100101', slide).text, 'abc');
+});
+
+check('prefix code: 0101 is ambiguous', () => {
+  const bad = { a: '0', b: '1', c: '00', d: '01', e: '10', f: '11' };
+  const parses = GR.allParses('0101', bad).map((p) => p.join(''));
+  ['abab', 'dd', 'abd', 'aeb', 'dab'].forEach((s) => assert.ok(parses.includes(s), s));
+  assert.ok(GR.prefixClash(bad));
+});
+
+check('15.3-3 Fibonacci frequencies', () => {
+  const fib = [1, 1, 2, 3, 5, 8, 13, 21];
+  const res = GR.huffman(fib.map((f, i) => ({ ch: 'abcdefgh'[i], f })));
+  assert.deepStrictEqual(Object.values(res.codes).map((c) => c.length).sort((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7, 7]);
+  assert.strictEqual(res.codes.h, '0');
+});
+
+check('15.2-5 unit intervals and greedy max subarray', () => {
+  assert.deepStrictEqual(GR.unitIntervals([0.5, 1.2, 1.4, 2.6, 3, 5]), [[0.5, 1.5], [2.6, 3.6], [5, 6]]);
+  const A = [13, -3, -25, 20, -3, -16, -23, 18, 20, -7, 12, -5, -22, 15, -4, 7];
+  const r = GR.maxSubarray(A);
+  assert.deepStrictEqual([r.best, r.lo + 1, r.hi + 1], [43, 8, 11]);
+  assert.strictEqual(GR.maxSubarray([-3, -1, -2]).best, -1);
+});
+
 console.log(`\n${passed} checks passed`);

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>課本習題 15.x 詳解 · Greedy Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-coin.js"></script>
+<script defer src="../assets/w-act.js"></script>
+<script defer src="../assets/w-knap.js"></script>
+<script defer src="../assets/w-gex.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="greedy" data-page="exercises"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Practice at Home · CLRS 4th ed. Chapter 15</p>
+<h1>課本習題詳解</h1>
+<p class="lede">投影片 p.44 指定的 10 題習題、Problem 15-1，以及「用貪婪法解最大子陣列」。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p><button type="button" id="toggle-all">全部展開</button></p>
+
+<h2 id="s15-1" data-short="15.1 活動選擇">15.1 Activity selection</h2>
+
+<section class="ex" id="ex-15-1-2">
+<header><span class="id">15.1-2</span><span class="t">改選「最晚開始」的活動也對</span></header>
+<div class="q">不選最早結束的，改成每次選「和已選活動相容、而且開始時間最晚」的活動。說明這也是貪婪演算法，並證明它得到最佳解。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>它是貪婪</strong>：每一步只看現在最好的（開始最晚 → 留給前面最多時間），選了就不回頭，剩下一個子問題「在 \(s_{\text{選}}\) 之前結束的活動」。</li>
+  <li><strong>對稱論證</strong>：把時間軸反過來，每個 \([s_i,f_i)\) 變成 \([-f_i,-s_i)\)。相容關係不變，而「最晚開始」變成「最早結束」。反轉後的問題用最早結束法是最佳的（Lemma 1、2），所以原問題用最晚開始法也是最佳的。</li>
+  <li><strong>直接證明 greedy choice</strong>：令 \(a_m\) 開始最晚、OPT 任一最佳解、\(a'\) 為 OPT 中開始最晚的。OPT 其他活動都在 \(s_{a'}\) 之前結束，而 \(s_m\ge s_{a'}\)，所以把 \(a'\) 換成 \(a_m\) 仍相容、個數不變。Optimal substructure 和 Lemma 2 同理。∎</li>
+  <li><strong>例</strong>：投影片 p.18 的資料用最晚開始得到 \(\{a_9,a_7,a_5,a_2\}\)，也是 4 個。</li>
+</ol>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-1-3">
+<header><span class="id">15.1-3</span><span class="t">三種錯的貪婪：最短、最少衝突、最早開始</span></header>
+<div class="q">舉例說明以下三種貪婪都不一定最佳：(1) 選時間最短的；(2) 選和其他剩下活動重疊最少的；(3) 選最早開始的。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>最短</strong>：\([4,6)\)、\([0,5)\)、\([5,10)\)。最短的 \([4,6)\) 和另外兩個都衝突 → 1 個；最佳 \(\{[0,5),[5,10)\}\) → 2 個。（投影片 p.11 的時間版本同理。）</li>
+  <li><strong>最早開始</strong>：\([0,10)\)、\([1,2)\)、\([2,3)\)、\([3,4)\)。最早開始的 \([0,10)\) 蓋住全部 → 1 個；最佳 3 個。</li>
+  <li><strong>最少衝突</strong>：上排 4 個 \([0,3),[4,7),[8,11),[12,15)\) 是最佳解。中間放 \([2,5),[6,9),[10,13)\)，再在 \([2,5)\) 和 \([10,13)\) 各疊 3 個複本。
+    <br>衝突數：\([6,9)\) 只和 \([4,7),[8,11)\) 衝突（2 個），是全部最少的；其他都 ≥ 4。選了 \([6,9)\) 就刪掉上排中間兩個，左右兩群各只能再選 1 個 → 總共 3 個 &lt; 4。</li>
+</ol>
+<p>下面的元件已經載入「最少衝突」的反例，切換規則看看：</p>
+<div data-widget="actRules" data-rule="overlap" data-set="3"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-1-5">
+<header><span class="id">15.1-5</span><span class="t">活動有價值：最大化總價值</span></header>
+<div class="q">每個活動 \(a_i\) 除了 \(s_i, f_i\) 還有價值 \(v_i\)，目標改成選出相容活動使 \(\sum v_i\) 最大。給一個多項式時間演算法。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>貪婪不行了</strong>：最早結束的活動可能價值很低，擋住一個價值很高的活動。要用 DP（weighted interval scheduling）。</li>
+  <li><strong>排序</strong>：依結束時間排序 \(f_1\le\dots\le f_n\)。令 \(p(j)\) = 最大的 \(i&lt;j\) 使 \(f_i\le s_j\)（和 \(a_j\) 相容的最後一個；沒有就是 0）。</li>
+  <li><strong>遞迴式</strong>：\(V[j]\) = 只用前 \(j\) 個活動的最大價值。最佳解要嘛不含 \(a_j\)，要嘛含 \(a_j\)（那麼其餘只能從 \(a_1..a_{p(j)}\) 選）：
+    $$V[j]=\max\bigl(V[j-1],\; v_j+V[p(j)]\bigr),\qquad V[0]=0.$$</li>
+  <li><strong>還原</strong>：從 \(j=n\) 往回，若 \(v_j+V[p(j)]\ge V[j-1]\) 就選 \(a_j\) 並跳到 \(p(j)\)，否則跳到 \(j-1\)。</li>
+  <li><strong>時間</strong>：排序 \(O(n\log n)\)；每個 \(p(j)\) 用二分搜尋 \(O(\log n)\)；填表 \(O(n)\)。總共 \(O(n\log n)\)。</li>
+</ol>
+<div data-widget="weightedAct"></div>
+</div></details>
+</section>
+
+<h2 id="s15-2" data-short="15.2 背包">15.2 Elements of the greedy strategy</h2>
+
+<section class="ex" id="ex-15-2-2">
+<header><span class="id">15.2-2</span><span class="t">0-1 knapsack 的 \(O(nW)\) DP</span></header>
+<div class="q">給一個 \(O(nW)\) 的動態規劃解 0-1 knapsack，\(n\) 是物品數、\(W\) 是背包容量。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>子問題</strong>：\(K[i,w]\) = 只用物品 \(1..i\)、容量 \(w\) 時的最大價值。</li>
+  <li><strong>選擇</strong>：物品 \(i\) 拿或不拿。
+    $$K[i,w]=\begin{cases}K[i-1,w] & w_i&gt;w\\ \max\bigl(K[i-1,w],\ v_i+K[i-1,w-w_i]\bigr) & w_i\le w\end{cases},\qquad K[0,w]=0.$$</li>
+  <li><strong>Optimal substructure</strong>：若最佳解拿了 \(i\)，其餘部分必是「物品 \(1..i-1\)、容量 \(w-w_i\)」的最佳解，否則換掉會更好。</li>
+  <li><strong>順序與時間</strong>：\(i\) 由 1 到 \(n\)、\(w\) 由 0 到 \(W\) 填表，\((n+1)(W+1)\) 格，每格 \(O(1)\) → \(O(nW)\)。從 \(K[n,W]\) 回溯：和上一列同格相同就沒拿 \(i\)，否則拿了並往左移 \(w_i\)。</li>
+</ol>
+<pre data-code="KNAPSACK-01(v, w, n, W)">
+let K[0:n, 0:W] be a new table
+for x = 0 to W
+    K[0, x] = 0
+for i = 1 to n
+    for x = 0 to W
+        K[i, x] = K[i - 1, x]                  // 不拿 i
+        if w[i] <= x and v[i] + K[i - 1, x - w[i]] > K[i, x]
+            K[i, x] = v[i] + K[i - 1, x - w[i]]  // 拿 i
+return K[n, W]
+</pre>
+<div data-widget="knap01Table"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-2-3">
+<header><span class="id">15.2-3</span><span class="t">越輕越值錢的 0-1 knapsack</span></header>
+<div class="q">0-1 knapsack 中，若物品依重量遞增排序的順序，恰好也是依價值遞減排序的順序。給一個有效率的演算法並證明正確。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>演算法</strong>：重新編號使 \(w_1\le w_2\le\dots\le w_n\)（此時 \(v_1\ge v_2\ge\dots\ge v_n\)）。從 1 開始依序拿，拿到第一個放不下的 \(k+1\) 就停（後面更重，也放不下）。答案是 \(\{1,\dots,k\}\)。\(O(n\log n)\)，已排序則 \(O(n)\)。</li>
+  <li><strong>證明</strong>：任取可行解 \(S=\{s_1&lt;s_2&lt;\dots&lt;s_m\}\)。因為 \(s_i\ge i\)，有 \(w_{s_i}\ge w_i\)、\(v_{s_i}\le v_i\)。</li>
+  <li>所以 \(\sum_{i\le m}w_i\le\sum w_{s_i}\le W\)：前 \(m\) 個也放得下，故 \(m\le k\)；而且 \(\sum_{i\le m}v_i\ge\sum v_{s_i}\)。</li>
+  <li>得到 \(\text{value}(S)\le\text{value}(\{1..m\})\le\text{value}(\{1..k\})\)，貪婪最佳。∎</li>
+</ol>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-2-5">
+<header><span class="id">15.2-5</span><span class="t">用最少的單位長度區間蓋住所有點</span></header>
+<div class="q">給實數線上的點 \(\{x_1,\dots,x_n\}\)，找最少個長度為 1 的閉區間蓋住所有點，並證明正確。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>演算法</strong>：排序。取最左邊還沒被蓋到的點 \(x\)，放區間 \([x,x+1]\)，刪掉它蓋到的點，重複。排序 \(O(n\log n)\) + 掃描 \(O(n)\)。</li>
+  <li><strong>Greedy choice</strong>：最左點 \(x_1\) 一定被某個最佳解的區間 \([a,a+1]\) 蓋到（\(a\le x_1\)）。它蓋到的點都 \(\ge x_1\) 且 \(\le a+1\le x_1+1\)，所以換成 \([x_1,x_1+1]\) 蓋到的點只多不少，仍是最佳解。</li>
+  <li><strong>Optimal substructure</strong>：去掉 \([x_1,x_1+1]\) 蓋到的點後，剩下的點用最少區間蓋住；若不是最少，換掉就讓整體更少，矛盾。∎</li>
+</ol>
+<div data-widget="unitCover"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-2-6">
+<header><span class="id">15.2-6</span><span class="t">\(O(n)\) 解 fractional knapsack</span></header>
+<div class="q">說明如何在 \(O(n)\) 時間解 fractional knapsack。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>想法</strong>：不需要完全排序，只要找到「拿到一半的那個物品」的密度門檻。用 Ch9 的線性時間 SELECT 找密度的中位數 \(m\)。</li>
+  <li>把物品分成 \(G\)（密度 \(&gt;m\)）、\(E\)（\(=m\)）、\(L\)（\(&lt;m\)），\(O(n)\)。</li>
+  <li>若 \(w(G)\ge W\)：答案只用 \(G\) 的物品 → 對 \(G\) 遞迴。</li>
+  <li>否則 \(G\) 全拿，再從 \(E\) 盡量拿；若還有容量 \(W'=W-w(G)-w(E)\)，對 \(L\) 用容量 \(W'\) 遞迴。</li>
+  <li>每次遞迴的物品數最多一半：\(T(n)=T(n/2)+O(n)=O(n)\)。∎</li>
+</ol>
+<p class="small muted">本站的測試把這個版本和「排序後貪婪」比對了 200 組隨機輸入，結果相同。</p>
+</div></details>
+</section>
+
+<h2 id="s15-3" data-short="15.3 Huffman">15.3 Huffman codes</h2>
+
+<section class="ex" id="ex-15-3-2">
+<header><span class="id">15.3-2</span><span class="t">不是 full binary tree 就不是最佳 prefix code</span></header>
+<div class="q">證明非 full 的二元樹不可能對應最佳的 prefix code。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li>非 full ⇒ 有某個內部節點 \(u\) 只有一個小孩 \(v\)。</li>
+  <li>刪掉 \(u\)，讓 \(v\) 的子樹直接接到 \(u\) 原本的位置（若 \(u\) 是根，\(v\) 變新根）。子樹裡每片葉子的深度都減 1，其他葉子不變。</li>
+  <li>新樹的碼字仍是 prefix code（字元仍都在葉子上），而成本少了 \(v\) 子樹裡所有葉子的頻率總和 \(&gt;0\)。</li>
+  <li>所以原來的樹不是最佳。∎</li>
+</ol>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-3-4">
+<header><span class="id">15.3-4</span><span class="t">\(B(T)\) = 所有內部節點的頻率和</span></header>
+<div class="q">證明 full binary tree \(T\) 的成本 \(B(T)\) 等於所有內部節點「兩個小孩頻率和」的總和。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li>定義內部節點的頻率 = 兩個小孩頻率和 = 它底下所有葉子的頻率和。</li>
+  <li>\(B(T)=\sum_{\text{葉 } c} f_c\, d_T(c)\)。葉子 \(c\) 的深度 \(d_T(c)\) = 它的祖先（內部節點）個數，所以 \(f_c\) 被每個祖先各算一次。</li>
+  <li>交換加總順序：\(\displaystyle\sum_c f_c\, d_T(c)=\sum_{\text{內部節點 } u}\ \sum_{c \text{ 在 } u \text{ 底下}} f_c=\sum_u f_u\)。∎</li>
+  <li><strong>例</strong>：CLRS 的 Huffman 樹內部節點 14 + 25 + 30 + 55 + 100 = 224 = \(B(T)\)。這也說明 Huffman 每次合併的「代價」就是新節點的頻率，總成本 = 所有合併代價之和。</li>
+</ol>
+</div></details>
+</section>
+
+<section class="ex" id="ex-15-3-5">
+<header><span class="id">15.3-5</span><span class="t">用 \(2n-1+n\lceil\lg n\rceil\) bits 傳送編碼本身</span></header>
+<div class="q">有一個 \(n\) 個字元的最佳 prefix code，想用最少 bits 把「編碼表」傳出去。說明如何只用 \(2n-1+n\lceil\lg n\rceil\) bits 表示。（提示：用 \(2n-1\) bits 描述樹的形狀。）</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>樹的形狀</strong>：最佳樹是 full binary tree（15.3-2），有 \(n\) 片葉子、\(n-1\) 個內部節點，共 \(2n-1\) 個節點。做 preorder walk，內部節點寫 1、葉子寫 0 → \(2n-1\) bits。因為是 full tree，看到 1 就知道接下來有左右兩棵子樹，可以唯一重建。</li>
+  <li><strong>葉子是誰</strong>：依同樣的 preorder 順序列出葉子的字元，每個字元用 \(\lceil\lg n\rceil\) bits 表示它在字元集 \(C\) 中的編號 → \(n\lceil\lg n\rceil\) bits。</li>
+  <li>合計 \(2n-1+n\lceil\lg n\rceil\) bits。∎</li>
+  <li><strong>例</strong>：CLRS 的 Huffman 樹，形狀 <code>10110011000</code>（11 = 2·6 − 1 bits），葉子順序 a c b f e d，各 3 bits → 18 bits，共 29 bits。</li>
+</ol>
+</div></details>
+</section>
+
+<h2 id="problems" data-short="Problem 15-1 & 最大子陣列">Problems</h2>
+
+<section class="ex" id="p15-1">
+<header><span class="id">15-1</span><span class="t">Coin changing</span></header>
+<div class="q">用最少枚硬幣找 \(n\) 分錢。(a) 面額 25、10、5、1 時設計貪婪並證明最佳。(b) 面額是 \(c^0,c^1,\dots,c^k\)（\(c&gt;1, k\ge1\)）時證明貪婪最佳。(c) 給一組（含 1）讓貪婪失敗的面額。(d) 給 \(O(nk)\) 的演算法處理任意 \(k\) 種面額（含 1）。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>(a)</strong> 貪婪：盡量拿 25，再盡量拿 10、5、1。最佳解中：1 最多 4 個（5 個換成 5）；5 最多 1 個（2 個換成 10）；10 最多 2 個（3 個換成 25+5）；不能同時有 2 個 10 和 1 個 5（換成 25）。所以 10、5、1 合計最多 \(10+10+4=24&lt;25\)，25 的個數必為 \(\lfloor n/25\rfloor\)；同理 5、1 合計 \(\le 9&lt;10\)，10 的個數也和貪婪一樣；依此類推，最佳解 = 貪婪解。</li>
+  <li><strong>(b)</strong> 最佳解中，每個 \(c^i\)（\(i&lt;k\)）最多 \(c-1\) 個（\(c\) 個可換成一個 \(c^{i+1}\)）。所以比 \(c^j\) 小的硬幣總額最多
+    $$\sum_{i=0}^{j-1}(c-1)c^i = c^j-1 &lt; c^j.$$
+    因此 \(c^k\) 的個數必為 \(\lfloor n/c^k\rfloor\)，對餘數遞迴同理，每一種面額的個數都和貪婪相同。</li>
+  <li><strong>(c)</strong> \(\{1,3,4\}\)、\(n=6\)：貪婪 4+1+1（3 枚），最佳 3+3（2 枚）。投影片的 \(\{1,4,5,10\}\)、\(n=8\) 也是。</li>
+  <li><strong>(d)</strong> DP：\(C[0]=0\)，\(C[j]=1+\min_{d_i\le j} C[j-d_i]\)；同時記 \(\text{coin}[j]\) = 達到最小值的 \(d_i\)，最後從 \(n\) 往回找。\(n\) 個子問題 × \(k\) 個選擇 → \(O(nk)\)。因為有 1 分，每個 \(C[j]\) 都有解。</li>
+</ol>
+<div data-widget="coinCompare" data-coins="1 3 4" data-n="18"></div>
+</div></details>
+</section>
+
+<section class="ex" id="maxsub">
+<header><span class="id">p.44</span><span class="t">用貪婪法解 maximum-subarray</span></header>
+<div class="q">之前用 divide-and-conquer 解過 maximum-subarray（\(O(n\log n)\)）。寫出貪婪演算法的虛擬碼並分析時間。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>貪婪選擇</strong>：從左往右累加 \(cur\)。一旦目前累積的和 \(&lt;0\)，它接在任何後面的子陣列前面都只會讓和變小，<strong>直接丟掉</strong>，從下一個元素重新開始。</li>
+  <li><strong>正確性（loop invariant）</strong>：處理完 \(A[i]\) 後，\(cur\) = 「以 \(A[i]\) 結尾的子陣列」的最大和。因為以 \(A[i]\) 結尾的最佳子陣列要嘛只有 \(A[i]\)，要嘛是「以 \(A[i-1]\) 結尾的最佳」再接 \(A[i]\)：\(cur_i=\max(A[i],\,cur_{i-1}+A[i])\)，而 \(cur_{i-1}&lt;0\) 時取前者。答案 = 所有 \(cur_i\) 的最大值，就是 \(best\)。</li>
+  <li><strong>時間</strong>：掃一遍，\(\Theta(n)\)，比 divide-and-conquer 的 \(\Theta(n\log n)\) 快。（這就是 Kadane's algorithm，CLRS 4.1-5。）</li>
+</ol>
+<pre data-code="GREEDY-MAX-SUBARRAY(A, n)">
+best = -∞, cur = 0, start = 1
+for i = 1 to n
+    if cur < 0              // 前面的和是負的：丟掉
+        cur = 0
+        start = i
+    cur = cur + A[i]
+    if cur > best
+        best = cur
+        (lo, hi) = (start, i)
+return (lo, hi, best)
+</pre>
+<div data-widget="maxSub"></div>
+</div></details>
+</section>
+
+</article>
+<footer class="site">題目改寫自 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 15 章習題與 Ch15 投影片 p.44，詳解為自行整理。</footer>
+</main>
+</div>
+<script>
+  document.getElementById('toggle-all').addEventListener('click', function () {
+    var all = document.querySelectorAll('.ex details');
+    var open = this.textContent === '全部展開';
+    all.forEach(function (d) { d.open = open; });
+    this.textContent = open ? '全部收合' : '全部展開';
+  });
+</script>
+</body>
+</html>

@@ -2,7 +2,27 @@
 (function () {
   'use strict';
 
-  const NAV = [
+  // One sidebar per chapter; a page picks its chapter with <aside class="side" data-chapter="…">.
+  const CHAPTERS = [
+    { id: 'dp', href: '../dp/index.html', text: 'Ch14 Dynamic Programming' },
+    { id: 'greedy', href: '../greedy/index.html', text: 'Ch15 Greedy Algorithms' },
+  ];
+  const NAVS = {};
+  NAVS.greedy = [
+    { title: 'Ch15 Greedy Algorithms', items: [
+      { id: 'hub', href: 'index.html', text: '總覽與速查表' },
+    ] },
+    { title: '投影片', items: [
+      { id: 'coin', href: 'coin-change.html', text: 'Coin Changing 找零錢' },
+      { id: 'activity', href: 'activity.html', text: 'Activity Selection 活動選擇' },
+      { id: 'knapsack', href: 'knapsack.html', text: 'Knapsack 背包問題' },
+      { id: 'huffman', href: 'huffman.html', text: 'Huffman Code 霍夫曼編碼' },
+    ] },
+    { title: '練習', items: [
+      { id: 'exercises', href: 'exercises.html', text: '課本習題 15.x & Problem 15-1' },
+    ] },
+  ];
+  NAVS.dp = [
     { title: 'Ch14 Dynamic Programming', items: [
       { id: 'hub', href: 'index.html', text: '總覽與速查表' },
     ] },
@@ -53,9 +73,10 @@
     const side = document.querySelector('aside.side');
     if (!side) return;
     const page = side.dataset.page;
-    side.append(h('a', { class: 'brand', href: page === 'home' ? 'index.html' : 'index.html' },
+    const chapter = side.dataset.chapter || 'dp';
+    side.append(h('a', { class: 'brand', href: 'index.html' },
       '演算法筆記', h('small', null, 'ALGORITHMS · 2026 FALL')));
-    for (const g of NAV) {
+    for (const g of NAVS[chapter]) {
       const ul = h('ul');
       for (const it of g.items) {
         const li = h('li', null, h('a', { href: it.href, class: it.id === page ? 'current' : null }, it.text));
@@ -70,8 +91,9 @@
       }
       side.append(h('div', { class: 'group' }, h('div', { class: 'group-title' }, g.title), ul));
     }
-    side.append(h('div', { class: 'group' }, h('div', { class: 'group-title' }, '其他'),
-      h('ul', null, h('li', null, h('a', { href: '../index.html' }, '← 所有章節')))));
+    side.append(h('div', { class: 'group' }, h('div', { class: 'group-title' }, '其他章節'),
+      h('ul', null, CHAPTERS.filter((c) => c.id !== chapter).map((c) => h('li', null, h('a', { href: c.href }, c.text))),
+        h('li', null, h('a', { href: '../index.html' }, '← 所有章節')))));
 
     const btn = h('button', { class: 'menu-btn', 'aria-label': '開啟目錄', 'aria-expanded': 'false' }, '☰ 目錄');
     btn.addEventListener('click', () => {
@@ -244,7 +266,7 @@
       });
       const g = s('g', { class: 'node' + (n.cls ? ' ' + n.cls : ''), transform: `translate(${x},${y})` });
       if (n.title) g.append(s('title', null, n.title));
-      const isRect = opts.shape === 'rect' || n.dummy;
+      const isRect = opts.shape === 'rect' || n.dummy || n.rect;
       if (isRect) {
         const w = n.dummy ? Math.min(opts.w, 34) : opts.w, hh = n.dummy ? 24 : opts.hgt;
         g.append(s('rect', { x: -w / 2, y: -hh / 2, width: w, height: hh, rx: n.dummy ? 3 : 6 }));

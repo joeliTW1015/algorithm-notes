@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Selection 活動選擇 · Greedy Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-act.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="greedy" data-page="activity"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch15 Greedy · 投影片 p.9–19 · CLRS 15.1</p>
+<h1>Activity Selection 活動選擇</h1>
+<p class="lede">新生週有一堆迎新活動，每個活動都要從頭待到尾，時間重疊的不能同時參加。怎麼選才能參加最多個？四種直覺的貪婪規則裡只有一種是對的。</p>
+
+<h2 id="problem" data-short="問題">問題</h2>
+<ul>
+  <li>有 \(n\) 個活動 \(A_1,\dots,A_n\)，活動 \(A_k\) 有開始時間 \(s_k\) 和結束時間 \(f_k\)，佔用半開區間 \([s_k, f_k)\)。</li>
+  <li>參加 \(A_k\) 就必須在 \(s_k\) 到、待到 \(f_k\)。兩個活動<strong>相容</strong>（compatible）若區間不重疊：\(s_i\ge f_j\) 或 \(s_j\ge f_i\)。</li>
+  <li><strong>目標</strong>：選出最多個兩兩相容的活動。</li>
+</ul>
+
+<h2 id="rules" data-short="該先選哪個">該先選哪一個？</h2>
+<p>投影片列出幾種直覺：(1) 最短的、(2) 最早開始的、(3) <strong>最早結束的</strong>、(4) 最晚開始的 / 最晚結束的。下面可以切換規則和輸入，看哪些會失敗：</p>
+<div data-widget="actRules" data-rule="duration"></div>
+
+<h3 id="shortest">最短時間：不一定最佳（p.11）</h3>
+<p>\(A_1=[4{:}50, 5{:}10)\)、\(A_2=[3{:}00, 5{:}00)\)、\(A_3=[5{:}05, 7{:}00)\)。最短的是 \(A_1\)（20 分鐘），選了它就和另外兩個都衝突，只能參加 1 個；最佳是 \(\{A_2, A_3\}\)，2 個。</p>
+<p>不過它<strong>至少有最佳解的一半</strong>：設 \(R\) = 最短優先的結果、\(O\) = 最佳解。</p>
+<ol class="steps">
+  <li><strong>\(R\) 的每個活動最多和 \(O\) 的 2 個活動衝突。</strong>如果 \(r\in R\) 和 \(O\) 的 3 個以上活動衝突，因為 \(O\) 的活動彼此不重疊，中間那個 \(o\) 一定被 \(r\) 完全包住，所以比 \(r\) 短。選 \(r\) 的當下 \(o\) 還沒被刪掉（之前選的活動和 \(r\) 不衝突，也就和被 \(r\) 包住的 \(o\) 不衝突），那應該先選 \(o\)，矛盾。</li>
+  <li><strong>\(O\) 的每個活動至少和 \(R\) 的 1 個活動衝突（或就在 \(R\) 裡）。</strong>否則它和 \(R\) 全部相容，演算法結束前一定會把它選進來。</li>
+  <li>所以 \(|O|\le 2|R|\)。若 \(|O|&gt;2|R|\)，就有某個 \(O\) 的活動沒有和任何 \(R\) 的活動衝突，\(R\) 還可以再多選一個。∎</li>
+</ol>
+
+<h3 id="earliest-start">最早開始：可能爛到只剩 1 個（p.12）</h3>
+<p>\(A_1=[3{:}00, 10{:}00)\)，\(A_2=[3{:}10, 3{:}20)\)、\(A_3=[3{:}20, 3{:}30)\)、\(A_4=[3{:}30, 3{:}40)\)……。最早開始的是又長又早的 \(A_1\)，選了就只剩它一個；最佳解是後面 \(n-1\) 個短活動全選。最壞情況：1 個 vs \(n-1\) 個，比例可以任意差。</p>
+<p>「最少衝突」也會失敗，反例見 <a href="exercises.html#ex-15-1-3">15.1-3</a>（上面元件的第 4 組輸入）。</p>
+
+<h2 id="choice" data-short="Greedy-choice">最早結束：Greedy-choice property</h2>
+<div class="note key"><span class="tag">Lemma 1</span>對活動選擇問題，<strong>存在</strong>一個最佳解包含「最早結束的活動」。</div>
+<p><strong>證明（cut-and-paste）</strong></p>
+<ol class="steps">
+  <li>令 OPT 為任一最佳解，\(A_j\) 為所有活動中最早結束的。</li>
+  <li>若 OPT 包含 \(A_j\)，得證。</li>
+  <li>否則令 \(A'\) 為 OPT 中最早結束的活動。OPT 的其他活動都在 \(A'\) 結束之後才開始（它們和 \(A'\) 相容、又比 \(A'\) 晚結束）。</li>
+  <li>因為 \(f_j\le f_{A'}\)，把 \(A'\) 換成 \(A_j\) 不會和 OPT 的其他活動衝突：\(\text{OPT}-\{A'\}\cup\{A_j\}\) 仍然合法，而且個數和 OPT 一樣 ⇒ 也是最佳解，且包含 \(A_j\)。∎</li>
+</ol>
+
+<h2 id="substructure" data-short="Optimal substructure">Optimal substructure</h2>
+<div class="note key"><span class="tag">Lemma 2</span>令 \(A_j\) 為最早結束的活動，\(S\) 為和 \(A_j\) 不衝突的活動集合，OPT 為包含 \(A_j\) 的最佳解。則 \(\text{OPT}-\{A_j\}\) 是輸入為 \(S\) 的子問題的最佳解。</div>
+<p><strong>證明（反證）</strong></p>
+<ol class="steps">
+  <li>\(\text{OPT}-\{A_j\}\) 裡的活動都和 \(A_j\) 相容，所以都在 \(S\) 裡，是子問題的一個可行解。</li>
+  <li>假設它不是最佳，令 \(C\) 是 \(S\) 的最佳解，則 \(|C|&gt;|\text{OPT}-\{A_j\}|\)。</li>
+  <li>\(C\) 的活動都和 \(A_j\) 相容，所以 \(C\cup\{A_j\}\) 合法，而且 \(|C\cup\{A_j\}|&gt;|\text{OPT}|\)，和 OPT 是最佳解矛盾。∎</li>
+</ol>
+
+<h2 id="algo" data-short="演算法">貪婪演算法</h2>
+<p>兩個 lemma 合起來：選最早結束的活動 → 刪掉和它衝突的 → 對剩下的重複。</p>
+<div class="two">
+<div>
+<pre data-code="概念版（p.17）">
+S = 所有活動
+while S 不是空的
+    A = S 中最早結束的活動
+    選 A，並從 S 刪掉和 A 衝突的活動
+</pre>
+</div>
+<div>
+<pre data-code="GREEDY-ACTIVITY-SELECTOR(s, f)">
+n = s.length       // 已依 f 排序
+A = {a1}
+k = 1              // 最後選的活動
+for m = 2 to n
+    if s[m] >= f[k]
+        A = A ∪ {am}
+        k = m
+return A
+</pre>
+</div>
+</div>
+<ul>
+  <li>排序後「剩下的活動中最早結束的、且不衝突的」就是往後掃遇到的第一個 \(s_m\ge f_k\) 的活動，所以只需要比較 \(s_m\) 和<strong>最後選的</strong>那個的 \(f_k\)。</li>
+  <li>輸入已依結束時間排序：\(\Theta(n)\)；沒排序要先排序：\(O(n\log n)\)。</li>
+</ul>
+
+<h2 id="run" data-short="例題逐步執行">例題（p.18）：逐步執行</h2>
+<table class="plain">
+  <tr><th>\(i\)</th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td><td class="num">9</td></tr>
+  <tr><th>\(s_i\)</th><td class="num">1</td><td class="num">2</td><td class="num">4</td><td class="num">1</td><td class="num">5</td><td class="num">8</td><td class="num">9</td><td class="num">11</td><td class="num">13</td></tr>
+  <tr><th>\(f_i\)</th><td class="num">3</td><td class="num">5</td><td class="num">7</td><td class="num">8</td><td class="num">9</td><td class="num">10</td><td class="num">11</td><td class="num">14</td><td class="num">16</td></tr>
+</table>
+<div data-widget="actSelector"></div>
+<p>結果 \(\{a_1, a_3, a_6, a_8\}\)，4 個。最佳解<strong>不唯一</strong>：\(\{a_2, a_5, a_7, a_9\}\) 也是 4 個（它是「最晚開始」貪婪的結果，見 <a href="exercises.html#ex-15-1-2">15.1-2</a>）。</p>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-15-1-2">15.1-2</a> 最晚開始也對 · <a href="exercises.html#ex-15-1-3">15.1-3</a> 三種錯的貪婪 · <a href="exercises.html#ex-15-1-5">15.1-5</a> 活動有價值（要用 DP）</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch15 Greedy Algorithm 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 15.1 節。</footer>
+</main>
+</div>
+</body>
+</html>

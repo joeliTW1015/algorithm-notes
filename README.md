@@ -3,8 +3,9 @@
 依上課投影片整理的互動式筆記，用 GitHub Pages 發布。
 
 - `dp/` — Chapter 14 Dynamic Programming：Rod cutting、Matrix-chain、LCS、Optimal BST、練習與習題詳解
-- `assets/algos.js` — 純演算法（含逐步記錄），網頁與測試共用
-- `assets/core.js` — 共用 UI：側欄、逐步播放器、DP 表格、樹狀圖
+- `greedy/` — Chapter 15 Greedy Algorithms：Coin changing、Activity selection、Knapsack、Huffman code、習題 15.x 詳解
+- `assets/algos.js`（DP）、`assets/greedy.js`（Greedy）— 純演算法（含逐步記錄），網頁與測試共用
+- `assets/core.js` — 共用 UI：側欄（依 `data-chapter` 切換章節目錄）、逐步播放器、表格、樹狀圖
 - `assets/w-*.js` — 各主題的互動元件
 
 純靜態 HTML/JS，不需要 build。本機預覽：

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Huffman Code 霍夫曼編碼 · Greedy Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-huff.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="greedy" data-page="huffman"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch15 Greedy · 投影片 p.25–43 · CLRS 15.3</p>
+<h1>Huffman Code 霍夫曼編碼</h1>
+<p class="lede">常出現的字元用短的碼、少出現的用長的碼，可以大幅壓縮檔案。但碼字要怎麼設計才不會解碼出錯、而且總長度最短？Huffman 在 1952 年（還是 MIT 博士生時）給了一個貪婪解。</p>
+
+<h2 id="encoding" data-short="定長 vs 變長">定長編碼 vs 變長編碼</h2>
+<ul>
+  <li><strong>Fixed-length</strong>：ASCII 每個字元都用 8 bits。</li>
+  <li>真實文字中每個字元出現的頻率不同 → <strong>variable-length</strong>：常見字元用少 bits，少見字元用多 bits。</li>
+</ul>
+<p><strong>例子（p.26–27）</strong>：100K 個字元的檔案，只有 a–f 六種字元；a 出現 45K 次，其他各 11K 次。</p>
+<table class="plain">
+  <tr><th></th><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th class="num">總 bits</th></tr>
+  <tr><td>頻率（K）</td><td>45</td><td>11</td><td>11</td><td>11</td><td>11</td><td>11</td><td></td></tr>
+  <tr><td>定長（3 bits）</td><td>000</td><td>001</td><td>010</td><td>011</td><td>100</td><td>101</td><td class="num">300K</td></tr>
+  <tr><td>變長</td><td>0</td><td>100</td><td>101</td><td>110</td><td>1110</td><td>1111</td><td class="num">232K</td></tr>
+</table>
+<p>變長：\((45\times1 + 33\times3 + 22\times4)\times 1\text{K}=232\text{K}\) bits，省了約 25%。</p>
+
+<h2 id="prefix" data-short="Prefix code">「更好」的編碼？Prefix code</h2>
+<p>再貪心一點：a→0、b→1、c→00、d→01、e→10、f→11，每個碼都更短。問題是收到 <code>0101</code> 時，它可能是 abab、dd、abd、aeb、dab……<strong>無法唯一解碼</strong>。原因：<mark>某個碼字是另一個碼字的前綴</mark>（a = 0 是 d = 01 的前綴）。</p>
+<ul>
+  <li><strong>Prefix code</strong>（prefix-free code）：沒有任何碼字是另一個碼字的前綴。</li>
+  <li><strong>解碼很簡單</strong>：從頭掃，一湊成某個碼字就輸出那個字元，然後對剩下的部分繼續。不會有歧義。</li>
+  <li><strong>Prefix code tree</strong>：每個字元是一個<strong>葉子</strong>，從根到葉的路徑（左 0、右 1）就是碼字。字元都在葉子上 ⇔ 是 prefix code。</li>
+</ul>
+<div data-widget="prefixCode"></div>
+
+<h2 id="optimal" data-short="最佳 prefix code">最佳 prefix code 問題</h2>
+<ul>
+  <li><strong>Input</strong>：字元集合 \(S=\{c_1,\dots,c_n\}\)，\(c_k\) 出現 \(f_{c_k}\) 次。</li>
+  <li><strong>Target</strong>：找碼字 \(w_k\) 使 \(\displaystyle B(T)=\sum_k |w_k|\, f_{c_k}\) 最小。\(|w_k|\) 就是 \(c_k\) 在樹 \(T\) 中的深度 \(d_T(c_k)\)。</li>
+  <li>最佳的樹一定是 <strong>full binary tree</strong>（每個內部節點都有兩個小孩）：若某節點只有一個小孩，把那個小孩的子樹往上提一層，所有葉子深度減 1，成本變小（<a href="exercises.html#ex-15-3-2">15.3-2</a>）。</li>
+</ul>
+
+<h2 id="choice" data-short="Greedy-choice">Greedy-choice property</h2>
+<div class="note key"><span class="tag">Lemma 1</span>令 \(c, c'\) 為頻率最小的兩個字元。存在一棵最佳 prefix code tree，其中 \(c\) 和 \(c'\) 是<strong>兄弟</strong>，而且是<strong>最深</strong>的兩片葉子。</div>
+<p><strong>證明（cut-and-paste）</strong></p>
+<ol class="steps">
+  <li>令 OPT 為任一最佳樹。若 \(c, c'\) 已經符合要求，得證。</li>
+  <li>否則令 \(a, b\) 為 OPT 中<strong>最深</strong>、而且有同一個 parent 的兩片葉子。<em>為什麼一定存在？</em>最佳樹是 full binary tree，最深的葉子的 parent 有兩個小孩，另一個小孩也在最深那層，不可能是內部節點（否則有更深的葉子），所以也是葉子。</li>
+  <li>把 \(a\) 和 \(c\) 交換、\(b\) 和 \(c'\) 交換。<em>為什麼成本不會變大？</em>交換 \(a\) 與 \(c\) 的成本變化是
+    $$\Delta = (f_c - f_a)\bigl(d(a) - d(c)\bigr)\le 0,$$
+    因為 \(f_c\le f_a\)（\(c\) 頻率最小）、\(d(a)\ge d(c)\)（\(a\) 最深）。\(b\) 與 \(c'\) 同理。</li>
+  <li>交換後成本 \(\le\) OPT，所以仍是最佳樹，而且 \(c, c'\) 是最深的兄弟。∎</li>
+</ol>
+
+<h2 id="substructure" data-short="Optimal substructure">Optimal substructure</h2>
+<p>令 \(S'\) = 從 \(S\) 拿掉 \(c, c'\)，加入新字元 \(X\)，\(f_X=f_c+f_{c'}\)。</p>
+<div class="note key"><span class="tag">Lemma 2</span>若 \(T'\) 是 \(S'\) 的最佳 prefix code tree，則把 \(T'\) 中的葉子 \(X\) 換成「有兩個小孩 \(c, c'\) 的內部節點」得到的樹 \(T\)，是 \(S\) 的最佳 prefix code tree。</div>
+<p><strong>關鍵等式</strong>：\(c, c'\) 的深度是 \(d_{T'}(X)+1\)，其餘字元深度不變，所以</p>
+<div class="formula">$$B(T) = B(T') - f_X\,d_{T'}(X) + (f_c+f_{c'})\bigl(d_{T'}(X)+1\bigr) = B(T') + f_c + f_{c'}.$$</div>
+<p><strong>證明（反證）</strong></p>
+<ol class="steps">
+  <li>假設 \(T\) 不是 \(S\) 的最佳樹，則存在最佳樹 \(T''\) 使 \(B(T'')&lt;B(T)\)。由 Lemma 1，可以假設 \(T''\) 中 \(c, c'\) 是兄弟。</li>
+  <li>把 \(T''\) 中 \(c, c'\) 的 parent 換成葉子 \(X\)，得到 \(S'\) 的樹 \(T'''\)。由同一個等式：
+    $$B(T''') = B(T'') - f_c - f_{c'} &lt; B(T) - f_c - f_{c'} = B(T').$$</li>
+  <li>這和 \(T'\) 是 \(S'\) 的最佳樹矛盾。∎</li>
+</ol>
+
+<h2 id="build" data-short="演算法 + 逐步執行">Huffman 演算法</h2>
+<p>兩個 lemma 合起來：合併頻率最小的兩個字元 → 對縮小一個字元的 \(S'\) 遞迴 → 把 \(X\) 展開成 \(c, c'\)。</p>
+<div class="two">
+<div>
+<pre data-code="Huffman(S)  // 遞迴版（p.41）">
+找出頻率最小的 c 和 c'
+S' = S - {c, c'} + {X}, fX = fc + fc'
+T' = Huffman(S')
+把 T' 的葉子 X 接上 c 和 c' 兩個小孩
+return 這棵樹
+</pre>
+</div>
+<div>
+<pre data-code="HUFFMAN(C)  // 迴圈版（p.43）">
+n = |C|
+Q = C              // min-priority queue
+for i = 1 to n - 1
+    allocate a new node z
+    z.left = x = EXTRACT-MIN(Q)
+    z.right = y = EXTRACT-MIN(Q)
+    z.freq = x.freq + y.freq
+    INSERT(Q, z)
+return EXTRACT-MIN(Q)  // 樹根
+</pre>
+</div>
+</div>
+<p>下面預設是投影片 p.42（CLRS 圖 15.5）的例子 f:5 e:9 c:12 b:13 d:16 a:45，合併順序 14 → 25 → 30 → 55 → 100。也可以換成 p.26 的頻率，會發現 Huffman 得到的成本正好是 232K——投影片 p.27 的編碼已經是最佳的。</p>
+<div data-widget="huffman"></div>
+
+<h3 id="time">執行時間：\(O(n\log n)\)</h3>
+<ul>
+  <li>用 binary min-heap 當 \(Q\)：BUILD-MIN-HEAP \(O(n)\)。</li>
+  <li>迴圈跑 \(n-1\) 次，每次 2 次 EXTRACT-MIN + 1 次 INSERT，各 \(O(\lg n)\)。</li>
+  <li>總共 \(O(n\log n)\)。（若用 van Emde Boas tree 可降到 \(O(n\lg\lg n)\)。）</li>
+</ul>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-15-3-2">15.3-2</a> 非 full 的樹不是最佳 · <a href="exercises.html#ex-15-3-4">15.3-4</a> \(B(T)\) = 內部節點頻率和 · <a href="exercises.html#ex-15-3-5">15.3-5</a> 用 \(2n-1+n\lceil\lg n\rceil\) bits 傳送編碼</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch15 Greedy Algorithm 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 15.3 節。</footer>
+</main>
+</div>
+</body>
+</html>
