@@ -6,8 +6,22 @@
   const CHAPTERS = [
     { id: 'dp', href: '../dp/index.html', text: 'Ch14 Dynamic Programming' },
     { id: 'greedy', href: '../greedy/index.html', text: 'Ch15 Greedy Algorithms' },
+    { id: 'amortized', href: '../amortized/index.html', text: 'Ch16 Amortized Analysis' },
   ];
   const NAVS = {};
+  NAVS.amortized = [
+    { title: 'Ch16 Amortized Analysis', items: [
+      { id: 'hub', href: 'index.html', text: '總覽與速查表' },
+    ] },
+    { title: 'Lecture 16-1 Aggregate', items: [
+      { id: 'stack', href: 'super-stack.html', text: 'Super Stack 多重 pop' },
+      { id: 'counter', href: 'binary-counter.html', text: 'Binary Counter 二進位計數器' },
+      { id: 'average', href: 'average-case.html', text: 'Amortized vs Average-case' },
+    ] },
+    { title: '練習', items: [
+      { id: 'exercises', href: 'exercises.html', text: '課本習題 16.1-x 詳解' },
+    ] },
+  ];
   NAVS.greedy = [
     { title: 'Ch15 Greedy Algorithms', items: [
       { id: 'hub', href: 'index.html', text: '總覽與速查表' },

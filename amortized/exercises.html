@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>課本習題 16.1-x · Amortized Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="amortized" data-page="exercises"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Homework · CLRS 4th ed. Chapter 16</p>
+<h1>課本習題詳解</h1>
+<p class="lede">投影片 p.18 指定的 16.1-1、16.1-2、16.1-3。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p><button type="button" id="toggle-all">全部展開</button></p>
+
+<h2 id="s16-1" data-short="16.1 Aggregate">16.1 Aggregate analysis</h2>
+
+<section class="ex" id="ex-16-1-1">
+<header><span class="id">16.1-1</span><span class="t">加入 MULTIPUSH，\(O(1)\) 還成立嗎？</span></header>
+<div class="q">stack 操作再加一個 MULTIPUSH(k)：一次 push k 個元素。stack 操作的 amortized cost 還是 \(O(1)\) 嗎？</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>不成立。</strong>MULTIPUSH(k) 的成本是 k。原本的論證靠的是「被 pop 的個數 ≤ PUSH 的<em>次數</em> ≤ n」；現在一次操作就能放進 k 個元素，這個上界沒了。</li>
+  <li><strong>反例</strong>：交替做 MULTIPUSH(k)、MULTIPOP(k)，共 n 個操作。每個都真的動到 k 個元素，總成本 \(nk\)，平均每個 \(\Theta(k)\)。k 可以跟 n 一樣大，所以 n 個操作可以到 \(\Theta(n^2)\)，不是 \(O(n)\)。</li>
+  <li><strong>還能說什麼</strong>：被 pop 的總數 ≤ 被 push 的元素總數 = \(\sum\)（MULTIPUSH 的 k）+ #PUSH。所以總成本 ≤ 2 × 被 push 的元素總數。照 p.3 的寫法：MULTIPUSH(k) 是 amortized \(O(k)\)，PUSH、POP、MULTIPOP 是 amortized \(O(1)\)——MULTIPOP 的成本全部算到當初 push 那些元素的操作身上。</li>
+</ol>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-1-2">
+<header><span class="id">16.1-2</span><span class="t">加入 DECREMENT，n 個操作要 \(\Theta(nk)\)</span></header>
+<div class="q">在 k-bit counter 加入 DECREMENT 操作。證明 n 個操作的成本可以高達 \(\Theta(nk)\)。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>上界</strong>：每個操作最多翻 k 個位元，所以永遠是 \(O(nk)\)。只要找到一串操作達到 \(\Omega(nk)\) 就是 \(\Theta(nk)\)。</li>
+  <li><strong>DECREMENT 的規則</strong>（INCREMENT 反過來）：從 \(b_0\) 往上，連續的 0 翻成 1（借位），再把第一個 1 翻成 0。在 0 上做 DECREMENT 會繞到 \(2^k-1\)（全部是 1）。</li>
+  <li><strong>壞序列</strong>：從 0 開始，交替做 DECREMENT、INCREMENT：
+    <br><code>00…0</code> → DEC → <code>11…1</code>（翻 k 個）→ INC → <code>00…0</code>（翻 k 個）→ …
+    <br>每個操作都翻 k 個，n 個操作共 \(nk\)，所以是 \(\Theta(nk)\)。</li>
+  <li><strong>不想用繞回也行</strong>：先 INCREMENT 到 \(2^{k-1}-1 = 011\dots1\)，之後交替 INCREMENT（→ \(100\dots0\)，翻 k 個）、DECREMENT（→ \(011\dots1\)，翻 k 個）。前面的 \(2^{k-1}-1\) 次是固定成本，n 夠大時總成本仍是 \(\Theta(nk)\)。</li>
+  <li><strong>為什麼原本的論證壞掉</strong>：只有 INCREMENT 時，\(b_i\) 每 \(2^i\) 次才翻一次；有了 DECREMENT，高位元可以每次都被來回翻轉，「高位元很少翻」不再成立。</li>
+</ol>
+<div data-widget="incDec"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-1-3">
+<header><span class="id">16.1-3</span><span class="t">第 i 個操作在 i 是 2 的冪時成本 i</span></header>
+<div class="q">一串 n 個操作，第 i 個操作的成本是 i（如果 i 剛好是 2 的冪），否則是 1。用 aggregate analysis 求每個操作的 amortized cost。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>寫出成本</strong>：\(c_1,c_2,\dots = 1, 2, 1, 4, 1, 1, 1, 8, 1, \dots\)。單次最壞是 \(c_n\le n\)，粗略總和 \(O(n^2)\)。</li>
+  <li><strong>分兩類加總</strong>：在 \(1..n\) 中，2 的冪是 \(1,2,4,\dots,2^{m}\)，\(m=\lfloor\lg n\rfloor\)，共 \(m+1\) 個；其他 \(n-m-1\) 個各花 1。
+    $$\sum_{i=1}^{n}c_i=\sum_{j=0}^{m}2^j+(n-m-1)=(2^{m+1}-1)+(n-m-1)\;&lt;\;2n+n=3n,$$
+    因為 \(2^m\le n\) ⇒ \(2^{m+1}\le 2n\)。</li>
+  <li><strong>除以 n</strong>：amortized cost \(&lt;3n/n=3=O(1)\)。</li>
+  <li><strong>和 binary counter 的關係</strong>：一樣是「貴的操作很稀疏」——成本 \(2^j\) 的操作在前 n 個中只出現一次，它們的總和是等比級數，被最大的一項 \(\le n\) 主導。</li>
+</ol>
+<div data-widget="powCost"></div>
+</div></details>
+</section>
+
+</article>
+<footer class="site">題目改寫自 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.1 節習題與 Ch16-1 投影片 p.18，詳解為自行整理。</footer>
+</main>
+</div>
+<script>
+  document.getElementById('toggle-all').addEventListener('click', function () {
+    var all = document.querySelectorAll('.ex details');
+    var open = this.textContent === '全部展開';
+    all.forEach(function (d) { d.open = open; });
+    this.textContent = open ? '全部收合' : '全部展開';
+  });
+</script>
+</body>
+</html>

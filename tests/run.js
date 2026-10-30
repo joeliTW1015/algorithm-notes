@@ -275,4 +275,64 @@ check('15.2-5 unit intervals and greedy max subarray', () => {
   assert.strictEqual(GR.maxSubarray([-3, -1, -2]).best, -1);
 });
 
+const AM = require('../assets/amortized.js');
+
+check('super stack: total cost <= 2 * #PUSH, popped <= pushed', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const ops = AM.randomStackOps(60, seed);
+    const r = AM.stackRun(ops);
+    assert.ok(r.popped <= r.pushes);
+    assert.ok(r.total <= 2 * r.pushes && r.total <= 2 * ops.length);
+  }
+  const w = AM.stackRun(AM.worstStackOps(10));
+  assert.strictEqual(w.steps[10].cost, 9);
+  assert.strictEqual(w.total, 18);
+  const s = AM.stackRun([{ op: 'push' }, { op: 'push' }, { op: 'superpop', k: 5 }, { op: 'pop' }]);
+  assert.deepStrictEqual(s.steps.map((x) => x.cost), [0, 1, 1, 2, 0]);
+});
+
+check('binary counter: slide examples and CLRS Figure 16.2', () => {
+  const five = [1, 0, 1, 0, 0];
+  const r = AM.increment(five);
+  assert.strictEqual(AM.show(r.bits), '00110');
+  assert.strictEqual(r.cost, 2);
+  const max = AM.increment([1, 1, 1, 1, 1]);
+  assert.strictEqual(AM.show(max.bits), '00000');
+  assert.strictEqual(max.cost, 5);
+  const fig = AM.counterRun(8, 16).steps.map((s) => s.total);
+  assert.deepStrictEqual(fig, [0, 1, 3, 4, 7, 8, 10, 11, 15, 16, 18, 19, 22, 23, 25, 26, 31]);
+});
+
+check('binary counter: b_i flips floor(n/2^i) times, total < 2n', () => {
+  for (const [k, n] of [[5, 31], [8, 100], [12, 1000]]) {
+    const r = AM.counterRun(k, n);
+    r.perBit.forEach((c, i) => assert.strictEqual(c, Math.floor(n / 2 ** i)));
+    assert.strictEqual(r.total, AM.incrementTotal(n, k));
+    assert.ok(r.total < 2 * n);
+  }
+});
+
+check('16.1-2 alternating DECREMENT/INCREMENT costs k each', () => {
+  const k = 6, ops = [];
+  for (let i = 0; i < 20; i++) ops.push(i % 2 ? 'inc' : 'dec');
+  const r = AM.counterRun(k, ops);
+  r.steps.slice(1).forEach((s) => assert.strictEqual(s.cost, k));
+  assert.strictEqual(r.total, 20 * k);
+  assert.strictEqual(AM.show(AM.decrement([0, 0, 1, 0]).bits), '0011');
+});
+
+check('16.1-3 power-of-two costs: total < 3n', () => {
+  assert.deepStrictEqual([1, 2, 3, 4, 5, 6, 7, 8].map(AM.powCost), [1, 2, 1, 4, 1, 1, 1, 8]);
+  assert.strictEqual(AM.powTotal(8), 19);
+  for (let n = 1; n <= 2000; n++) assert.ok(AM.powTotal(n) < 3 * n);
+});
+
+check('quicksort average over all n! inputs = 2(n+1)H_n - 4n, worst = n(n-1)/2', () => {
+  for (let n = 1; n <= 7; n++) {
+    const st = AM.quicksortStats(n);
+    assert.ok(Math.abs(st.avg - AM.quicksortAvgFormula(n)) < 1e-9, 'n=' + n);
+    assert.strictEqual(st.worst, (n * (n - 1)) / 2);
+  }
+});
+
 console.log(`\n${passed} checks passed`);

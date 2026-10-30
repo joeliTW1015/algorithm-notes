@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amortized vs Average-case · Amortized Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="amortized" data-page="average"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch16-1 Amortized Analysis · 投影片 p.15–17</p>
+<h1>Amortized vs Average-case</h1>
+<p class="lede">兩個都叫「平均」，但平均的對象完全不同：amortized 是對<strong>一串操作</strong>平均，而且那一串是最壞的；average-case 是對<strong>所有可能的輸入</strong>平均，要假設輸入的分布。</p>
+
+<h2 id="compare" data-short="比較">差在哪裡</h2>
+<table class="plain">
+  <tr><th></th><th>Amortized analysis</th><th>Average-case analysis</th></tr>
+  <tr><td>平均什麼</td><td>一串操作中，每個操作的成本</td><td>所有輸入上，演算法的成本</td></tr>
+  <tr><td>需要機率嗎</td><td>不需要</td><td>需要假設輸入分布（例如 n! 種順序等機率）</td></tr>
+  <tr><td>對手</td><td>最壞的操作序列也成立</td><td>只對「平均的輸入」成立，壞輸入仍然可能很慢</td></tr>
+  <tr><td>保證</td><td>n 個操作總時間 ≤ n × amortized cost（一定成立）</td><td>期望值；個別一次執行可以比平均差很多</td></tr>
+  <tr><td>例子</td><td>SUPER-POP、INCREMENT：amortized \(O(1)\)</td><td>QUICKSORT：平均 \(\Theta(n\log n)\) 次比較</td></tr>
+</table>
+<div class="note"><span class="tag">p.15</span>兩種分析都有用，只是研究的是不同的東西。</div>
+
+<h2 id="quicksort" data-short="Quicksort 例子">例：Quicksort 的平均情況（p.16–17）</h2>
+<ul>
+  <li>排序 n 個數，算 quicksort 用幾次比較。</li>
+  <li>假設 n! 種輸入順序<strong>等機率</strong>出現，就可以算出這 n! 個輸入的平均比較次數：\(\Theta(n\log n)\)。</li>
+  <li>所以可以說「<strong>平均</strong>排序時間 = \(\Theta(n\log n)\)」。</li>
+</ul>
+<p>下面把 n! 種順序全部跑一遍（課本的 QUICKSORT，最後一個元素當 pivot）：</p>
+<div data-widget="qsAverage"></div>
+
+<h2 id="why" data-short="為什麼不是 amortized">為什麼不能說 amortized sorting time = \(\Theta(n\log n)\)？</h2>
+<ol class="steps">
+  <li><strong>Amortized 要對最壞的序列成立。</strong>把「排序一次」當成一個操作，考慮連續 m 次排序。對手每次都給已經排好的輸入（例如 1 2 … n），每次都要 \(n(n-1)/2=\Theta(n^2)\) 次比較。</li>
+  <li><strong>總成本 \(\Theta(mn^2)\)</strong>，平均每次 \(\Theta(n^2)\)，不是 \(\Theta(n\log n)\)。</li>
+  <li><strong>根本原因</strong>：quicksort 每次排序彼此<strong>獨立</strong>，一次貴的排序不會讓之後的排序變便宜。Amortized 能變便宜，靠的是「貴的操作之前一定有很多便宜的操作在『存錢』」（SUPER-POP 之前一定有 PUSH），而排序沒有這種結構。</li>
+  <li>\(\Theta(n\log n)\) 只是對<strong>隨機輸入</strong>的期望值；把最壞情況加進來就沒有這個保證。∎</li>
+</ol>
+<div class="note warn"><span class="tag">別搞混</span>Randomized quicksort（隨機選 pivot）的期望時間是 \(O(n\log n)\)，對任何輸入都成立——但那是對演算法自己丟的硬幣取期望，仍然不是 amortized。</div>
+
+</article>
+<footer class="site">內容整理自 Ch16 Amortized Analysis I 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 7、16 章。</footer>
+</main>
+</div>
+</body>
+</html>

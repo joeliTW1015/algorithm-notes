@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binary Counter 二進位計數器 · Amortized Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="amortized" data-page="counter"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch16-1 Amortized Analysis · 投影片 p.8–14</p>
+<h1>Binary Counter 二進位計數器</h1>
+<p class="lede">一個 k-bit 計數器，每次 INCREMENT 的成本是翻轉的位元數。最壞一次翻 k 個，所以 n 次是 \(O(nk)\)——一樣對但不緊。數一數每個位元各翻幾次，就得到 \(&lt;2n\)。</p>
+
+<h2 id="setup" data-short="設定">設定</h2>
+<ul>
+  <li>計數器有 k 個位元，從右邊數起記為 \(b_0, b_1, \dots, b_{k-1}\)（\(b_0\) 是最低位）。一開始 count = 0，例如 k = 5 時是 <code>0 0 0 0 0</code>。</li>
+  <li>INCREMENT 把 count 加 1，成本 = <strong>被翻轉的位元數</strong>：</li>
+</ul>
+<table class="plain">
+  <tr><th>之前</th><th>之後</th><th class="num">成本</th><th>說明</th></tr>
+  <tr><td class="mono">0 0 1 0 1（5）</td><td class="mono">0 0 1 1 0（6）</td><td class="num">2</td><td>\(b_0\): 1→0，\(b_1\): 0→1</td></tr>
+  <tr><td class="mono">1 1 1 1 1（MAX）</td><td class="mono">0 0 0 0 0（0）</td><td class="num">k = 5</td><td>全部是 1 時，INCREMENT 讓所有位元歸零（繞回）</td></tr>
+</table>
+<p>規則：從 \(b_0\) 往上，把連續的 1 都翻成 0（進位），再把遇到的第一個 0 翻成 1。</p>
+
+<h2 id="naive" data-short="粗略分析">粗略分析：\(O(nk)\)</h2>
+<ul>
+  <li><strong>單次 INCREMENT 最壞？</strong> \(O(k)\)：所有位元都是 1 時要翻 k 個。</li>
+  <li><strong>n 次最壞總共？</strong> \(O(nk)\)。正確，但不緊——大部分 INCREMENT 只翻一兩個位元。</li>
+</ul>
+
+<h2 id="run" data-short="逐步執行">逐步執行</h2>
+<p>黃色是這次翻轉的位元。注意下面那張「已翻次數」表：\(b_0\) 每次都翻，\(b_1\) 每 2 次翻一次，\(b_2\) 每 4 次……；右下圖的黑線（累計成本）永遠在綠色虛線 \(2n\) 之下，離橘色的粗略上界 \(nk\) 很遠。</p>
+<div data-widget="counter"></div>
+
+<h2 id="observe" data-short="關鍵觀察">關鍵觀察：每個位元多久翻一次</h2>
+<div class="note key"><span class="tag">p.12</span>\(b_i\) 每 \(2^i\) 次 INCREMENT 才翻一次。精確地說：第 x 次 INCREMENT 會翻 \(b_i\) ⇔ \(x\) 可以被 \(2^i\) 整除。</div>
+<p>為什麼？第 x 次 INCREMENT 把 \(x-1\) 變成 \(x\)，翻掉的是 \(x-1\) 結尾那串連續的 1，再加上它上面的那個 0——也就是 \(b_0,\dots,b_t\)，其中 \(t\) = \(x\) 結尾 0 的個數。所以 \(b_i\) 被翻 ⇔ \(x\) 至少有 \(i\) 個結尾 0 ⇔ \(2^i \mid x\)。在 \(1..n\) 中這樣的 x 有 \(\lfloor n/2^i\rfloor\) 個。</p>
+
+<h2 id="aggregate" data-short="Aggregate 分析">Aggregate 分析：\(&lt;2n\)</h2>
+<div class="formula">
+$$\text{總成本}=\sum_{i=0}^{k-1}\left\lfloor \frac{n}{2^i}\right\rfloor\;\le\;\sum_{i=0}^{k-1}\frac{n}{2^i}\;&lt;\;n\sum_{i=0}^{\infty}\frac{1}{2^i}\;=\;2n.$$
+</div>
+<p>除以 INCREMENT 的次數 n：<strong>amortized cost of INCREMENT = \(O(1)\)</strong>。</p>
+<p class="small muted">投影片 p.13 把上限寫成 \(i=0\) to \(k\)；位元只到 \(b_{k-1}\)，多一項不影響結論。</p>
+
+<h2 id="method" data-short="Aggregate method">Aggregate method 的步驟（p.14）</h2>
+<ol class="recipe">
+  <li><b>找總成本</b>（所以叫 aggregate）：super stack 是「每個元素最多被 pop 一次」，binary counter 是「\(b_i\) 翻 \(\lfloor n/2^i\rfloor\) 次」。</li>
+  <li><b>除以操作數</b>：\(O(n)/n = O(1)\)。</li>
+</ol>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-16-1-2">16.1-2</a>：加入 DECREMENT，n 個操作可以要 \(\Theta(nk)\)。</li>
+  <li><a href="exercises.html#ex-16-1-3">16.1-3</a>：第 i 個操作在 i 是 2 的冪時成本 i，否則 1——跟 \(b_i\) 的翻轉頻率是同一種數法。</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch16 Amortized Analysis I 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.1 節。</footer>
+</main>
+</div>
+</body>
+</html>

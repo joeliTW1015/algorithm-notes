@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Stack 多重 pop · Amortized Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="amortized" data-page="stack"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch16-1 Amortized Analysis · 投影片 p.4–7</p>
+<h1>Super Stack 多重 pop</h1>
+<p class="lede">在一般 stack 上多加一個 SUPER-POP(k)。單次 SUPER-POP 可能要 \(O(n)\)，所以「n 個操作 × 每個 \(O(n)\)」得到 \(O(n^2)\)——對，但不緊。換個角度數，總成本其實只有 \(O(n)\)。</p>
+
+<h2 id="problem" data-short="問題">問題</h2>
+<p>朋友做了一個 super stack，除了 PUSH / POP 之外還支援：</p>
+<ul>
+  <li><strong>SUPER-POP(k)</strong>：pop 掉頂端 k 個元素（假設 k 不超過目前 stack 大小）。</li>
+  <li>成本：PUSH、POP 各 \(O(1)\)（記為 1）；SUPER-POP(k) 是 \(O(k)\)（記為 k）。</li>
+</ul>
+<pre data-code="SUPER-POP(S, k)    // 課本叫 MULTIPOP">
+while not STACK-EMPTY(S) and k > 0
+    POP(S)
+    k = k - 1
+</pre>
+<p>從空的 stack 開始，做了 n 個操作，<strong>但不知道順序</strong>。</p>
+
+<h2 id="naive" data-short="粗略分析">粗略分析：\(O(n^2)\)</h2>
+<ul>
+  <li><strong>單次 SUPER-POP 最壞是多少？</strong> \(O(n)\)。stack 裡最多只有 n 個元素（只有 n 個操作，最多 n 次 PUSH），所以一次最多 pop n 個。</li>
+  <li><strong>n 個操作最壞總共多少？</strong> 每個 \(O(n)\)，共 n 個 → \(O(n^2)\)。這是<strong>正確的上界，但不緊</strong>：要讓某次 SUPER-POP 很貴，前面就得先花很多次 PUSH，而那些 PUSH 本身都很便宜。</li>
+</ul>
+
+<h2 id="aggregate" data-short="Aggregate 分析">Aggregate 分析：\(O(n)\)</h2>
+<p>雖然不知道順序，還是知道：</p>
+<ol class="steps">
+  <li>PUSH / POP 最多 n 個 → 花在它們身上的時間 \(O(n)\)。</li>
+  <li>所有 SUPER-POP 一共 pop 掉的元素個數，<strong>不會超過曾經 push 進去的元素個數</strong>——每個元素被 push 一次，最多被 pop 一次（pop 掉就不在 stack 裡了）。而 push 最多 n 次 → 花在 SUPER-POP 的時間 \(O(n)\)。</li>
+  <li>所以 n 個操作的總時間 \(= O(n)\)。更精確：總成本 \(\le \#\text{PUSH} + \#\text{被 pop 的元素} \le 2\cdot\#\text{PUSH} \le 2n\)。</li>
+</ol>
+<div class="note key"><span class="tag">結論（p.7）</span>對任意 n、任意順序的 n 個操作，最壞總時間 \(O(n)\) ⇒ 平均每個操作 \(O(n)/n = O(1)\)。我們說每個操作的 <strong>amortized cost 是 \(O(1)\)</strong>——包括 SUPER-POP。</div>
+<p>自己按按看：不管怎麼排，黑色的累計成本線都不會超過綠色虛線 \(2n\)。「推 19 個 + SUPER-POP(19)」那組最後一次成本 19，但前面 19 次 PUSH 各只花 1。</p>
+<div data-widget="superStack"></div>
+
+<h2 id="trick" data-short="關鍵手法">關鍵手法：從「元素」的角度數</h2>
+<table class="plain">
+  <tr><th></th><th>從「操作」的角度</th><th>從「元素」的角度</th></tr>
+  <tr><td>問的問題</td><td>每個操作最多花多少？</td><td>每個元素一生中最多被動幾次？</td></tr>
+  <tr><td>答案</td><td>SUPER-POP 最多 n</td><td>push 1 次 + pop 最多 1 次 = 2</td></tr>
+  <tr><td>總和</td><td>\(n\cdot n = O(n^2)\)</td><td>\(\le 2n = O(n)\)</td></tr>
+</table>
+<p>Binary counter 用的是同一招，只是換成「每個<strong>位元</strong>被翻幾次」。<a href="binary-counter.html">→ 下一頁</a></p>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-16-1-1">16.1-1</a>：再加一個 MULTIPUSH(k)，\(O(1)\) 還成立嗎？</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch16 Amortized Analysis I 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.1 節。</footer>
+</main>
+</div>
+</body>
+</html>

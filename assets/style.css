@@ -354,6 +354,53 @@ svg.tl .fline { stroke: var(--pencil); stroke-width: 1.6; stroke-dasharray: 4 3;
 .verdict { display: inline-block; font: 700 12.5px var(--f-mono); padding: 1px 9px; border-radius: 99px; color: #fff; background: var(--win); }
 .verdict.bad { background: var(--warn); }
 
+/* ---------- Ch16 Amortized analysis ---------- */
+/* Counter bits: yellow = flipped by this operation. */
+.bitrow { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+.bitcell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bitcell .v { display: flex; align-items: center; justify-content: center; width: 40px; height: 44px; border: 2px solid var(--ink); border-radius: 4px; background: #fff; font: 700 22px var(--f-mono); transition: background .15s; }
+.bitcell .ix { font: 500 11.5px var(--f-mono); color: var(--ink-soft); }
+.bitcell.flip .v { background: var(--hl); box-shadow: 2px 2px 0 var(--ink); }
+.bitrow.small .bitcell .v { width: 30px; height: 34px; font-size: 17px; }
+
+.hero-counter { justify-self: end; width: min(400px, 100%); }
+.hero-counter .bitrow { justify-content: center; }
+@media (max-width: 1100px) { .hero-counter { justify-self: start; } }
+
+.stack-pair { display: flex; gap: 22px; align-items: flex-end; }
+.stackviz { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 96px; padding: 6px 8px 8px; border: 2px solid var(--ink); border-top: 0; border-radius: 0 0 6px 6px; background: #fff; min-height: 80px; justify-content: flex-end; }
+.stackviz .top-label { font: 500 11px var(--f-mono); color: var(--ink-faint); align-self: flex-start; }
+.stackviz .empty, .stackviz .more { font-size: 12.5px; color: var(--ink-soft); }
+.stack-pair .item { width: 76px; text-align: center; font: 700 14px/26px var(--f-mono); border: 1.5px solid var(--ink); border-radius: 3px; background: var(--pencil-soft); }
+.stack-pair .item.new { background: var(--win-soft); border-color: var(--win); box-shadow: 0 0 0 2px var(--win); }
+.stack-pair .item.out { background: #f0f2f1; border-style: dashed; color: var(--ink-faint); text-decoration: line-through; margin-top: 3px; }
+.stack-out { min-width: 90px; }
+
+/* Charts: bars = cost of one operation, solid line = running total, dashed = bounds. */
+.chart-wrap { margin: 10px 0 4px; }
+svg.chart { display: block; width: 100%; max-width: 760px; height: auto; background: #fff; border: 1px solid var(--rule); border-radius: 4px; }
+svg.chart .grid { stroke: var(--grid); stroke-width: 1; }
+svg.chart .axis { stroke: var(--ink); stroke-width: 1.2; }
+svg.chart .tick { font: 500 10.5px var(--f-mono); fill: var(--ink-soft); }
+svg.chart .bar { fill: var(--pencil-soft); stroke: var(--pencil); stroke-width: 1; }
+svg.chart .bar.hot { fill: var(--hl); stroke: var(--ink); }
+svg.chart .ln { fill: none; stroke-width: 2.4; stroke-linejoin: round; }
+svg.chart .ln.total { stroke: var(--ink); }
+svg.chart .ln.ref { stroke: var(--win); stroke-dasharray: 6 4; }
+svg.chart .ln.naive { stroke: var(--warn); stroke-dasharray: 3 3; }
+svg.chart .cursor { stroke: var(--trace); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+.chart-legend .lg::before { content: ""; display: inline-block; width: 18px; height: 0; vertical-align: 4px; margin-right: 6px; border-top: 2.4px solid var(--ink); }
+.chart-legend .lg.ref::before { border-top: 2.4px dashed var(--win); }
+.chart-legend .lg.naive::before { border-top: 2.4px dotted var(--warn); }
+.chart-legend .lg.bar::before { width: 10px; height: 12px; vertical-align: -1px; border: 1px solid var(--pencil); background: var(--pencil-soft); }
+
+.fig-scroll { max-height: 300px; overflow-y: auto; position: relative; }
+table.plain.fig { margin: 4px 0; font-size: 13.5px; }
+table.plain.fig td, table.plain.fig th { padding: 1px 8px; }
+table.plain.fig tr.on td { background: var(--hl-soft); }
+table.plain.fig mark { padding: 0 2px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
