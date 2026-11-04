@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>課本習題 16.1-x · Amortized Analysis</title>
+<title>課本習題 16.1–16.3 · Amortized Analysis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -13,6 +13,7 @@
 <script defer src="../assets/amortized.js"></script>
 <script defer src="../assets/core.js"></script>
 <script defer src="../assets/w-amort.js"></script>
+<script defer src="../assets/w-amort2.js"></script>
 </head>
 <body>
 <div class="layout">
@@ -22,7 +23,7 @@
 
 <p class="eyebrow">Homework · CLRS 4th ed. Chapter 16</p>
 <h1>課本習題詳解</h1>
-<p class="lede">投影片 p.18 指定的 16.1-1、16.1-2、16.1-3。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p class="lede">Ch16-1 投影片 p.18 指定的 16.1-1 ~ 16.1-3，以及 Ch16-2 投影片 p.30 指定的 16.2-1、16.2-3、16.3-1、16.3-3 ~ 16.3-6。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
 <p><button type="button" id="toggle-all">全部展開</button></p>
 
 <h2 id="s16-1" data-short="16.1 Aggregate">16.1 Aggregate analysis</h2>
@@ -72,8 +73,175 @@
 </div></details>
 </section>
 
+<h2 id="s16-2" data-short="16.2 Accounting">16.2 The accounting method</h2>
+
+<section class="ex" id="ex-16-2-1">
+<header><span class="id">16.2-1</span><span class="t">每 k 個操作備份一次的 stack</span></header>
+<div class="q">對一個大小永遠不超過 k 的 stack 做 PUSH、POP。每做完 k 個操作，就自動把整個 stack 複製一份備份。用 accounting method 指定適當的 amortized cost，證明 n 個操作（包含複製）的總成本是 \(O(n)\)。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>實際成本</strong>：PUSH、POP 各 1；一次備份要複製目前 stack 裡的每個元素，成本 = stack 大小 \(\le k\)。</li>
+  <li><strong>收費</strong>：PUSH、POP <strong>都收 $2</strong>：$1 付自己，$1 存進「備份基金」。</li>
+  <li><strong>為什麼夠</strong>：兩次備份之間剛好有 k 個操作，基金多了 $k。備份時 stack 大小 \(\le k\)，所以 $k 一定付得起。付完後基金仍 \(\ge 0\)（多的留著）。
+    <br>不變量：第 j 個操作之後，基金 \(\ge j \bmod k\ge 0\)。</li>
+  <li><strong>結論</strong>：credit 永遠 \(\ge 0\) ⇒ 總實際成本 \(\le\sum\hat c_i=2n=O(n)\)。</li>
+  <li><strong>重點是「操作數」而不是「PUSH 數」</strong>：備份是每 k 個<em>操作</em>發生一次，所以讓每個操作都存 $1 最直接。如果只讓 PUSH 存錢，要存 $2 才夠（PUSH 收 $3）：兩次備份間若有 p 個 PUSH、\(k-p\) 個 POP，備份時的大小 \(\le s_{	ext{前}}+p-(k-p)\le 2p\)。</li>
+</ol>
+<div data-widget="backupStack"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-2-3">
+<header><span class="id">16.2-3</span><span class="t">Counter 加上 RESET，n 個操作仍是 \(O(n)\)</span></header>
+<div class="q">counter 除了 INCREMENT，還要能 RESET（所有位元歸零）。檢查或修改一個位元算 \(\Theta(1)\)。說明怎麼用位元陣列實作，讓從 0 開始的任意 n 個 INCREMENT / RESET 總共 \(O(n)\) 時間。（提示：記住最高位的 1 在哪。）</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>問題在哪</strong>：直接把 k 個位元全部清 0，RESET 就是 \(\Theta(k)\)；n 個 RESET 是 \(\Theta(nk)\)。可是位元 \(b_{\max+1}\) 以上本來就都是 0，不用碰。</li>
+  <li><strong>實作</strong>：多存一個 <code>max</code> = 最高位的 1 的位置（全部是 0 時為 −1）。
+<pre data-code="INCREMENT(A, k)">
+i = 0
+while i < k and A[i] == 1
+    A[i] = 0
+    i = i + 1
+if i < k
+    A[i] = 1
+    if i > max then max = i
+else max = -1            // 繞回 0
+</pre>
+<pre data-code="RESET(A)">
+for i = 0 to max         // 只清到最高位的 1
+    A[i] = 0
+max = -1
+</pre></li>
+  <li><strong>收費</strong>：INCREMENT 收 <strong>$3</strong>，RESET 收 <strong>$1</strong>（付 <code>max</code> 這類 \(O(1)\) 的雜事）。INCREMENT 的 $3：
+    <ul>
+      <li>$1 付那個 0→1；</li>
+      <li>$1 放在剛變成 1 的位元上，付它之後變回 0（被 INCREMENT 或被 RESET）；</li>
+      <li>$1 存進「RESET 基金」。</li>
+    </ul></li>
+  <li><strong>RESET 為什麼付得起</strong>：RESET 碰 \(b_0..b_{\max}\)，共 \(\max+1\) 個位元。上一次歸零（RESET 或繞回）之後，count 從 0 長到至少 \(2^{\max}\)，所以至少做了 \(2^{\max}\ge\max+1\) 次 INCREMENT，基金至少 $(max+1)。</li>
+  <li><strong>寫成不變量</strong>（也就是 potential \(\Phi=\#1+(\max+1)\)）：銀行 \(\ge \#1 + (\max+1)\)。
+    <ul>
+      <li>INCREMENT（翻掉 t 個 1、設一個 0）：銀行 \(+3-(t+1)=2-t\)；#1 變化 \(1-t\)，max 最多加 1。右邊最多加 \(2-t\)。✓</li>
+      <li>繞回：銀行 \(+3-k\)；右邊從 \(k+k\) 掉到 0，掉了 \(2k\)。✓</li>
+      <li>RESET：銀行 \(+1-(\max+1)\)；右邊掉到 0，掉了 \(\#1+\max+1\ge\max+1\)。✓</li>
+    </ul></li>
+  <li><strong>結論</strong>：銀行永遠 \(\ge 0\) ⇒ 總時間 \(\le 3\cdot\#\text{INC}+\#\text{RESET}\le 3n=O(n)\)。</li>
+</ol>
+<div data-widget="resetCounter"></div>
+</div></details>
+</section>
+
+<h2 id="s16-3" data-short="16.3 Potential">16.3 The potential method</h2>
+
+<section class="ex" id="ex-16-3-1">
+<header><span class="id">16.3-1</span><span class="t">\(\Phi(D_0)\ne0\) 時換成從 0 開始的 \(\Phi'\)</span></header>
+<div class="q">假設 \(\Phi(D_i)\ge\Phi(D_0)\) 對所有 i 成立，但 \(\Phi(D_0)\ne0\)。證明存在 \(\Phi'\) 使得 \(\Phi'(D_0)=0\)、\(\Phi'(D_i)\ge0\)（\(i\ge1\)），而且用 \(\Phi'\) 算出的 amortized cost 跟用 \(\Phi\) 的一樣。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>定義</strong> \(\Phi'(D)=\Phi(D)-\Phi(D_0)\)：整個位能往下平移一個常數。</li>
+  <li>\(\Phi'(D_0)=\Phi(D_0)-\Phi(D_0)=0\)。</li>
+  <li>\(\Phi'(D_i)=\Phi(D_i)-\Phi(D_0)\ge0\)，因為題目給了 \(\Phi(D_i)\ge\Phi(D_0)\)。</li>
+  <li><strong>amortized cost 不變</strong>：常數在相減時消掉
+    $$\hat c_i'=c_i+\Phi'(D_i)-\Phi'(D_{i-1})=c_i+\bigl(\Phi(D_i)-\Phi(D_0)\bigr)-\bigl(\Phi(D_{i-1})-\Phi(D_0)\bigr)=\hat c_i.\;\blacksquare$$</li>
+  <li><strong>直覺</strong>：跟物理一樣，位能的「零點」可以隨便選，只有<strong>差</strong>有意義。</li>
+</ol>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-3-3">
+<header><span class="id">16.3-3</span><span class="t">Min-heap：INSERT \(O(\lg n)\)、EXTRACT-MIN \(O(1)\)</span></header>
+<div class="q">一般的 binary min-heap，INSERT 和 EXTRACT-MIN 最壞都是 \(O(\lg n)\)（n = 目前 heap 裡的個數）。給一個 potential function \(\Phi\)，讓 INSERT 的 amortized cost 是 \(O(\lg n)\)、EXTRACT-MIN 是 \(O(1)\)，並證明。注意：不知道 heap 最多會有幾個元素。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>想法</strong>：每個元素被 INSERT 時多付一筆「將來把它 EXTRACT 掉」的錢。EXTRACT 一次最多 \(O(\lg n)\)，所以 INSERT 多付 \(O(\lg n)\) 就夠——但 n 會變，所以位能要跟<strong>目前的</strong> n 有關，不能用最大值。</li>
+  <li><strong>實際成本</strong>：存在常數 c，使大小為 n 時兩種操作都 \(\le c(1+\lg n)\)（INSERT 的 n 是插入後、EXTRACT-MIN 的 n 是取出前）。</li>
+  <li><strong>位能</strong>：
+    $$\Phi(D)=c\sum_{j=1}^{n}\lg j=c\lg(n!)\qquad(n=D\text{ 的大小}).$$
+    空 heap：\(\Phi(D_0)=0\)；\(\lg j\ge0\) ⇒ \(\Phi\ge0\)。合法。</li>
+  <li><strong>INSERT</strong>（\(n-1\to n\)）：\(\Delta\Phi=c\lg n\)，
+    $$\hat c\le c(1+\lg n)+c\lg n=c(1+2\lg n)=O(\lg n).$$</li>
+  <li><strong>EXTRACT-MIN</strong>（\(n\to n-1\)）：\(\Delta\Phi=-c\lg n\)，
+    $$\hat c\le c(1+\lg n)-c\lg n=c=O(1).$$</li>
+  <li><strong>結論</strong>：\(\Phi(D_i)\ge\Phi(D_0)\) ⇒ 總實際成本 ≤ 總 amortized cost。∎</li>
+  <li><strong>別的選擇</strong>：\(\Phi=c\,n\lg n\) 也行（\(n\lg n-(n-1)\lg(n-1)\) 介於 \(\lg n\) 和 \(\lg n+\lg e\) 之間），只是算起來比 \(\lg(n!)\) 麻煩。</li>
+</ol>
+<p>元件裡實際成本取 1 + 交換次數（\(\le 1+\lfloor\lg n\rfloor\)，c = 1）。看 EXTRACT-MIN 那幾步的 \(\hat c\)：永遠 \(\le 1\)。</p>
+<div data-widget="heapPot"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-3-4">
+<header><span class="id">16.3-4</span><span class="t">Stack 一開始有 \(s_0\) 個，最後 \(s_n\) 個</span></header>
+<div class="q">做 n 個 PUSH / POP / MULTIPOP，stack 一開始有 \(s_0\) 個元素、最後有 \(s_n\) 個。總成本是多少？</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>位能</strong>：還是 \(\Phi\) = stack 裡的元素個數，只是現在 \(\Phi(D_0)=s_0\)、\(\Phi(D_n)=s_n\)。amortized cost 跟以前一樣：PUSH 2、POP 0、MULTIPOP 0。</li>
+  <li><strong>用 telescoping 等式</strong>（不需要 \(\Phi(D_i)\ge\Phi(D_0)\)）：
+    $$\sum_{i=1}^{n}c_i=\sum_{i=1}^{n}\hat c_i-\Phi(D_n)+\Phi(D_0)=2\cdot\#\text{PUSH}-s_n+s_0\;\le\;2n-s_n+s_0.$$</li>
+  <li><strong>直接數也一樣</strong>：被 pop 的個數 = \(s_0+\#\text{PUSH}-s_n\)，總成本 = #PUSH + 被 pop 的個數 = \(2\cdot\#\text{PUSH}+s_0-s_n\)。</li>
+  <li><strong>為什麼不能套用「\(\Phi(D_i)\ge\Phi(D_0)\)」</strong>：MULTIPOP 可以把原本的 \(s_0\) 個也 pop 掉，讓 \(\Phi(D_i)&lt;s_0\)。那些元素是「免費送的」，沒有人替它們存過錢，所以要在總成本裡多加 \(s_0\)。</li>
+</ol>
+<div data-widget="potStack" data-s0="5"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-3-5">
+<header><span class="id">16.3-5</span><span class="t">用兩個 stack 做 queue</span></header>
+<div class="q">用兩個普通的 stack 實作 queue，讓 ENQUEUE 和 DEQUEUE 的 amortized cost 都是 \(O(1)\)。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>實作</strong>：IN 收新元素，OUT 負責出隊。
+<pre data-code="ENQUEUE(Q, x) / DEQUEUE(Q)">
+ENQUEUE(Q, x)
+    PUSH(IN, x)
+DEQUEUE(Q)
+    if STACK-EMPTY(OUT)
+        while not STACK-EMPTY(IN)
+            PUSH(OUT, POP(IN))     // 倒過來：最舊的到 OUT 頂端
+    return POP(OUT)
+</pre></li>
+  <li><strong>順序對</strong>：IN 倒進 OUT 時順序反轉，最早進來的在 OUT 最上面；OUT 裡的元素都比 IN 裡的舊，所以先清空 OUT 再倒是對的 FIFO。</li>
+  <li><strong>實際成本</strong>（每個 PUSH / POP 算 1）：ENQUEUE = 1；DEQUEUE = 1，或在 OUT 空時要先倒 m 個 = \(2m+1\)。最壞單次 \(\Theta(n)\)。</li>
+  <li><strong>位能</strong> \(\Phi=2\cdot|IN|\)（IN 裡每個元素將來要被 pop 一次、push 一次）。\(\Phi(D_0)=0\)、\(\Phi\ge0\)。
+    <ul>
+      <li>ENQUEUE：\(\hat c=1+2=3\)。</li>
+      <li>DEQUEUE 不用倒：\(\hat c=1+0=1\)。</li>
+      <li>DEQUEUE 要倒 m 個：\(\hat c=(2m+1)+(0-2m)=1\)。</li>
+    </ul></li>
+  <li><strong>結論</strong>：兩種操作 amortized 都是 \(O(1)\)。Accounting 的說法：每個元素 ENQUEUE 時付 $3（push 進 IN、之後 pop 出 IN、push 進 OUT），DEQUEUE 付最後那次 pop 的 $1。</li>
+</ol>
+<div data-widget="twoStackQueue"></div>
+</div></details>
+</section>
+
+<section class="ex" id="ex-16-3-6">
+<header><span class="id">16.3-6</span><span class="t">INSERT 與 DELETE-LARGER-HALF</span></header>
+<div class="q">設計一個資料結構存整數 multiset S（可以重複），支援 INSERT(S, x) 和 DELETE-LARGER-HALF(S)（刪掉最大的 \(\lceil|S|/2\rceil\) 個）。任意 m 個操作要 \(O(m)\) 時間，而且能在 \(O(|S|)\) 時間輸出 S 的所有元素。</div>
+<details><summary>詳解</summary><div class="a">
+<ol class="steps">
+  <li><strong>資料結構</strong>：一個沒排序的陣列（dynamic array 或 linked list）。
+    <ul>
+      <li><strong>INSERT</strong>：接到尾端，\(O(1)\)。</li>
+      <li><strong>DELETE-LARGER-HALF</strong>：令 \(s=|S|\)、\(h=\lceil s/2\rceil\)。用 Ch9 的 linear-time SELECT 找第 h 大的元素 y（\(O(s)\)）；掃一次，留下比 y 小的，以及剛好補足 \(s-h\) 個的 y（處理重複值），其餘刪掉。總共 \(O(s)\)。</li>
+      <li><strong>輸出</strong>：掃一次陣列，\(O(|S|)\)。</li>
+    </ul></li>
+  <li><strong>實際成本</strong>：存在常數 c，INSERT \(\le c\)，DELETE-LARGER-HALF \(\le c\cdot s\)。</li>
+  <li><strong>位能</strong> \(\Phi=2c\cdot|S|\)，\(\Phi(D_0)=0\)、\(\Phi\ge0\)。
+    <ul>
+      <li>INSERT：\(\hat c\le c+2c=3c\)。</li>
+      <li>DELETE-LARGER-HALF：|S| 少了 \(h\ge s/2\)，\(\Delta\Phi\le-2c\cdot s/2=-cs\)，\(\hat c\le cs-cs=0\)。</li>
+    </ul></li>
+  <li><strong>結論</strong>：m 個操作總時間 \(\le 3c\cdot m=O(m)\)。∎</li>
+  <li><strong>易錯</strong>：用排序找中位數是 \(O(s\lg s)\)，\(\Delta\Phi\) 抵不掉，會變成 \(O(m\lg m)\)。一定要 linear-time SELECT。</li>
+</ol>
+<p>元件裡把常數 c 取 1：INSERT 成本 1、DELETE-LARGER-HALF 成本 |S|。</p>
+<div data-widget="halfSet"></div>
+</div></details>
+</section>
+
 </article>
-<footer class="site">題目改寫自 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.1 節習題與 Ch16-1 投影片 p.18，詳解為自行整理。</footer>
+<footer class="site">題目改寫自 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.1–16.3 節習題（Ch16-1 投影片 p.18、Ch16-2 投影片 p.30 指定），詳解為自行整理。</footer>
 </main>
 </div>
 <script>

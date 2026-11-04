@@ -18,8 +18,12 @@
       { id: 'counter', href: 'binary-counter.html', text: 'Binary Counter 二進位計數器' },
       { id: 'average', href: 'average-case.html', text: 'Amortized vs Average-case' },
     ] },
+    { title: 'Lecture 16-2 Accounting & Potential', items: [
+      { id: 'accounting', href: 'accounting.html', text: 'Accounting Method 記帳法' },
+      { id: 'potential', href: 'potential.html', text: 'Potential Method 位能法' },
+    ] },
     { title: '練習', items: [
-      { id: 'exercises', href: 'exercises.html', text: '課本習題 16.1-x 詳解' },
+      { id: 'exercises', href: 'exercises.html', text: '課本習題 16.1–16.3 詳解' },
     ] },
   ];
   NAVS.greedy = [

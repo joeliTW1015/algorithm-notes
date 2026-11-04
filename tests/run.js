@@ -335,4 +335,121 @@ check('quicksort average over all n! inputs = 2(n+1)H_n - 4n, worst = n(n-1)/2',
   }
 });
 
+// ---------- Ch16-2 Accounting & potential method ----------
+check('accounting super stack (slides p.5-8): $2/$0/$0 never overdraws, bank = #items', () => {
+  for (const seed of [1, 3, 11, 42]) {
+    const r = AM.stackAccount(AM.randomStackOps(80, seed));
+    assert.strictEqual(r.firstNeg, -1);
+    r.steps.forEach((s) => { assert.strictEqual(s.bank, s.stack.length); assert.ok(s.total <= 2 * s.pushes); });
+  }
+  const bad = AM.stackAccount([{ op: 'push' }, { op: 'pop' }], { push: 1 });
+  assert.strictEqual(bad.firstNeg, 2);
+  assert.strictEqual(AM.stackAccount(AM.worstStackOps(10), { push: 1, pop: 1, superpop: 1 }).minBank, -8);
+});
+
+check('accounting binary counter (slides p.9-14): bank >= #1 bits; start != 0 overdraws', () => {
+  for (const [k, n] of [[5, 32], [8, 16], [4, 50]]) {
+    const r = AM.counterAccount(k, n);
+    assert.strictEqual(r.firstNeg, -1);
+    r.steps.forEach((s) => {
+      const ones = s.bits.reduce((a, b) => a + b, 0);
+      assert.ok(s.bank >= ones);
+      assert.strictEqual(s.bank, s.amortTotal - s.total);
+      assert.strictEqual(s.credit.reduce((a, b) => a + b, 0), ones);
+    });
+  }
+  assert.deepStrictEqual(AM.counterAccount(8, 16).steps.map((s) => s.total), [0, 1, 3, 4, 7, 8, 10, 11, 15, 16, 18, 19, 22, 23, 25, 26, 31]);
+  const p14 = AM.counterAccount(5, 4, { start: 7 });
+  assert.strictEqual(p14.steps[1].cost, 4);
+  assert.strictEqual(p14.steps[1].bank, -2);
+  assert.ok(AM.counterAccount(5, 16, { charge: 1 }).firstNeg > 0);
+});
+
+check('potential super stack (slides p.23-25): PUSH 2, POP 0, SUPER-POP 0; telescoping', () => {
+  const ops = AM.randomStackOps(80, 9), r = AM.stackRun(ops);
+  const phi = AM.PHI.stack.find((p) => p.id === 'items');
+  const L = AM.potentialLedger(r.steps.map((s) => s.stack), r.steps.map((s) => s.cost), phi.f);
+  assert.ok(L.valid);
+  L.rows.forEach((row) => assert.strictEqual(row.amort, ops[row.i - 1].op === 'push' ? 2 : 0));
+  assert.strictEqual(L.amortTotal, L.total + L.phiN - L.phi0);
+  const neg = AM.potentialLedger(r.steps.map((s) => s.stack), r.steps.map((s) => s.cost), AM.PHI.stack.find((p) => p.id === 'neg').f);
+  assert.ok(!neg.valid && neg.amortTotal < neg.total);
+});
+
+check('potential counter (slides p.26-28, CLRS 16.3): amortized <= 2, = 0 on wrap; total <= 2n - b_n + b_0', () => {
+  const r = AM.counterRun(4, 40);
+  const L = AM.potentialLedger(r.steps.map((s) => s.bits), r.steps.map((s) => s.cost), AM.PHI.counter[0].f);
+  L.rows.forEach((row) => assert.strictEqual(row.amort, row.i % 16 === 0 ? 0 : 2));
+  for (const start of [0, 7, 11, 31]) {
+    const run = AM.counterRun(5, 20, start), b0 = run.steps[0].bits.reduce((a, b) => a + b, 0), bn = run.steps[20].bits.reduce((a, b) => a + b, 0);
+    assert.ok(run.total <= 2 * 20 - bn + b0, 'start=' + start);
+  }
+});
+
+check('16.2-1 backup stack: $2 per operation is enough, total <= 2n', () => {
+  for (let k = 2; k <= 12; k++) for (const mode of ['random', 'full']) {
+    const r = AM.backupRun(AM.backupOps(100, k, mode, k), k);
+    assert.ok(r.minBank >= 0, `k=${k} ${mode}`);
+    assert.ok(r.total <= 200);
+  }
+  const full = AM.backupRun(AM.backupOps(32, 4, 'full'), 4);
+  assert.deepStrictEqual(full.steps.filter((s) => s.didCopy).map((s) => s.copy), Array(8).fill(4));
+});
+
+check('16.2-3 counter with RESET: bank >= #1 + (max+1), total <= 3n', () => {
+  const r = AM.rng(5);
+  for (let trial = 0; trial < 40; trial++) {
+    const k = 2 + (trial % 8), ops = Array.from({ length: 120 }, () => (r() < 0.1 ? 'reset' : 'inc'));
+    const res = AM.resetCounterRun(k, ops);
+    assert.ok(res.minSlack >= 0);
+    assert.ok(res.total <= 3 * ops.length);
+    res.steps.forEach((s) => { const top = s.bits.lastIndexOf(1); assert.strictEqual(s.max, top); });
+  }
+});
+
+check('16.3-3 min-heap: Phi = lg(n!) gives INSERT <= 1 + 2 lg n, EXTRACT-MIN <= 1', () => {
+  const r = AM.rng(8), xs = Array.from({ length: 60 }, () => Math.floor(r() * 100));
+  const ops = [...xs.map((x) => ({ op: 'insert', x })), ...xs.map(() => ({ op: 'extract' }))];
+  const res = AM.heapRun(ops);
+  assert.deepStrictEqual(res.steps.filter((s) => s.op && s.op.op === 'extract').map((s) => s.out), xs.slice().sort((a, b) => a - b));
+  res.steps.slice(1).forEach((s) => {
+    if (s.op.op === 'insert') assert.ok(s.amort <= 1 + 2 * Math.log2(s.n) + 1e-9);
+    else assert.ok(s.amort <= 1 + 1e-9);
+  });
+  assert.ok(Math.abs(AM.heapPhi(8) - Math.log2(40320)) < 1e-9);
+});
+
+check('16.3-4 stack starting with s0 items: total = 2#PUSH + s0 - sn', () => {
+  for (const s0 of [0, 3, 8]) {
+    const ops = [...AM.randomStackOps(50, s0 + 1), { op: 'superpop', k: 99 }, { op: 'push' }];
+    const r = AM.stackRun(ops, Array.from({ length: s0 }, (_, j) => j + 1)), last = r.steps[r.steps.length - 1];
+    assert.strictEqual(r.total, 2 * r.pushes + s0 - last.stack.length);
+  }
+});
+
+check('16.3-5 queue from two stacks: FIFO, ENQUEUE 3, DEQUEUE 1', () => {
+  const r = AM.rng(2), ops = [];
+  let size = 0;
+  for (let i = 0; i < 200; i++) { const op = size && r() < 0.45 ? 'deq' : 'enq'; ops.push(op); size += op === 'enq' ? 1 : -1; }
+  const res = AM.queueRun(ops), outs = res.steps.filter((s) => s.op === 'deq').map((s) => s.out);
+  assert.deepStrictEqual(outs, outs.map((_, j) => j + 1));
+  res.steps.slice(1).forEach((s) => assert.strictEqual(s.amort, s.op === 'enq' ? 3 : 1));
+  assert.ok(res.total <= res.amortTotal);
+});
+
+check('16.3-6 DELETE-LARGER-HALF: keeps the floor(s/2) smallest, m operations <= 3m', () => {
+  const r = AM.rng(6), ops = [];
+  for (let i = 0; i < 300; i++) ops.push(r() < 0.15 ? { op: 'dlh' } : { op: 'insert', x: Math.floor(r() * 10) });
+  const res = AM.halfRun(ops);
+  res.steps.slice(1).forEach((s, j) => {
+    if (s.op.op !== 'dlh') return;
+    const before = res.steps[j].S.slice().sort((a, b) => a - b);
+    assert.deepStrictEqual(s.S.slice().sort((a, b) => a - b), before.slice(0, Math.floor(before.length / 2)));
+    assert.ok(s.amort <= 0);
+  });
+  assert.ok(res.total <= 3 * ops.length);
+  const dup = AM.halfRun([5, 5, 5, 5, 2, 2, 8].map((x) => ({ op: 'insert', x })).concat([{ op: 'dlh' }]));
+  assert.deepStrictEqual(dup.steps[8].S.slice().sort(), [2, 2, 5]);
+});
+
 console.log(`\n${passed} checks passed`);

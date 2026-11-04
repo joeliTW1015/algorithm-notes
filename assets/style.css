@@ -401,6 +401,42 @@ table.plain.fig td, table.plain.fig th { padding: 1px 8px; }
 table.plain.fig tr.on td { background: var(--hl-soft); }
 table.plain.fig mark { padding: 0 2px; }
 
+/* ---------- Ch16-2 Accounting & potential method ---------- */
+/* Credit: green $ coins sit on stack items / 1-bits; a dashed "無" means a 1 with no money on it. */
+.coins { display: inline-flex; gap: 2px; margin-left: 6px; vertical-align: 1px; }
+.coin { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 3px; border-radius: 99px; font: 700 10.5px var(--f-mono); color: var(--win); background: var(--win-soft); border: 1.5px solid var(--win); line-height: 1; }
+.coin.none { color: var(--warn); background: #fff; border: 1.5px dashed var(--warn); font-weight: 600; }
+.coin.spent { color: var(--ink-faint); background: #f0f2f1; border-color: var(--ink-faint); text-decoration: line-through; }
+.stack-pair.credit .item { width: 104px; }
+.bitcell .coin, .bitcell .under, .bitcell .ptr { margin-top: 2px; }
+.bitcell .under { display: block; height: 18px; }
+.bitcell .ptr { font: 700 11px var(--f-mono); color: var(--trace); height: 18px; }
+.bankbox { min-width: 120px; padding: 8px 12px; border: 2px solid var(--win); border-radius: var(--radius); background: #fff; }
+.bankbox .amt { font: 800 26px/1.2 var(--f-display); color: var(--win); }
+.bankbox.neg { border-color: var(--warn); background: var(--warn-soft); }
+.bankbox.neg .amt { color: var(--warn); }
+.stack-pair .backup, .stack-out .backup { margin-top: 6px; font: 700 12.5px var(--f-mono); color: var(--ink); background: var(--hl); border: 1.5px solid var(--ink); border-radius: 3px; padding: 1px 6px; display: inline-block; }
+svg.chart .ln.phi { stroke: var(--trace); stroke-width: 2; }
+.chart-legend .lg.phi::before { border-top: 2.4px solid var(--trace); }
+.pot-cols { display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; align-items: start; }
+@container (max-width: 860px) { .pot-cols { grid-template-columns: max-content minmax(0, 1fr); } .pot-cols > :last-child { grid-column: 1 / -1; } }
+.pmeter-wrap { text-align: center; }
+svg.pmeter { display: block; height: auto; }
+svg.pmeter .base { stroke: var(--ink); stroke-width: 1.4; }
+svg.pmeter .start { stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg.pmeter .pbar { fill: var(--trace-soft); stroke: var(--trace); stroke-width: 1.6; transition: y .2s, height .2s; }
+svg.pmeter .pbar.low { fill: var(--warn-soft); stroke: var(--warn); }
+svg.pmeter .tick { font: 500 10.5px var(--f-mono); fill: var(--ink-soft); }
+svg.pmeter .val { font: 700 13px var(--f-mono); fill: var(--ink); }
+.fig-scroll.ledger { max-height: 260px; }
+.fig-scroll.ledger tr:first-child th { position: sticky; top: 0; background: var(--paper-2); z-index: 1; }
+.pot-summary { margin-top: 12px; }
+.pot-summary p { margin: 4px 0; }
+.arr { display: flex; flex-wrap: wrap; gap: 4px; }
+.arr .cell { min-width: 34px; text-align: center; font: 700 14px/28px var(--f-mono); border: 1.5px solid var(--ink); border-radius: 3px; background: var(--pencil-soft); }
+.arr .cell.new { background: var(--win-soft); border-color: var(--win); }
+.arr .cell.out { background: #f0f2f1; border-style: dashed; color: var(--ink-faint); text-decoration: line-through; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }

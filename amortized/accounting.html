@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accounting Method 記帳法 · Amortized Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+<script defer src="../assets/w-amort2.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="amortized" data-page="accounting"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch16-2 Amortized Analysis II · 投影片 p.3–15</p>
+<h1>Accounting Method 記帳法</h1>
+<p class="lede">每種操作先「收費」，收費就是它的 amortized cost。收多的錢存成 credit、綁在資料結構裡的某個物件上；之後貴的操作用這些存款付。只要銀行<strong>永遠不透支</strong>，總收費就是總實際成本的上界。</p>
+
+<h2 id="idea" data-short="銀行帳戶">銀行帳戶的比喻（p.3–4）</h2>
+<ul>
+  <li>每個操作付一筆 <strong>amortized cost</strong> \(\hat c_i\)（投影片寫 \(\alpha_i\)），實際成本是 \(c_i\)。</li>
+  <li>\(\hat c_i \ge c_i\)：多的 \(\hat c_i - c_i\) <strong>存進銀行</strong>。</li>
+  <li>\(\hat c_i &lt; c_i\)：差額<strong>從存款拿</strong>。</li>
+  <li>存款通常可以從資料結構「看出來」：例如 stack 裡每個元素身上都有 $1 → 存款 = 元素個數。</li>
+</ul>
+<div class="note key"><span class="tag">Lemma（p.4）</span>如果每個操作都付得起（存款從來不是負的），那麼對任何一串操作，
+$$\sum_{i=1}^{n} c_i \;\le\; \sum_{i=1}^{n} \hat c_i .$$</div>
+<p><strong>證明</strong>：做完前 n 個操作後，銀行裡的錢 = 收到的 − 花掉的 \(=\sum_{i\le n}\hat c_i-\sum_{i\le n}c_i\)。存款 \(\ge 0\) 就是這個不等式。∎</p>
+<div class="note warn"><span class="tag">易錯</span>要求的是<strong>每一個時間點</strong>都不透支，不只是最後。「先少收、之後再補」不行：如果操作序列剛好在欠錢的時候停下來，那一刻的總收費就小於總實際成本，amortized cost 就不是上界了。</div>
+
+<h2 id="stack" data-short="Super Stack（Take 2）">Super Stack（Take 2，p.5–8）</h2>
+<p>同一個 super stack（PUSH、POP、SUPER-POP(k)），這次每種操作收不同的錢：</p>
+<table class="plain">
+  <tr><th>操作</th><th class="num">實際成本 \(c\)</th><th class="num">收費 \(\hat c\)</th><th>錢怎麼走</th></tr>
+  <tr><td>PUSH</td><td class="num">1</td><td class="num">$2</td><td>$1 付 PUSH，<strong>$1 放在被 push 的元素身上</strong></td></tr>
+  <tr><td>POP</td><td class="num">1</td><td class="num">$0</td><td>被 pop 的元素拿出身上的 $1 付</td></tr>
+  <tr><td>SUPER-POP(k)</td><td class="num">k</td><td class="num">$0</td><td>被 pop 的 k 個元素各捐 $1，剛好 $k</td></tr>
+</table>
+<p>p.6 的三個問題：</p>
+<ol class="steps">
+  <li><strong>誰存錢？</strong>PUSH（收 $2、只花 $1）。</li>
+  <li><strong>誰領錢？</strong>POP 和 SUPER-POP（收 $0、實際成本 ≥ 1）。</li>
+  <li><strong>怎麼查存款？</strong>stack 裡每個元素身上剛好有 $1 → 存款 = stack 裡的元素個數 \(\ge 0\)。</li>
+</ol>
+<p>p.7：SUPER-POP(k) 要付 k，而被 pop 的 k 個元素身上正好各有 $1 → 一定付得起。所以銀行永遠不透支。</p>
+<div class="note key"><span class="tag">結論（p.8）</span>PUSH 的 amortized cost = 2，POP / SUPER-POP = 0。對任何操作序列（\(n_1\) 個 PUSH、\(n_2\) 個 POP、\(n_3\) 個 SUPER-POP），
+$$\text{總實際成本} \le 2n_1 + 0\cdot n_2 + 0\cdot n_3 = 2n_1 \le 2n,$$
+所以每個操作 amortized \(O(1)\)。</div>
+<p>改收費試試：「PUSH 只收 $1」元素身上沒錢，第一次 POP 就透支（橘色）；「PUSH 收 $3」也合法，但上界變成 \(3n_1\)，比較鬆；「每個都收 $1」在 SUPER-POP(k) 時差 \(k-1\)。</p>
+<div data-widget="bankStack"></div>
+<div class="note"><span class="tag">觀察</span>SUPER-POP 的實際成本是 k，amortized cost 卻是 0——amortized cost 可以跟實際成本差很多，甚至<strong>漸近地</strong>不一樣（CLRS 16.2）。重點只是總和要蓋得住。</div>
+
+<h2 id="counter" data-short="Binary Counter（Take 2）">Binary Counter（Take 2，p.9–12）</h2>
+<p>k-bit counter 從 0 開始，每次 INCREMENT 收 <strong>$2</strong>。實際成本 = 翻轉的位元數。</p>
+<div class="note key"><span class="tag">觀察（p.10）</span>每次 INCREMENT <strong>最多只有一個位元</strong>從 0 變 1（那個「第一個 0」）；其他被翻的都是從 1 變 0。</div>
+<table class="plain">
+  <tr><th>之前</th><th>之後</th><th>0→1</th><th>1→0</th><th class="num">成本</th></tr>
+  <tr><td class="mono">0 0 1 0 0（4）</td><td class="mono">0 0 1 0 1（5）</td><td>\(b_0\)</td><td>—</td><td class="num">1</td></tr>
+  <tr><td class="mono">0 0 1 1 1（7）</td><td class="mono">0 1 0 0 0（8）</td><td>\(b_3\)</td><td>\(b_0,b_1,b_2\)</td><td class="num">4</td></tr>
+</table>
+<p>錢怎麼走（p.12）：</p>
+<ul>
+  <li>收到的 $2：<strong>$1 付那個 0→1</strong>，另外 <strong>$1 存在剛變成 1 的那個位元上</strong>。</li>
+  <li>每個 1→0 的位元：拿自己身上的 $1 付。</li>
+  <li>所以任何時候，<strong>每個 1 身上都有 $1</strong> → 存款 = counter 裡 1 的個數 \(\ge 0\) → 永遠付得起。</li>
+</ul>
+<p>綠色 $1 是位元身上的 credit；變成 0 時那 $1 被劃掉（捐出去付翻轉）。右下圖紫線是銀行餘額，它就是 1 的個數。</p>
+<div data-widget="bankCounter"></div>
+
+<h2 id="proof" data-short="p.13 證明">「存款 = 1 的個數」的證明（p.13 整理版）</h2>
+<p>投影片 p.13 只證了 counter 是 \(0\,1\dots1\)（剛好 \(2^k-1\)）這種特殊值的情況。對<strong>每一次</strong> INCREMENT 都成立的版本：</p>
+<div class="note key"><span class="tag">不變量</span>每次 INCREMENT 之後，counter 裡每個 1 身上恰好有 $1，所以存款 \(\ge\) 1 的個數 \(\ge 0\)。</div>
+<ol class="steps">
+  <li><strong>Basis</strong>：count = 0，沒有 1，存款 $0。成立。</li>
+  <li><strong>Inductive step</strong>：假設做第 i 次之前成立。這次把結尾的 \(t\) 個 1 變成 0、一個 0 變成 1：
+    <ul>
+      <li>\(t\) 個 1→0：各用自己身上的 $1 付，付完它們變 0，身上不需要錢了。</li>
+      <li>1 個 0→1：用收到的 $1 付，剩下的 $1 放在它身上。</li>
+    </ul>
+    做完後，原本的 1 該有的錢都還在，新的 1 也有 $1。成立。</li>
+  <li><strong>繞回的那一次</strong>（\(11\dots1 \to 00\dots0\)）：k 個 1→0 都用自己的錢付，沒有 0→1，收到的 $2 沒用到，直接留在銀行。存款 \(=\#1 + 2 \ge \#1\)。仍成立。∎</li>
+</ol>
+<div class="note key"><span class="tag">結論（p.14）</span>INCREMENT 的 amortized cost = 2：從 0 開始做 n 次，總實際成本 \(\le 2n\)。</div>
+
+<h2 id="nonzero" data-short="起始值 ≠ 0？">p.14 的問題：起始值 ≠ 0 會怎樣？</h2>
+<ul>
+  <li>上面的論證靠「每個 1 身上都有 $1」。但如果一開始 count 就不是 0，<strong>那些一開始就存在的 1 身上沒有錢</strong>——它們不是被我們收過 $2 的 INCREMENT 設成 1 的。</li>
+  <li>例：從 \(00111\) 開始，第一次 INCREMENT 翻 4 個位元，只收到 $2，三個 1→0 都沒有 credit → 透支 $2。（元件裡選「p.14：從 7 = 00111 開始」，看橘色的「無」。）</li>
+  <li><strong>修法</strong>：一開始先存 \(b_0\) 元（\(b_0\) = 起始時 1 的個數），每個初始的 1 發 $1。總實際成本 \(\le 2n + b_0 \le 2n + k\)。只要 \(n=\Omega(k)\)，仍是 \(O(n)\)。</li>
+  <li>用 potential method 可以算得更精確：\(\sum c_i \le 2n - b_n + b_0\)（\(b_n\) = 最後 1 的個數）。<a href="potential.html#nonzero">→</a></li>
+</ul>
+
+<h2 id="remarks" data-short="Remarks">Accounting vs Aggregate（p.15）</h2>
+<table class="plain">
+  <tr><th></th><th>Aggregate（16-1）</th><th>Accounting（本頁）</th></tr>
+  <tr><td>怎麼算</td><td>直接算 n 個操作的總成本 \(T(n)\)，除以 n</td><td>先給每種操作定收費，再證明存款不會是負的</td></tr>
+  <tr><td>Amortized cost</td><td>所有操作<strong>都一樣</strong>：\(T(n)/n\)</td><td>不同操作<strong>可以不一樣</strong>（PUSH 2、POP 0）</td></tr>
+  <tr><td>多的錢放哪</td><td>不用管</td><td>綁在特定物件上，叫做該物件的 <strong>credit</strong>（stack 的元素、counter 的位元）</td></tr>
+</table>
+
+<h2 id="recipe" data-short="解題步驟">解題步驟</h2>
+<ol class="recipe">
+  <li><b>定收費</b>：便宜但「會製造之後的工作」的操作多收一點（PUSH 製造將來的 pop，0→1 製造將來的 1→0）。</li>
+  <li><b>說出 credit 在哪</b>：寫成不變量，例如「stack 裡每個元素身上有 $1」「每個 1 身上有 $1」。</li>
+  <li><b>逐種操作檢查</b>：收到的錢 + 用掉的 credit ≥ 實際成本，而且做完後不變量仍成立。</li>
+  <li><b>收尾</b>：credit 永遠 ≥ 0 ⇒ \(\sum c_i \le \sum \hat c_i\)，總時間就是收費總和。</li>
+</ol>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-16-2-1">16.2-1</a>：stack 每 k 個操作就整個備份一次，用 accounting 證明總成本 \(O(n)\)。</li>
+  <li><a href="exercises.html#ex-16-2-3">16.2-3</a>：counter 加上 RESET（歸零），要讓 n 個操作還是 \(O(n)\)。</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch16 Amortized Analysis II 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.2 節。</footer>
+</main>
+</div>
+</body>
+</html>

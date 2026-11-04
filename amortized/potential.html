@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Potential Method 位能法 · Amortized Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+<script defer src="../assets/w-amort2.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="amortized" data-page="potential"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">Ch16-2 Amortized Analysis II · 投影片 p.16–29</p>
+<h1>Potential Method 位能法</h1>
+<p class="lede">不再把錢綁在個別物件上，而是用一個函數 \(\Phi\) 量<strong>整個資料結構</strong>現在「存了多少能量」。每個操作的 amortized cost = 實際成本 + 位能的變化。位能升高 = 存錢，位能降低 = 把存款拿來付。</p>
+
+<h2 id="idea" data-short="物理的比喻">物理的比喻（p.16–18）</h2>
+<ul>
+  <li>物體越高，重力位能越大；位能只看物體的<strong>狀態</strong>（高度），不看它怎麼到那裡的。</li>
+  <li>Amortized analysis 裡，<strong>potential function</strong> \(\Phi\) 把資料結構的狀態對應到一個數字：\(\Phi(D)\)。</li>
+  <li>一個操作可能讓位能上升或下降；位能就像 accounting method 裡的存款，可以拿來幫忙付之後的操作。</li>
+</ul>
+
+<h2 id="def" data-short="定義">定義（p.19–21）</h2>
+<table class="plain">
+  <tr><th>符號</th><th>意思</th></tr>
+  <tr><td>\(\Phi\)</td><td>potential function（位能函數）</td></tr>
+  <tr><td>\(D_i\)</td><td>做完第 i 個操作後的資料結構（\(D_0\) = 一開始）</td></tr>
+  <tr><td>\(c_i\)</td><td>第 i 個操作的實際成本</td></tr>
+  <tr><td>\(\hat c_i\)</td><td>第 i 個操作的 amortized cost（投影片寫 \(\alpha_i\)，課本寫 \(\hat c_i\)）</td></tr>
+</table>
+<p>p.19：位能升高 d，amortized cost 要 \(\ge\) 實際成本 + d（多付的存進位能）；位能降低 d，amortized cost 只要 \(\ge\) 實際成本 − d（降下來的位能幫忙付）。合起來（p.20）：
+$$\hat c_i \;\ge\; c_i + \Phi(D_i) - \Phi(D_{i-1}).$$
+amortized cost 越小，分析越緊，所以一般直接取等號（p.21）：</p>
+<div class="formula">$$\hat c_i \;=\; c_i + \underbrace{\Phi(D_i) - \Phi(D_{i-1})}_{\text{potential change } \Delta\Phi_i}$$</div>
+<p>加總起來中間的 \(\Phi\) 全部消掉（telescoping）：</p>
+<div class="formula">$$\sum_{i=1}^{n}\hat c_i=\sum_{i=1}^{n}\bigl(c_i+\Phi(D_i)-\Phi(D_{i-1})\bigr)=\sum_{i=1}^{n}c_i+\Phi(D_n)-\Phi(D_0).$$</div>
+
+<h2 id="valid" data-short="什麼 Φ 可以用">什麼樣的 \(\Phi\) 可以用（p.22）</h2>
+<div class="note key"><span class="tag">條件</span>只要 \(\Phi(D_i)\ge\Phi(D_0)\) 對<strong>所有</strong> i 成立，就有
+$$\sum_{j=1}^{i}\hat c_j=\sum_{j=1}^{i}c_j+\underbrace{\Phi(D_i)-\Phi(D_0)}_{\ge 0}\;\ge\;\sum_{j=1}^{i}c_j\qquad\text{（任何時間點）}.$$
+最常見的寫法：取 \(\Phi(D_0)=0\)，再證明 \(\Phi(D_i)\ge 0\)。</div>
+<ul>
+  <li><strong>為什麼要「所有 i」</strong>：我們不知道操作序列什麼時候停，所以每個前綴都要蓋得住——跟 accounting 的「每個時間點都不透支」是同一件事。</li>
+  <li><strong>合法不代表好用</strong>：\(\Phi=0\) 永遠合法，但那樣 \(\hat c_i=c_i\)，什麼都沒分析到。目標是找<strong>讓 amortized cost 最小</strong>的 \(\Phi\)。</li>
+  <li><strong>跟 accounting 的關係</strong>：\(\Phi(D_i)\) 就是「做完第 i 個操作後銀行裡的錢」。差別在於 \(\Phi\) 只看整個資料結構的狀態，不用說明每塊錢放在哪個物件上。</li>
+</ul>
+
+<h2 id="stack" data-short="Super Stack（Take 3）">Super Stack（Take 3，p.23–25）</h2>
+<p>定義 \(\Phi(S)\) = stack S 裡的元素個數。一開始是空的：\(\Phi(D_0)=0\)，而且個數不會是負的：\(\Phi(D_i)\ge 0=\Phi(D_0)\)。</p>
+<table class="plain">
+  <tr><th>操作</th><th class="num">\(c_i\)</th><th class="num">\(\Delta\Phi\)</th><th class="num">\(\hat c_i=c_i+\Delta\Phi\)</th></tr>
+  <tr><td>PUSH</td><td class="num">1</td><td class="num">+1</td><td class="num">2</td></tr>
+  <tr><td>POP</td><td class="num">1</td><td class="num">−1</td><td class="num">0</td></tr>
+  <tr><td>SUPER-POP(k)</td><td class="num">k</td><td class="num">−k</td><td class="num">0</td></tr>
+</table>
+<p class="small muted">投影片假設 stack 夠大（p.24 的方括號）。一般情況 SUPER-POP 實際 pop 掉 \(k'=\min(k,s)\) 個，\(c_i=k'\)、\(\Delta\Phi=-k'\)，\(\hat c_i\) 仍然是 0。</p>
+<div class="note key"><span class="tag">結論（p.25）</span>\(\Phi(D_i)\ge\Phi(D_0)\) ⇒ 總 amortized ≥ 總實際。每個操作的 amortized cost \(\le 2 = O(1)\)。</div>
+<p>換 \(\Phi\) 看看：左邊紫色長條是位能，虛線是 \(\Phi(D_0)\)；表格是每一步的 \(c_i\)、\(\Phi\)、\(\hat c_i\)。</p>
+<ul class="small">
+  <li><strong>Φ = 2·#items</strong>：合法，PUSH 變 3、POP 變 −1——上界變鬆了。</li>
+  <li><strong>Φ = 0</strong>：合法，但 \(\hat c=c\)，SUPER-POP 的 \(\hat c\) 跟 k 有關，不是常數。</li>
+  <li><strong>Φ = −#items</strong>：第一次 PUSH 後 \(\Phi(D_1)=-1&lt;\Phi(D_0)\)，\(\hat c_{\text{PUSH}}=0\)，總 amortized 低於總實際（橘色）。</li>
+</ul>
+<div data-widget="potStack"></div>
+
+<h2 id="counter" data-short="Binary Counter（Take 3）">Binary Counter（Take 3，p.26–28）</h2>
+<p>定義 \(\Phi(B)\) = counter B 裡 1 的個數。從 0 開始：\(\Phi(D_0)=0\le\Phi(D_i)\)。</p>
+<p>假設第 i 次 INCREMENT 把 \(t_i\) 個位元從 1 變 0（p.27）：</p>
+<ol class="steps">
+  <li><strong>一般情況</strong>（有一個 0→1）：\(c_i=t_i+1\)，1 的個數少 \(t_i\) 多 1：\(\Delta\Phi=1-t_i\)。
+    $$\hat c_i=(t_i+1)+(1-t_i)=2.$$</li>
+  <li><strong>繞回</strong>（\(11\dots1\to00\dots0\)，沒有 0→1）：\(c_i=t_i=k\)，\(\Delta\Phi=-k\)，\(\hat c_i=0\)。</li>
+  <li>兩種情況都有 \(\hat c_i\le 2\)。</li>
+</ol>
+<div class="note warn"><span class="tag">p.27</span>投影片寫「\(\hat c_i = 2\) for all i」，嚴格來說是 \(\le 2\)：繞回那一步 \(\hat c_i=0\)。課本寫的就是 \(\le\)。下面選「k = 4, n = 20」，第 16 步就是繞回。</div>
+<div class="note key"><span class="tag">結論（p.28）</span>INCREMENT 的 amortized cost \(\le 2=O(1)\)，n 次的總實際成本 \(\le 2n\)。</div>
+<div data-widget="potCounter"></div>
+
+<h2 id="nonzero" data-short="起始值不是 0">起始值不是 0（回答 p.14 的問題）</h2>
+<p>Potential method 處理這個特別乾淨。設一開始有 \(b_0\) 個 1、最後有 \(b_n\) 個 1。把 telescoping 式反過來寫：</p>
+<div class="formula">$$\sum_{i=1}^{n}c_i=\sum_{i=1}^{n}\hat c_i-\Phi(D_n)+\Phi(D_0)\;\le\;2n-b_n+b_0\;\le\;2n+k.$$</div>
+<ul>
+  <li>這裡不需要 \(\Phi(D_i)\ge\Phi(D_0)\)：我們用的是 n 步之後的<strong>等式</strong>，直接把 \(\Phi(D_0)=b_0\) 算進去。</li>
+  <li>只要 \(n=\Omega(k)\)（INCREMENT 至少跟位元數一樣多次），總成本仍是 \(O(n)\)，不管初始值是多少。</li>
+  <li>在上面元件選「從 11 = 01011 開始」：看最下面的 telescoping 那一行。</li>
+</ul>
+
+<h2 id="compare" data-short="三種方法比較">三種方法比較（含 p.29 Remarks）</h2>
+<div class="wide scroll-x">
+<table class="plain" style="min-width:820px">
+  <tr><th></th><th>Aggregate（16-1）</th><th>Accounting（<a href="accounting.html">p.3–15</a>）</th><th>Potential（本頁）</th></tr>
+  <tr><td>核心</td><td>算總成本 \(T(n)\)，除以 n</td><td>每種操作收費，多的錢存成物件上的 credit</td><td>\(\hat c_i=c_i+\Delta\Phi\)，\(\Phi\) 量整個結構的位能</td></tr>
+  <tr><td>不同操作的 amortized cost</td><td>都一樣</td><td>可以不同</td><td>可以不同，由 \(\Phi\) 決定</td></tr>
+  <tr><td>要證明什麼</td><td>\(T(n)\) 的上界</td><td>credit 永遠 \(\ge 0\)</td><td>\(\Phi(D_i)\ge\Phi(D_0)\)</td></tr>
+  <tr><td>Super stack</td><td>pop 的總數 ≤ push 的總數</td><td>PUSH $2，每個元素身上 $1</td><td>\(\Phi\) = #items</td></tr>
+  <tr><td>Binary counter</td><td>\(\sum\lfloor n/2^i\rfloor&lt;2n\)</td><td>INCREMENT $2，每個 1 身上 $1</td><td>\(\Phi\) = #1 bits</td></tr>
+  <tr><td>優點</td><td>直觀</td><td>容易解釋「錢從哪來」</td><td>每個操作的 \(\hat c_i\) 都算得很明確，式子乾淨</td></tr>
+  <tr><td>難處</td><td>總和不一定好算</td><td>要設計收費和 credit 放哪</td><td>找好的 \(\Phi\) 可能非常難（like magic）</td></tr>
+</table>
+</div>
+<div class="note"><span class="tag">p.29</span>Potential 跟 accounting 本質一樣：現在存一點（$ / 位能），之後拿來用。Accounting 的總 credit 就是一個合法的 \(\Phi\)。</div>
+
+<h2 id="recipe" data-short="解題步驟">解題步驟</h2>
+<ol class="recipe">
+  <li><b>找 \(\Phi\)</b>：量「累積了多少之後要清掉的工作」——stack 裡的元素（之後會被 pop）、counter 裡的 1（之後會被翻回 0）。貴的操作應該讓 \(\Phi\) 掉很多。</li>
+  <li><b>檢查合法</b>：\(\Phi(D_0)=0\)、\(\Phi(D_i)\ge 0\)。</li>
+  <li><b>每種操作算 \(\hat c=c+\Delta\Phi\)</b>：貴的操作 \(c\) 大但 \(\Delta\Phi\) 很負，抵掉。</li>
+  <li><b>收尾</b>：\(\sum c_i\le\sum\hat c_i\)。如果 \(\Phi(D_0)\ne0\)，用 \(\sum c_i=\sum\hat c_i-\Phi(D_n)+\Phi(D_0)\)。</li>
+</ol>
+
+<h2 id="practice" data-short="相關習題">相關習題</h2>
+<ul>
+  <li><a href="exercises.html#ex-16-3-1">16.3-1</a>：\(\Phi(D_0)\ne0\) 時，換一個 \(\Phi'\) 讓 \(\Phi'(D_0)=0\)，amortized cost 不變。</li>
+  <li><a href="exercises.html#ex-16-3-3">16.3-3</a>：binary min-heap，讓 INSERT 是 \(O(\lg n)\)、EXTRACT-MIN 是 \(O(1)\)。</li>
+  <li><a href="exercises.html#ex-16-3-4">16.3-4</a>：stack 一開始有 \(s_0\) 個、最後有 \(s_n\) 個，總成本是多少。</li>
+  <li><a href="exercises.html#ex-16-3-5">16.3-5</a>：用兩個 stack 做 queue。</li>
+  <li><a href="exercises.html#ex-16-3-6">16.3-6</a>：INSERT 與 DELETE-LARGER-HALF。</li>
+</ul>
+
+</article>
+<footer class="site">內容整理自 Ch16 Amortized Analysis II 投影片與 <em>Introduction to Algorithms</em>（CLRS 4th ed.）第 16.3 節。</footer>
+</main>
+</div>
+</body>
+</html>

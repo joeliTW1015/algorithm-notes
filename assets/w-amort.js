@@ -24,19 +24,19 @@
   };
 
   let chartId = 0;
-  // Line / bar chart. lines: [{pts:[[x,y]…], cls, label}], bars: [{x, y, cls}], xMax/yMax: axis ranges.
+  // Line / bar chart. lines: [{pts:[[x,y]…], cls, label}], bars: [{x, y, cls}], xMax/yMax/yMin: axis ranges (yMin ≤ 0, default 0).
   function chart(o) {
-    const w = o.w || 640, H = o.h || 240, L = 46, R = 14, T = 12, B = 30;
+    const w = o.w || 640, H = o.h || 240, L = 46, R = 14, T = 12, B = 30, lo = Math.min(0, o.yMin || 0);
     const X = (x) => L + (x / (o.xMax || 1)) * (w - L - R);
-    const Y = (y) => T + (H - T - B) * (1 - y / (o.yMax || 1));
+    const Y = (y) => T + (H - T - B) * (1 - (y - lo) / (o.yMax - lo || 1));
     const svg = s('svg', { class: 'chart', viewBox: `0 0 ${w} ${H}`, role: 'img', 'aria-label': o.aria || 'chart' });
-    const ys = nice(o.yMax, 5), xs = nice(o.xMax, 8);
-    for (let y = 0; y <= o.yMax + 1e-9; y += ys) {
+    const ys = nice(o.yMax - lo, 5), xs = nice(o.xMax, 8);
+    for (let y = Math.ceil(lo / ys - 1e-9) * ys; y <= o.yMax + 1e-9; y += ys) {
       svg.append(s('line', { class: 'grid', x1: L, x2: w - R, y1: Y(y), y2: Y(y) }),
         s('text', { class: 'tick', x: L - 6, y: Y(y) + 4, 'text-anchor': 'end' }, y));
     }
     for (let x = 0; x <= o.xMax + 1e-9; x += xs) svg.append(s('text', { class: 'tick', x: X(x), y: H - B + 16, 'text-anchor': 'middle' }, x));
-    svg.append(s('line', { class: 'axis', x1: L, x2: w - R, y1: Y(0), y2: Y(0) }), s('line', { class: 'axis', x1: L, x2: L, y1: T, y2: Y(0) }));
+    svg.append(s('line', { class: 'axis', x1: L, x2: w - R, y1: Y(0), y2: Y(0) }), s('line', { class: 'axis', x1: L, x2: L, y1: T, y2: Y(lo) }));
     if (o.xLabel) svg.append(s('text', { class: 'tick', x: w - R, y: H - 2, 'text-anchor': 'end' }, o.xLabel));
     const bw = Math.max(1.5, Math.min(18, ((w - L - R) / (o.xMax || 1)) * 0.7));
     (o.bars || []).forEach((b) => {
@@ -45,14 +45,14 @@
     });
     // Lines that leave the plot (e.g. the nk bound) are clipped at the top instead of bent.
     const clipId = 'clip' + ++chartId;
-    svg.append(s('clipPath', { id: clipId }, s('rect', { x: L, y: T - 2, width: w - L - R, height: H - T - B + 4 })));
+    svg.append(s('clipPath', { id: clipId }, s('rect', { x: L, y: T - 2, width: w - L - R, height: Y(lo) - T + 4 })));
     const lines = s('g', { 'clip-path': `url(#${clipId})` });
     (o.lines || []).forEach((ln) => {
       const pts = ln.pts.map(([x, y]) => [X(x), Y(y)].map((v) => v.toFixed(1)).join(','));
       lines.append(s('polyline', { class: 'ln ' + (ln.cls || ''), points: pts.join(' ') }));
     });
     svg.append(lines);
-    if (o.cursor !== undefined) svg.append(s('line', { class: 'cursor', x1: X(o.cursor), x2: X(o.cursor), y1: T, y2: Y(0) }));
+    if (o.cursor !== undefined) svg.append(s('line', { class: 'cursor', x1: X(o.cursor), x2: X(o.cursor), y1: T, y2: Y(lo) }));
     const legend = h('div', { class: 'chart-legend' },
       [...(o.bars && o.bars.length && o.barLabel ? [['bar', o.barLabel]] : []), ...(o.lines || []).filter((l) => l.label).map((l) => [l.cls, l.label])]
         .map(([c, t]) => h('span', { class: 'lg ' + c, html: t })));
