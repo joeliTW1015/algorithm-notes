@@ -437,6 +437,16 @@ svg.pmeter .val { font: 700 13px var(--f-mono); fill: var(--ink); }
 .arr .cell.new { background: var(--win-soft); border-color: var(--win); }
 .arr .cell.out { background: #f0f2f1; border-style: dashed; color: var(--ink-faint); text-decoration: line-through; }
 
+/* ---------- Exam-style answers (習題詳解) ---------- */
+.a .ans { margin: 4px 0 12px; padding: 6px 12px; border-left: 4px solid var(--win); background: var(--win-soft); font-weight: 600; border-radius: 0 var(--radius) var(--radius) 0; }
+.a > p, .a > ul { margin: 8px 0; }
+.a .lbl { font: 700 13px var(--f-mono); color: var(--ink); background: var(--paper-2); padding: 0 6px; border-radius: 3px; margin-right: 6px; }
+.a .more { font-size: 14px; color: var(--ink-soft); margin-top: 10px; }
+.a .try { font-size: 13px; color: var(--ink-faint); border-top: 1px dashed var(--rule); padding-top: 8px; margin-top: 14px; }
+.a pre.ascii { font: 500 13.5px/1.35 var(--f-mono); background: #fff; border: 1px solid var(--grid); border-radius: var(--radius); padding: 8px 14px; overflow-x: auto; width: fit-content; max-width: 100%; }
+.note.exam ul { margin: 6px 0 0; padding-left: 20px; }
+.note.exam li { margin: 3px 0; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
