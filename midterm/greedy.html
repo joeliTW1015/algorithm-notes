@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Greedy 考古題 · 期中考古題 Ch14–16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/midterm.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-coin.js"></script>
+<script defer src="../assets/w-huff.js"></script>
+<script defer src="../assets/w-gex.js"></script>
+<script defer src="../assets/w-knap.js"></script>
+<script defer src="../assets/w-midterm.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="midterm" data-page="greedy"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">期中考古題 · Ch15 Greedy Algorithms（舊卷標 Ch16）</p>
+<h1>Greedy 考古題</h1>
+<p class="lede">Greedy 題幾乎都是同一個模式：<strong>寫出 greedy 規則 → 證 greedy-choice property（exchange argument）→ 證 optimal substructure → 分析時間</strong>。Huffman 是整份考古題出現最多次的題型。</p>
+<p><button type="button" id="toggle-all">全部展開</button></p>
+
+<div class="note key"><span class="tag">證明模板</span>
+<ol class="steps">
+  <li><b>Greedy-choice property</b>：設 O 是任一最佳解。若 O 不含 greedy 選的 g，從 O 拿掉某個 x、換成 g 得到 O′；證明 O′ 仍合法且不比 O 差 ⇒ 存在含 g 的最佳解。</li>
+  <li><b>Optimal substructure</b>：若 O 是含 g 的最佳解，則 O − {g} 是「選了 g 之後剩下的子問題」的最佳解；否則用子問題更好的解 + g 會比 O 更好（cut-and-paste，矛盾）。</li>
+  <li>兩者合起來，對問題大小歸納 ⇒ greedy 得到最佳解。</li>
+</ol></div>
+
+<!-- ======================================================= -->
+<h2 id="props" data-short="Greedy 兩性質">Greedy 的兩個性質</h2>
+<p class="yrs"><span class="yr-tag greedy">2011 Q5</span></p>
+
+<section class="ex" id="mt-2011-q5">
+<header><span class="id">2011 Q5</span><span class="t">Two key properties for greedy</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">What are the two key properties that an optimization problem must have in order for greedy algorithm to apply?</p><p class="zh">一個最佳化問題要具備哪兩個關鍵性質，才能用 greedy algorithm？</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">(1) Greedy-choice property　(2) Optimal substructure。</p>
+<ol>
+  <li><strong>Greedy-choice property</strong>：a globally optimal solution can be arrived at by making a locally optimal (greedy) choice——存在一個最佳解包含 greedy 的第一個選擇，而且這個選擇不用先解子問題就能決定。</li>
+  <li><strong>Optimal substructure</strong>：做完 greedy choice 之後只剩<strong>一個</strong>子問題，它的最佳解加上 greedy choice 就是原問題的最佳解。</li>
+</ol>
+<p class="more">對照 DP：DP 也要 optimal substructure，但它是<strong>先解所有子問題再選</strong>（bottom-up），greedy 是<strong>先選再解唯一的子問題</strong>（top-down）。DP 的第二要素是 overlapping subproblems，見 <a href="dp.html#mt-dp-elements">DP 兩要素</a>。</p>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="coin" data-short="找零錢 greedy 證明">找零錢：證明 greedy 最佳</h2>
+<p class="yrs"><span class="yr-tag hot">3 次</span><span class="yr-tag greedy">2021 Q2a</span><span class="yr-tag greedy">2022 Q5</span><span class="yr-tag greedy">2025 Q9</span></p>
+
+<section class="ex" id="mt-coin-us">
+<header><span class="id">2021 Q2a · 2025 Q9</span><span class="t">25 / 10 / 5 / 1 的 greedy 是最佳</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">Consider the problem of making change for n cents using the fewest number of coins. Assume that each coin's value is an integer. Describe a greedy algorithm to make change using quarters (quarter = 25 cents), dimes (dime = 10 cents), nickels (nickel = 5 cents), and pennies (penny = 1 cent). Prove that your algorithm yields an optimal solution. (Prove your algorithm satisfies the greedy choice property and optimal substructure property.)</p><p class="zh">用最少枚硬幣找 n 分錢，面額 25、10、5、1。設計 greedy 演算法並證明它最佳（要證 greedy-choice property 和 optimal substructure）。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">Greedy：每次拿「不超過剩餘金額的最大硬幣」。證明靠：最佳解中比 c 小的硬幣總和一定 &lt; c。</p>
+<pre data-code="GREEDY-CHANGE(n)">
+for each coin c in (25, 10, 5, 1)       // 由大到小
+    k[c] = floor(n / c)                  // 拿越多越好
+    n = n - k[c] * c
+return k                                 // O(1)：只有 4 種硬幣
+</pre>
+<p><span class="lbl">Lemma</span>任一最佳解中：penny ≤ 4（5 個 → 1 nickel）、nickel ≤ 1（2 個 → 1 dime）、dime ≤ 2（3 個 → quarter + nickel），且不會同時有 2 dime 和 1 nickel（→ 1 quarter）。因此比 c 小的硬幣總和：c = 5 時 ≤ 4、c = 10 時 ≤ 4 + 5 = 9、c = 25 時 ≤ max(20 + 4, 10 + 5 + 4) = 24，都 &lt; c。</p>
+<p><span class="lbl">Greedy choice</span>Let c = largest coin ≤ n，O 為最佳解。比 c 大的硬幣 &gt; n 不能用。若 O 不含 c，O 全由比 c 小的硬幣組成，總和 = n ≥ c，與 Lemma 矛盾。故 O 含 c。</p>
+<p><span class="lbl">Optimal substructure</span>若 O 是 n 的最佳解且含 c，則 O − {c} 是 n − c 的最佳解：否則有更少硬幣的 O′ 找 n − c，O′ ∪ {c} 比 O 少，矛盾。</p>
+<p>對 n 歸納 ⇒ greedy 最佳。<span class="lbl">Time</span>\(O(1)\)（k 種硬幣為 \(O(k)\)）。</p>
+<p class="more">易錯：只說「大的先拿比較少」不算證明；Lemma 的每一種替換都要寫。面額改成 {1, 4, 5} greedy 就錯（8 = 4 + 4），所以證明一定要用到這組面額的性質。相關：<a href="../greedy/coin-change.html">Coin changing 主題頁</a>、<a href="dp.html#mt-coin-dp">任意面額用 DP</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="coinGreedy" data-coins="1 5 10 25" data-x="68"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2022-q5">
+<header><span class="id">2022 Q5</span><span class="t">面額是 c 的次方：c⁰, c¹, …, cᵏ</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Consider the problem of making change for n cents using the fewest number of coins. Assume that each coin's value is an integer. Suppose that the available coins are in the denominations that are powers of c, i.e., the denominations are c<sup>0</sup>, c<sup>1</sup>, …, c<sup>k</sup> for some integers c &gt; 1 and k ≥ 1. Show that the greedy algorithm always yields an optimal solution.</p><p class="zh">面額是 \(c^0, c^1, \dots, c^k\)（c &gt; 1、k ≥ 1）時，證明 greedy 找零一定最佳。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">最佳解中每種 \(c^i\ (i&lt;k)\) 最多 \(c-1\) 枚 ⇒ 比 \(c^j\) 小的硬幣總和 \(\le c^j-1&lt;c^j\) ⇒ 最佳解一定含 greedy 選的 \(c^j\)。</p>
+<p><span class="lbl">Greedy choice</span>Let \(c^j\) = largest denomination ≤ n，O 為最佳解。若 O 中某個 \(c^i\ (i&lt;k)\) 用了 ≥ c 枚，把 c 枚換成 1 枚 \(c^{i+1}\)，少 \(c-1\) 枚，矛盾。所以 \(i&lt;k\) 時 \(\text{count}(c^i)\le c-1\)。比 \(c^j\) 大的面額 &gt; n 不能用；若 O 不含 \(c^j\)，則
+$$n=\sum_{i=0}^{j-1}\text{count}(c^i)\,c^i\le\sum_{i=0}^{j-1}(c-1)c^i=c^j-1&lt;c^j\le n,$$ 矛盾。故 O 含 \(c^j\)。</p>
+<p><span class="lbl">Optimal substructure</span>O − {\(c^j\)} 是 \(n-c^j\) 的最佳解（cut-and-paste，同上題）。歸納 ⇒ greedy 最佳。</p>
+<div class="rubric"><b>2022 給分</b>：greedy choice 6%（只寫出「≥ c 枚可換成大一號」得 3%，要接著用等比級數導出矛盾）；optimal substructure 4%。</div>
+<p class="more">這是 CLRS Problem 15-1(b)（3rd ed. 16-1(b)）。相關：<a href="../greedy/exercises.html#p15-1">Problem 15-1 詳解</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="coinGreedy" data-coins="1 3 9 27" data-x="80"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="huffman" data-short="Huffman（最常考）">Huffman code</h2>
+<p class="yrs"><span class="yr-tag hot">5 次</span><span class="yr-tag greedy">2017 Q9</span><span class="yr-tag greedy">2018 Q8</span><span class="yr-tag greedy">2019 Q5</span><span class="yr-tag greedy">2020 Q5</span><span class="yr-tag greedy">2022 Q4</span></p>
+
+<pre data-code="HUFFMAN(C)">
+n = |C|
+Q = C                                  // min-priority queue keyed on freq
+for i = 1 to n - 1
+    allocate a new node z
+    z.left = x = EXTRACT-MIN(Q)
+    z.right = y = EXTRACT-MIN(Q)
+    z.freq = x.freq + y.freq
+    INSERT(Q, z)
+return EXTRACT-MIN(Q)                  // the root of the tree
+</pre>
+
+<section class="ex" id="mt-2022-q4">
+<header><span class="id">2022 Q4</span><span class="t">6 個字元建 Huffman code</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose we have a 100,000-character data file with 6 characters. We observe that the 6 characters in the file occurs with the frequencies given in the following table. Construct a Huffman code for the following 6 characters: (Please show your algorithm, time complexity and final result.)</p><p class="zh">100,000 字元的檔案只有 6 種字元，頻率如下表（單位：千）。建出 Huffman code，要寫演算法、時間複雜度與最後結果。</p>
+<table class="plain small"><tr><th>Character</th><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr>
+<tr><th>Frequency (thousands)</th><td class="num">35</td><td class="num">8</td><td class="num">10</td><td class="num">12</td><td class="num">15</td><td class="num">20</td></tr></table></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">a = 11、b = 000、c = 001、d = 100、e = 101、f = 01；總長 245 千 bits（定長碼要 300 千）。時間 \(O(n\lg n)\)。</p>
+<p><span class="lbl">Algorithm</span>上面的 HUFFMAN(C)。<span class="lbl">Time</span>建 min-heap \(O(n)\)；迴圈 \(n-1\) 次，每次 2 次 EXTRACT-MIN + 1 次 INSERT，各 \(O(\lg n)\) ⇒ \(O(n\lg n)\)。</p>
+<p><span class="lbl">Merges</span>b8 + c10 = 18 → d12 + e15 = 27 → 18 + f20 = 38 → 27 + a35 = 62 → 38 + 62 = 100。</p>
+<pre class="ascii">
+              100
+           0/     \1
+          38       62
+        0/  \1   0/  \1
+       18  f:20  27  a:35
+     0/ \1     0/ \1
+   b:8  c:10 d:12 e:15
+</pre>
+<p>Cost \(=\sum f\cdot|w| = 35·2+20·2+(8+10+12+15)·3=70+40+135=245\)。</p>
+<div class="rubric"><b>2022 給分</b>：algorithm 4%、time complexity 2%、final result 4%。左右（0/1）對調得到的碼也對，碼長必須一樣。</div>
+<p class="try">互動驗證</p>
+<div data-widget="huffman" data-freq="a:35 b:8 c:10 d:12 e:15 f:20"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-huff-fib">
+<header><span class="id">2019 Q5 · 2020 Q5</span><span class="t">Fibonacci 頻率的 Huffman code，推廣到 n 個</span><span class="yrs"><span class="yr-tag">10–15%</span></span></header>
+<div class="q"><p class="orig" lang="en">What is the optimal Huffman code for the following set of frequencies, based on the first 8 Fibonacci numbers? a:1 b:1 c:2 d:3 e:5 f:8 g:13 h:21. Can you generalize your answer to find the optimal code when the frequencies are the first n Fibonacci numbers?</p><p class="zh">頻率是前 8 個 Fibonacci 數（a:1 b:1 c:2 d:3 e:5 f:8 g:13 h:21）時，最佳 Huffman code 是什麼？能推廣到前 n 個 Fibonacci 數嗎？</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">h = 0、g = 10、f = 110、e = 1110、d = 11110、c = 111110、b = 1111110、a = 1111111（a、b 可互換）。一般化：第 k 大的頻率（k = 1…n−1）碼是 \(1^{k-1}0\)，最小的是 \(1^{n-1}\)——一條「毛毛蟲」樹。</p>
+<p><span class="lbl">Why</span>Fact：\(\sum_{i=1}^{k}F_i=F_{k+2}-1\)。歸納：合併完前 k 個後，那棵樹的頻率是 \(F_{k+2}-1\)，剩下的是 \(F_{k+1}\le F_{k+2}\le\cdots\)。因為 \(F_{k+2}-1&lt;F_{k+2}\)，最小的兩個一定是「合併樹」和 \(F_{k+1}\)，所以每一步都把新字元接在同一條鏈上，深度依序加 1。</p>
+<p>Cost \(=1·7+1·7+2·6+3·5+5·4+8·3+13·2+21·1=132\)。</p>
+<p class="more">2020 答案鍵（0-indexed）：code(N−1) = "0"；code(i) = "1" + code(i+1)（0 &lt; i）；code(0) = "1"×(N−1)。</p>
+<p class="try">互動驗證</p>
+<div data-widget="huffman" data-freq="a:1 b:1 c:2 d:3 e:5 f:8 g:13 h:21"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2017-q9">
+<header><span class="id">2017 Q9</span><span class="t">證明：最小的兩個字元可以是最深的兄弟</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">In 1952, David Huffman thinks of a greedy algorithm to obtain the optimal prefix code tree. Let c and c′ be chars with least frequencies. Please prove that there is some optimal prefix code tree with c and c′ sharing the same parent, and the two leaves are farthest from root.</p><p class="zh">Huffman 的 greedy 演算法。令 c、c′ 是頻率最小的兩個字元，證明存在一棵最佳 prefix code 樹，c 和 c′ 有同一個父節點，而且是離 root 最遠的兩片葉子。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">Exchange argument：取最佳樹 T 中最深的一對兄弟 a、b，把 c、c′ 分別跟 a、b 交換，成本不會增加。</p>
+<p><span class="lbl">Proof</span>Let T 為最佳樹。最佳樹是 full binary tree，所以最深的葉子有兄弟；令 a、b 為深度最大的兄弟葉子。WLOG \(f(c)\le f(c')\)、\(f(a)\le f(b)\)。因 c、c′ 頻率最小：\(f(c)\le f(a)\)、\(f(c')\le f(b)\)；且 \(d_T(a)=d_T(b)\ge d_T(c),d_T(c')\)。</p>
+<p>把 c 和 a 交換得 T′：
+$$B(T)-B(T')=f(a)d_T(a)+f(c)d_T(c)-f(a)d_T(c)-f(c)d_T(a)=\bigl(f(a)-f(c)\bigr)\bigl(d_T(a)-d_T(c)\bigr)\ge0.$$
+同理再把 c′ 和 b 交換得 T″，\(B(T')-B(T'')\ge0\)。所以 \(B(T'')\le B(T)\)，T 最佳 ⇒ T″ 也最佳，且 c、c′ 在 T″ 是最深的兄弟。∎</p>
+<p class="more">易錯：要先說明「最深的葉子一定有兄弟」（full binary tree）；兩個因子都 ≥ 0 才能說差 ≥ 0。若 a = c′ 或 b = c，交換其中一次即可。相關：<a href="../greedy/huffman.html">Huffman 主題頁</a>、<a href="../greedy/exercises.html#ex-15-3-2">15.3-2</a>。</p>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2018-q8">
+<header><span class="id">2018 Q8</span><span class="t">頻率遞減 ⇒ 存在碼長遞增的最佳碼</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Prove that if we order the characters in an alphabet so that their frequencies are monotonically decreasing, then there exists an optimal code whose codeword lengths are monotonically increasing.</p><p class="zh">證明：若字母依頻率遞減排序，則存在一個最佳碼，其碼長是遞增的。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">從任一最佳碼開始，只要有 \(i&lt;j\) 但 \(l_i&gt;l_j\) 就交換兩者的碼字；成本不增加，逆序數減少，最後得到碼長遞增的最佳碼。</p>
+<p><span class="lbl">Proof</span>\(f_1\ge f_2\ge\cdots\ge f_n\)，取最佳碼，碼長 \(l_1,\dots,l_n\)。若某 \(i&lt;j\) 有 \(l_i&gt;l_j\)，交換 \(c_i\)、\(c_j\) 的碼字（仍是 prefix code），成本變化
+$$\Delta=(f_il_j+f_jl_i)-(f_il_i+f_jl_j)=-(f_i-f_j)(l_i-l_j)\le0,$$
+因 \(f_i\ge f_j\)、\(l_i&gt;l_j\)。原碼最佳 ⇒ 新碼也最佳。每次交換逆序對（\(i&lt;j,\ l_i&gt;l_j\)）的數量至少減 1，有限次後沒有逆序 ⇒ \(l_1\le l_2\le\cdots\le l_n\)。∎</p>
+<div class="rubric"><b>2018 給分</b>：步驟 1（交換）3%、到步驟 2（成本不增加）6%、全對（歸納 / 重複到沒有逆序）10%。答案鍵寫「(l<sub>j</sub> − l<sub>i</sub>) is positive … A is not optimal」符號與結論都寫反——正確說法是 Δ ≤ 0，交換後不會變差，而不是推出矛盾。</div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="activity" data-short="Activity：最晚開始">Activity selection：選最晚開始的</h2>
+<p class="yrs"><span class="yr-tag greedy">2011 Q6</span></p>
+
+<section class="ex" id="mt-2011-q6">
+<header><span class="id">2011 Q6</span><span class="t">Select the last activity to start</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">Supposed we have a set S = {a<sub>1</sub>, a<sub>2</sub>, …, a<sub>n</sub>} of n proposed activities that wish to use a resource. Each activity a<sub>i</sub> has a start time s<sub>i</sub> and a finish time f<sub>i</sub>, where 0 ≤ s<sub>i</sub> &lt; f<sub>i</sub> &lt; ∞. If selected, activity a<sub>i</sub> takes place during the half-open time interval [s<sub>i</sub>, f<sub>i</sub>). Activities a<sub>i</sub> and a<sub>j</sub> are compatible if the intervals [s<sub>i</sub>, f<sub>i</sub>) and [s<sub>j</sub>, f<sub>j</sub>) do not overlap. In the <b>activity-selection problem</b>, we wish to select a maximum-size subset of mutually compatible activities. We assume that the activities are sorted in monotonically increasing order of start time: s<sub>1</sub> ≤ s<sub>2</sub> ≤ s<sub>3</sub> ≤ … ≤ s<sub>n−1</sub> ≤ s<sub>n</sub>. An algorithm is designed to select the last activity to start that is compatible with all previously selected activities. Describe how this approach is a greedy algorithm, and prove that it yields an optimal solution.</p><p class="zh">n 個活動各有 \([s_i,f_i)\)，要選最多個互相相容的活動；活動已依開始時間排序。某演算法每次選「與已選活動相容、開始最晚」的活動。說明它為什麼是 greedy，並證明它得到最佳解。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">它每一步只做一個局部最好的選擇（留給前面最多時間的活動），不回頭——是 greedy。正確性：把時間反轉，就是「最早結束」的 greedy；也可直接用 exchange argument。</p>
+<pre data-code="LAST-TO-START(s, f, n)">
+A = {a_n};  k = n                      // 最晚開始的一定選
+for m = n - 1 downto 1
+    if f[m] <= s[k]                    // 在已選的 a_k 開始前結束
+        A = A ∪ {a_m};  k = m
+return A                               // Θ(n)
+</pre>
+<p><span class="lbl">Greedy choice</span>Let \(S_k\) 為子問題、\(a_m\) 是其中 start 最大的，\(A_k\) 是 \(S_k\) 的最佳解、\(a_j\) 是 \(A_k\) 中 start 最大的。若 \(a_j\ne a_m\)，令 \(A'=A_k-\{a_j\}\cup\{a_m\}\)：\(A_k\) 其他活動都在 \(s_j\le s_m\) 前結束，所以和 \(a_m\) 相容；\(|A'|=|A_k|\) ⇒ 含 \(a_m\) 的最佳解存在。</p>
+<p><span class="lbl">Optimal substructure</span>選 \(a_m\) 後剩下的子問題是「在 \(s_m\) 前結束的活動」；\(A-\{a_m\}\) 必為它的最佳解，否則換成更大的解會使 A 更大（矛盾）。</p>
+<p class="more">相關：<a href="../greedy/exercises.html#ex-15-1-2">課本 15.1-2（同一題）</a>、<a href="../greedy/activity.html">Activity selection 主題頁</a>。</p>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="unit" data-short="Unit intervals 覆蓋點">最少的 unit-length intervals 覆蓋所有點</h2>
+<p class="yrs"><span class="yr-tag greedy">2018 Q7</span><span class="yr-tag greedy">2024 Q1</span></p>
+
+<section class="ex" id="mt-unit">
+<header><span class="id">2018 Q7 · 2024 Q1</span><span class="t">Smallest set of unit-length closed intervals</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Describe a greedy algorithm that, given a set X = {x<sub>1</sub>, x<sub>2</sub>, …, x<sub>n</sub>} of points on the real line, determines the smallest set of unit-length closed intervals that contains all of the given points. Prove that your greedy choice is correct and that the problem has optimal substructure.</p><p class="zh">給實數線上的點集合 X，找出最少個長度為 1 的閉區間蓋住所有點。描述 greedy 演算法，證明 greedy choice 正確且問題有 optimal substructure。（2024 版：Describe an efficient algorithm … Argue that your algorithm is correct.）</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">排序後，每次取<strong>最左邊還沒被蓋到的點 x</strong>，放 \([x,x+1]\)，跳過它蓋到的點。\(O(n\lg n)\)。</p>
+<pre data-code="UNIT-INTERVALS(X, n)">
+sort X so that x1 <= x2 <= ... <= xn   // O(n lg n)
+S = ∅;  i = 1
+while i <= n
+    left = x_i                         // 最左的未覆蓋點
+    S = S ∪ {[left, left + 1]}
+    while i <= n and x_i <= left + 1
+        i = i + 1                      // 跳過被這個區間蓋到的點
+return S                               // 掃描 O(n)
+</pre>
+<p><span class="lbl">Greedy choice</span>Let \(y_1\) 為最左的點，S′ 為最佳解，其中蓋住 \(y_1\) 的區間是 \([x',x'+1]\)，\(x'\le y_1\)。沒有點在 \(y_1\) 左邊，所以它蓋到的點都在 \([y_1,x'+1]\subseteq[y_1,y_1+1]\)。換成 \([y_1,y_1+1]\) 仍蓋住全部、數量不變 ⇒ 含 greedy choice 的最佳解存在。</p>
+<p><span class="lbl">Optimal substructure</span>拿掉 \([y_1,y_1+1]\) 蓋到的點後剩下 \(X'=\{x&gt;y_1+1\}\)；\(S-\{[y_1,y_1+1]\}\) 是 X′ 的最佳解，否則換掉更少的解會使 S 更小。</p>
+<p><span class="lbl">Time</span>排序 \(O(n\lg n)\) + 掃描 \(O(n)\) = \(O(n\lg n)\)。</p>
+<div class="rubric"><b>給分</b>：2018 pseudocode 5%、證明 5%（不清楚處各 −1）；2024 正確性 5%、效率 5%。2018 答案鍵「x′ &lt; 1」是筆誤，應為 x′ ≤ y<sub>1</sub>。</div>
+<p class="more">相關：<a href="../greedy/exercises.html#ex-15-2-5">課本 15.2-5（同一題）</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="unitCover"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="bag" data-short="背包裝最多件 O(n)">背包裝最多件：O(n)（用 SELECT）</h2>
+<p class="yrs"><span class="yr-tag greedy">2011 Q2</span><span class="yr-tag greedy">2017 Q8</span></p>
+
+<section class="ex" id="mt-bag">
+<header><span class="id">2011 Q2 · 2017 Q8</span><span class="t">Maximize the number of items, O(n)</span><span class="yrs"><span class="yr-tag">10–15%</span></span></header>
+<div class="q"><p class="orig" lang="en">(2011 Q2) We have a bag which has a weight capacity of x kilograms. We also have n items, each of different weights. Our target is to pack as many items as possible in the bag, without exceeding the weight capacity. Note that, we want to maximize the number of items, not the total weights of the items. Your clever friend, Matthew, tells you that one way is to pack items according to increasing order of the weights, from smallest to the largest (until exceeding the weight capacity), and this strategy can pack the maximum number of items. You want to follow Matthew's idea. From the first glance, it seems that finding all the desired items to be packed will require sorting, thus taking O(n log n) time. However, this can be done much faster. Design an algorithm to determine the desired items in O(n) time.<br><br>
+(2017 Q8) … Design an algorithm to determine the desired items in O(n) time. (You need to give the algorithm and analysis the time complexity step by step in your algorithm.)</p><p class="zh">背包容量 x 公斤，n 個物品重量各不相同，要裝<strong>最多件</strong>（不是最重）。由輕到重裝可以得到最多件，但排序要 \(O(n\log n)\)。設計 \(O(n)\) 演算法找出要裝的物品。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">最佳解 = 最輕的若干個。用 SELECT 找中位數 m 切成輕、重兩半：輕的一半放得下就全拿、再到重的一半找；放不下就只在輕的一半找。\(T(n)=T(n/2)+O(n)=O(n)\)。</p>
+<p><span class="lbl">Why lightest</span>（exchange）若最佳解用了某個 w，但有更輕的 w′ 沒用，換成 w′：總重不增加、件數不變。所以存在由最輕的 k 個組成的最佳解，k 是最大的「前 k 輕總和 ≤ x」。</p>
+<pre data-code="PACK(S, x)">
+if S == ∅ return ∅
+m = SELECT(S, ceil(|S| / 2))           // 中位數，O(|S|)
+L = {w ∈ S : w <= m};  R = S - L        // partition，O(|S|)
+if sum(L) <= x                          // O(|S|)
+    return L ∪ PACK(R, x - sum(L))      // 輕的一半全拿
+else if |L| == 1 return ∅
+else return PACK(L, x)                  // 重的一半一個都放不下
+</pre>
+<p><span class="lbl">Time</span>每層 \(O(|S|)\)，遞迴到一半大小：\(T(n)=T(\lceil n/2\rceil)+cn\le 2cn=O(n)\)。</p>
+<p class="more">易錯：寫「先 sort」是 \(O(n\lg n)\)，不符題意；只用 SELECT 找第 k 小但不知道 k 也不行——k 要靠這種二分（或 weighted-median 的想法）逐步確定。這跟 <a href="../greedy/exercises.html#ex-15-2-6">15.2-6 O(n) fractional knapsack</a> 是同一個技巧。</p>
+<p class="try">互動驗證</p>
+<div data-widget="bagCount"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="knap" data-short="Knapsack：重量序 = 價值反序">0/1 knapsack：重量遞增 = 價值遞減</h2>
+<p class="yrs"><span class="yr-tag greedy">2020 Q4</span></p>
+
+<section class="ex" id="mt-2020-q4">
+<header><span class="id">2020 Q4</span><span class="t">輕的就是貴的 → greedy 可解</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose that in a 0-1 knapsack problem, the order of the items when sorted by increasing weight is the same as their order when sorted by decreasing value. Give an efficient algorithm to find an optimal solution to this variant of the knapsack problem, and argue that your algorithm is correct.</p><p class="zh">0-1 knapsack 中，物品依重量遞增排序的順序，剛好等於依價值遞減排序的順序。給一個有效率的演算法並證明正確。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">依重量由輕到重（= 價值由高到低）一直拿，拿到下一個放不下就停。\(O(n\lg n)\)（已排序則 \(O(n)\)）。</p>
+<pre data-code="LIGHT-FIRST(w, v, n, W)">
+sort items by increasing w             // = decreasing v，O(n lg n)
+A = ∅
+for i = 1 to n
+    if w[i] > W  break                  // 後面更重，都放不下
+    A = A ∪ {i};  W = W - w[i]
+return A
+</pre>
+<p><span class="lbl">Greedy choice</span>Let \(a_1\) 最輕（也最貴），O 為最佳解。若 \(a_1\notin O\)：O 空的話直接加入 \(a_1\)（若 \(w_1\le W\)）；否則把 O 中任一 \(a_j\) 換成 \(a_1\)：重量 \(w_1\le w_j\) 仍放得下，價值 \(v_1\ge v_j\) 不減 ⇒ 含 \(a_1\) 的最佳解存在。</p>
+<p><span class="lbl">Optimal substructure</span>O − {a<sub>1</sub>} 是物品 2..n、容量 \(W-w_1\) 的最佳解（cut-and-paste）。</p>
+<p class="more">相關：<a href="../greedy/exercises.html#ex-15-2-3">課本 15.2-3（同一題）</a>、<a href="../greedy/knapsack.html">Knapsack 主題頁</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="knapsack" data-v="60 50 40 30" data-w="10 20 30 40" data-cap="60"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="tasks" data-short="Task scheduling">Unit-time task scheduling（profit + deadline）</h2>
+<p class="yrs"><span class="yr-tag greedy">2021 Q3</span><span class="yr-tag">2026 投影片沒教</span></p>
+
+<section class="ex" id="mt-2021-q3">
+<header><span class="id">2021 Q3</span><span class="t">每件工作 1 單位時間，求最大利潤</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">Given a set of tasks with profits {p<sub>1</sub>, …, p<sub>n</sub>} and deadlines {d<sub>1</sub>, …, d<sub>n</sub>}, determine the maximum profit you can earn. Each task occupies a one-time unit. You can only do one task at a time, and you cannot execute the task after its deadline. (a) (9%) Describe your algorithm. (b) (3%) Prove the greedy choice property. (c) (3%) Prove the optimal substructure property.</p><p class="zh">每件工作有利潤 \(p_i\) 和截止時間 \(d_i\)，各占 1 單位時間，一次只能做一件，超過截止時間就不能做。求最大利潤：要選哪些工作、怎麼排？(a) 描述演算法 (b) 證明 greedy-choice property (c) 證明 optimal substructure。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">利潤由大到小，每件放在「deadline 之前<strong>最晚</strong>的空時間格」；沒有空格就放棄。\(O(n^2)\)（disjoint-set 可到近線性）。</p>
+<pre data-code="SCHEDULE(p, d, n)">
+sort tasks by decreasing profit        // O(n lg n)
+D = min(n, max d[i]);  slot[1..D] = NIL
+for each task i in that order          // n 次
+    t = min(d[i], D)
+    while t >= 1 and slot[t] != NIL    // 往前找空格，O(n)
+        t = t - 1
+    if t >= 1  slot[t] = i             // 放在最晚的空格
+return slot                            // 總時間 O(n^2)
+</pre>
+<p><span class="lbl">(b) Greedy choice</span>Let \(a_1\) 利潤最大，O 為最佳排程。若 \(a_1\notin O\)：\(1..d_1\) 若有空格，加入 \(a_1\) 利潤變大，矛盾；否則 \(1..d_1\) 全滿，把其中任一工作 \(a_j\) 換成 \(a_1\)（\(p_1\ge p_j\)）不會變差。再把 \(a_1\) 和第 \(d_1\) 格的工作交換位置（那個工作 deadline ≥ \(d_1\)，移到更早的格子仍合法）⇒ 存在把 \(a_1\) 放在第 \(d_1\) 格的最佳解。</p>
+<p><span class="lbl">(c) Optimal substructure</span>確定 \(a_1\) 佔第 \(d_1\) 格後，剩下的問題是「其餘工作排進其餘時間格」；O − {a<sub>1</sub>} 必是它的最佳解，否則換成更好的解 + \(a_1\) 比 O 好，矛盾。</p>
+<p class="more">為什麼放「最晚」的空格：把早的格子留給 deadline 更早的工作。這是 CLRS 3rd ed. 16.5（matroid）的例子，4th ed. 與 2026 投影片沒有，但 2021 考過。</p>
+<p class="try">互動驗證（含暴力枚舉對照）</p>
+<div data-widget="taskSched"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="bus" data-short="公車公司">公車公司（O(1) greedy）</h2>
+<p class="yrs"><span class="yr-tag greedy">2019 Q4</span></p>
+
+<section class="ex" id="mt-2019-q4">
+<header><span class="id">2019 Q4</span><span class="t">N 人、每台 X 元、超過 M 人每人賠 V</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">You are the manager of a bus company. N people would like to travel to a common destination by bus and they will pay you Y dollars. Each bus costs X dollars, and each of the buses can carry any number of people. However, it gets quite uncomfortable when there are too many people in a room. Formally, if there are more than M people on a bus, every person on that bus will complain and you will pay each of them V dollars. Come up with a constant time algorithm (clear description without pseudo-code is sufficient) to minimize your overall cost when people are assigned to your buses optimally. You also need to prove why it is optimal.</p><p class="zh">N 人搭公車，付你 Y 元。每台車 X 元、可載任意人數，但一台車超過 M 人時，車上每個人都抱怨、你要賠每人 V 元。設計 \(O(1)\) 演算法求最小總成本（文字描述即可），並證明最佳。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">最小成本 \(=\min\bigl(X\lceil N/M\rceil,\ X+VN\bigr)\)（\(N\le M\) 時為 X）：要嘛全部不超載，要嘛全部擠一台。\(O(1)\)。收入 Y 固定，不影響最佳化。</p>
+<p><span class="lbl">Proof</span>
+(1) 有兩台以上超載的車時，把它們合併成一台：仍超載、賠償人數不變，少一台車 ⇒ 最佳解至多一台超載。
+(2) 沒有超載：至少 \(\lceil N/M\rceil\) 台，取等號即可。
+(3) 恰一台超載、載 s 人（\(M&lt;s\le N\)）：其餘 \(N-s\) 人至少要 \(\lceil (N-s)/M\rceil\ge (N-s)/M\) 台，
+$$\text{cost}(s)\ \ge\ X+Vs+\tfrac{X(N-s)}{M}=X+\tfrac{XN}{M}+s\bigl(V-\tfrac{X}{M}\bigr).$$
+若 \(VM\ge X\)：\(\text{cost}(s)\ge X+\tfrac{XN}{M}+M(V-\tfrac XM)=\tfrac{XN}{M}+VM\ge \tfrac{XN}{M}+X&gt;X\lceil N/M\rceil\)，不超載較好。
+若 \(VM&lt;X\)：下界對 s 遞減，在 \(s=N\) 最小，\(\text{cost}\ge X+VN\)，而全部一台恰好是 \(X+VN\)。
+故答案為兩者取小。∎</p>
+<p class="more">直覺：多開一台車省下 M 個人的賠償 VM，但要花 X。\(X&gt;VM\) 就乾脆全部擠一台。考卷上同學寫的「X − Y」等不是答案。</p>
+<p class="try">互動驗證（與 DP 暴力比對）</p>
+<div data-widget="busCost"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="vcover" data-short="樹的 vertex cover">樹的 vertex cover（線性時間 greedy）</h2>
+<p class="yrs"><span class="yr-tag greedy">2024 Q7</span></p>
+
+<section class="ex" id="mt-2024-q7">
+<header><span class="id">2024 Q7</span><span class="t">Optimal vertex cover for a tree in linear time</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Give an efficient greedy algorithm that finds an optimal vertex cover for a tree in linear time.</p><p class="zh">設計一個有效率的 greedy 演算法，在線性時間內找出一棵樹的最小 vertex cover。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">反覆取一片葉子 u，把它的鄰居 v 放進 cover，刪掉 v 的所有邊。\(O(V)\)。</p>
+<pre data-code="TREE-VERTEX-COVER(T)">
+C = ∅;  L = list of leaves of T
+while E != ∅
+    u = a leaf in L;  v = the neighbor of u
+    C = C ∪ {v}                        // 取葉子的鄰居
+    for each edge (v, w)
+        remove (v, w);  if deg(w) == 1 add w to L
+return C
+</pre>
+<p><span class="lbl">Greedy choice</span>邊 (u, v) 必須被 u 或 v 蓋住。u 只有這一條邊，所以任何含 u 的 cover 可以把 u 換成 v，大小不變、仍是 cover ⇒ 存在含 v 的最佳解。</p>
+<p><span class="lbl">Optimal substructure</span>刪掉 v 和它的邊後剩下一個森林 T′；C − {v} 是 T′ 的最佳 cover（cut-and-paste）。</p>
+<p><span class="lbl">Time</span>每條邊只刪一次，\(O(V+E)=O(V)\)（樹 \(|E|=|V|-1\)）。等價寫法：post-order DFS，只要有一個孩子不在 C 就把自己放進 C。</p>
+<div class="rubric"><b>給分</b>：演算法正確 8%、複雜度說明 2%。這題出自 <code>11210_mid_ans.pdf</code>（實為較晚一次考試的答案，含圖論 / NP 題）。</div>
+</div></details>
+</section>
+
+</article>
+<footer class="site">題目取自 2011–2025 許健平老師「計算方法設計 / Algorithms」期中考卷（<code>exams/</code>），官方答案與給分標準引用自附答案的考卷；其餘詳解為自行整理，數值由 <code>assets/greedy.js</code>、<code>assets/midterm.js</code> 計算並在 <code>tests/run.js</code> 檢查。</footer>
+</main>
+</div>
+<script>
+  document.getElementById('toggle-all').addEventListener('click', function () {
+    var all = document.querySelectorAll('.ex details');
+    var open = this.textContent === '全部展開';
+    all.forEach(function (d) { d.open = open; });
+    this.textContent = open ? '全部收合' : '全部展開';
+  });
+</script>
+</body>
+</html>

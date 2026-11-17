@@ -28,7 +28,7 @@
 
 <p class="eyebrow">Practice at Home · CLRS 4th ed. Chapter 14</p>
 <h1>課本習題詳解</h1>
-<p class="lede">投影片指定的 16 題課本習題。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p class="lede">投影片指定的 16 題課本習題。每題先列 CLRS 4th ed. 的英文原題（考試題目就是這個格式），下面附中譯；可按「隱藏中譯」只看英文。詳解預設收合，先自己想再打開。</p>
 <p><button type="button" id="toggle-all">全部展開</button></p>
 
 <div class="note exam"><span class="tag">作答格式</span>詳解依 2026 第一次小考的給分標準撰寫：
@@ -43,7 +43,7 @@
 
 <section class="ex" id="ex-14-1-2">
 <header><span class="id">14.1-2</span><span class="t">「密度優先」的貪婪法不一定最佳</span></header>
-<div class="q">定義長度 \(i\) 的密度為 \(p_i/i\)。貪婪策略：每次切下密度最大的那一段（長度 \(i\le\) 剩餘長度），剩下的繼續用同樣策略。舉反例說明它不一定最佳。</div>
+<div class="q"><p class="orig" lang="en">Show, by means of a counterexample, that the following “greedy” strategy does not always determine an optimal way to cut rods. Define the <em>density</em> of a rod of length \(i\) to be \(p_i/i\), that is, its value per inch. The greedy strategy for a rod of length \(n\) cuts off a first piece of length \(i\), where \(1\le i\le n\), having maximum density. It then continues by applying the greedy strategy to the remaining piece of length \(n-i\).</p><p class="zh">定義長度 \(i\) 的密度為 \(p_i/i\)。貪婪策略：每次切下密度最大的那一段（長度 \(i\le\) 剩餘長度），剩下的繼續用同樣策略。舉反例說明它不一定最佳。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">不一定最佳，反例如下。</p>
 <table class="plain small">
@@ -60,7 +60,7 @@ Optimal：\(2+2\) → \(20+20=40&gt;34\)。∎</p>
 
 <section class="ex" id="ex-14-1-3">
 <header><span class="id">14.1-3</span><span class="t">每切一刀有固定成本 c</span></header>
-<div class="q">每切一刀要付固定成本 \(c\)，收益 = 各段價格總和 − 刀費。設計這個變形的 DP 演算法。</div>
+<div class="q"><p class="orig" lang="en">Consider a modification of the rod-cutting problem in which, in addition to a price \(p_i\) for each rod, each cut incurs a fixed cost of \(c\). The revenue associated with a solution is now the sum of the prices of the pieces minus the costs of making the cuts. Give a dynamic-programming algorithm to solve this modified problem.</p><p class="zh">每切一刀要付固定成本 \(c\)，收益 = 各段價格總和 − 刀費。設計這個變形的 DP 演算法。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">\(r_0=0,\quad r_j=\max\Bigl(p_j,\ \max_{1\le i\lt j}\{p_i+r_{j-i}-c\}\Bigr)\)，時間 \(\Theta(n^2)\)。</p>
 <p><span class="lbl">Idea</span>第一段長 \(i\)：\(i=j\) 是不切，沒有刀費；\(i&lt;j\) 切一刀扣 \(c\)，剩下 \(j-i\) 的刀費已含在 \(r_{j-i}\)。</p>
@@ -83,7 +83,7 @@ return r[n]
 
 <section class="ex" id="ex-14-1-4">
 <header><span class="id">14.1-4</span><span class="t">迴圈只跑到 ⌊n/2⌋</span></header>
-<div class="q">把 CUT-ROD 和 MEMOIZED-CUT-ROD-AUX 的 for 迴圈改成只跑到 \(\lfloor n/2\rfloor\)。還需要改什麼？執行時間有什麼影響？</div>
+<div class="q"><p class="orig" lang="en">Modify CUT-ROD and MEMOIZED-CUT-ROD-AUX so that their <b>for</b> loops go up to only \(\lfloor n/2\rfloor\), rather than up to \(n\). What other changes to the procedures do you need to make? How are their running times affected?</p><p class="zh">把 CUT-ROD 和 MEMOIZED-CUT-ROD-AUX 的 for 迴圈改成只跑到 \(\lfloor n/2\rfloor\)。還需要改什麼？執行時間有什麼影響？</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">要改兩處：(1) \(p_i\) 改成 \(r_i\)（左段也能再切）；(2) 「不切」\(p_n\) 另外處理。CUT-ROD 仍是指數時間，MEMOIZED 仍是 \(\Theta(n^2)\)。</p>
 <p><span class="lbl">Why</span>\(r_n=\max\bigl(p_n,\ \max_{1\le i\le\lfloor n/2\rfloor}(r_i+r_{n-i})\bigr)\)：\(r_i+r_{n-i}\) 和 \(r_{n-i}+r_i\) 相同，試一半就夠；但 \(i=n\)（不切）不在迴圈內。</p>
@@ -104,7 +104,7 @@ return q
 
 <section class="ex" id="ex-14-1-6">
 <header><span class="id">14.1-6</span><span class="t">Fibonacci 的 O(n) DP 與 subproblem graph</span></header>
-<div class="q">給一個 \(O(n)\) 的 DP 演算法計算第 \(n\) 個 Fibonacci 數（\(F_0=0, F_1=1, F_i=F_{i-1}+F_{i-2}\)）。畫出 subproblem graph，它有幾個頂點、幾條邊？</div>
+<div class="q"><p class="orig" lang="en">The Fibonacci numbers are defined by recurrence (3.31) on page 69. Give an \(O(n)\)-time dynamic-programming algorithm to compute the \(n\)th Fibonacci number. Draw the subproblem graph. How many vertices and edges does the graph contain?</p><p class="zh">給一個 \(O(n)\) 的 DP 演算法計算第 \(n\) 個 Fibonacci 數（\(F_0=0, F_1=1, F_i=F_{i-1}+F_{i-2}\)）。畫出 subproblem graph，它有幾個頂點、幾條邊？</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">Bottom-up \(O(n)\)；subproblem graph 有 \(n+1\) 個頂點、\(2(n-1)\) 條邊（\(n\ge1\)）。</p>
 <pre data-code="FIB(n)">
@@ -127,7 +127,7 @@ return f[n]
 
 <section class="ex" id="ex-14-2-1">
 <header><span class="id">14.2-1</span><span class="t">找出最佳括號</span></header>
-<div class="q">維度序列 \(\langle 5, 10, 3, 12, 5, 50, 6\rangle\)，找出最佳括號方式。</div>
+<div class="q"><p class="orig" lang="en">Find an optimal parenthesization of a matrix-chain product whose sequence of dimensions is \(\langle 5, 10, 3, 12, 5, 50, 6\rangle\).</p><p class="zh">維度序列 \(\langle 5, 10, 3, 12, 5, 50, 6\rangle\)，找出最佳括號方式。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">\(((A_1A_2)((A_3A_4)(A_5A_6)))\)，共 2010 次純量乘法。</p>
 <p>\(m[i,j]=\min_{i\le k\lt j}\{m[i,k]+m[k+1,j]+p_{i-1}p_kp_j\}\)，依長度 \(l=2..6\) 填表：</p>
@@ -159,7 +159,8 @@ return f[n]
 
 <section class="ex" id="ex-14-2-3">
 <header><span class="id">14.2-3</span><span class="t">用 substitution method 證明 Ω(2ⁿ)</span></header>
-<div class="q">證明括號方式數的遞迴式 \(P(n)=\sum_{k=1}^{n-1}P(k)P(n-k)\)（\(P(1)=1\)）的解是 \(\Omega(2^n)\)。</div>
+<div class="q"><p class="orig" lang="en">Use the substitution method to show that the solution to the recurrence (14.6) is \(\Omega(2^n)\).
+$$P(n)=\begin{cases}1 & \text{if } n=1,\\ \sum_{k=1}^{n-1}P(k)P(n-k) & \text{if } n\ge 2.\end{cases}\qquad(14.6)$$</p><p class="zh">證明括號方式數的遞迴式 \(P(n)=\sum_{k=1}^{n-1}P(k)P(n-k)\)（\(P(1)=1\)）的解是 \(\Omega(2^n)\)。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">Claim：\(P(n)\ge2^{n-2}\) for all \(n\ge2\) ⇒ \(P(n)=\Omega(2^n)\)（\(c=\tfrac14,\ n_0=2\)）。</p>
 <p><span class="lbl">Base</span>\(P(2)=P(1)P(1)=1=2^0\).</p>
@@ -172,7 +173,9 @@ $$P(n)\ge P(1)P(n-1)+P(n-1)P(1)=2P(n-1)\ge2\cdot2^{n-3}=2^{n-2}.$$</p>
 
 <section class="ex" id="ex-14-2-5">
 <header><span class="id">14.2-5</span><span class="t">表格被讀取的總次數 = (n³ − n)/3</span></header>
-<div class="q">令 \(R(i,j)\) 為 MATRIX-CHAIN-ORDER 計算其他格子時讀取 \(m[i,j]\) 的次數。證明 \(\sum_{i=1}^{n}\sum_{j=i}^{n}R(i,j)=\dfrac{n^3-n}{3}\)。</div>
+<div class="q"><p class="orig" lang="en">Let \(R(i,j)\) be the number of times that table entry \(m[i,j]\) is referenced while computing other table entries in a call of MATRIX-CHAIN-ORDER. Show that the total number of references for the entire table is
+$$\sum_{i=1}^{n}\sum_{j=i}^{n}R(i,j)=\frac{n^3-n}{3}.$$
+(<em>Hint:</em> You may find equation (A.4) on page 1141 useful.)</p><p class="zh">令 \(R(i,j)\) 為 MATRIX-CHAIN-ORDER 計算其他格子時讀取 \(m[i,j]\) 的次數。證明 \(\sum_{i=1}^{n}\sum_{j=i}^{n}R(i,j)=\dfrac{n^3-n}{3}\)。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>改數「每格計算時讀了幾格」。算長度 \(l\) 的 \(m[i,j]\)：\(k=i..j-1\) 共 \(l-1\) 圈，每圈讀 \(m[i,k], m[k+1,j]\) → \(2(l-1)\) 次；長度 \(l\) 的格子有 \(n-l+1\) 個。</p>
 $$\begin{aligned}
@@ -189,7 +192,7 @@ $$\begin{aligned}
 
 <section class="ex" id="ex-14-3-2">
 <header><span class="id">14.3-2</span><span class="t">Merge sort 的遞迴樹：memoization 沒用</span></header>
-<div class="q">畫出 MERGE-SORT 在 16 個元素的陣列上的遞迴樹，解釋為什麼 memoization 無法加速像 merge sort 這樣好的 divide-and-conquer 演算法。</div>
+<div class="q"><p class="orig" lang="en">Draw the recursion tree for the MERGE-SORT procedure from Section 2.3.1 on an array of 16 elements. Explain why memoization fails to speed up a good divide-and-conquer algorithm such as MERGE-SORT.</p><p class="zh">畫出 MERGE-SORT 在 16 個元素的陣列上的遞迴樹，解釋為什麼 memoization 無法加速像 merge sort 這樣好的 divide-and-conquer 演算法。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">Merge sort 沒有 overlapping subproblems，查表永遠查不到，memoization 無法加速。</p>
 <p><span class="lbl">Tree</span>根 \(A[1..16]\) → \([1..8],[9..16]\) → 4 個長 4 → 8 個長 2 → 16 個長 1，共 31 個節點（樹形見下方元件）。</p>
@@ -200,7 +203,7 @@ $$\begin{aligned}
 
 <section class="ex" id="ex-14-3-3">
 <header><span class="id">14.3-3</span><span class="t">改成「最多」乘法次數，還有 optimal substructure 嗎？</span></header>
-<div class="q">矩陣鏈乘的反向版本：加括號使純量乘法次數<strong>最多</strong>。這個問題有 optimal substructure 嗎？</div>
+<div class="q"><p class="orig" lang="en">Consider the antithetical variant of the matrix-chain multiplication problem where the goal is to parenthesize the sequence of matrices so as to maximize, rather than minimize, the number of scalar multiplications. Does this problem exhibit optimal substructure?</p><p class="zh">矩陣鏈乘的反向版本：加括號使純量乘法次數<strong>最多</strong>。這個問題有 optimal substructure 嗎？</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">有。\(m[i,j]=\max_{i\le k\lt j}\{m[i,k]+m[k+1,j]+p_{i-1}p_kp_j\}\)。</p>
 <p><span class="lbl">Proof</span>設 \(A_i..A_j\) 的最大成本括號最後切在 \(k\)，成本 = 左半成本 + 右半成本 + \(p_{i-1}p_kp_j\)。最後一項只和 \(i,k,j\) 有關，左右兩半用不同的矩陣，互不影響（子問題獨立）。
@@ -213,7 +216,7 @@ $$\begin{aligned}
 
 <section class="ex" id="ex-14-3-4">
 <header><span class="id">14.3-4</span><span class="t">先選 k 再解子問題的貪婪法</span></header>
-<div class="q">有人主張不用解完所有子問題：在 \(A_i\cdots A_j\) 中，直接選讓 \(p_{i-1}p_kp_j\) 最小的 \(k\) 當分割點，再遞迴處理兩邊。找一個讓這個貪婪法得到非最佳解的例子。</div>
+<div class="q"><p class="orig" lang="en">As stated, in dynamic programming, you first solve the subproblems and then choose which of them to use in an optimal solution to the problem. Professor Capulet claims that she does not always need to solve all the subproblems in order to find an optimal solution. She suggests that she can find an optimal solution to the matrix-chain multiplication problem by always choosing the matrix \(A_k\) at which to split the subproduct \(A_iA_{i+1}\cdots A_j\) (by selecting \(k\) to minimize the quantity \(p_{i-1}p_kp_j\)) before solving the subproblems. Find an instance of the matrix-chain multiplication problem for which this greedy approach yields a suboptimal solution.</p><p class="zh">有人主張不用解完所有子問題：在 \(A_i\cdots A_j\) 中，直接選讓 \(p_{i-1}p_kp_j\) 最小的 \(k\) 當分割點，再遞迴處理兩邊。找一個讓這個貪婪法得到非最佳解的例子。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">反例：\(\langle1,2,3,4\rangle\)，即 \(A_1:1\times2,\ A_2:2\times3,\ A_3:3\times4\)。</p>
 <p><span class="lbl">Greedy</span>\(k=1\)：\(p_0p_1p_3=8\)；\(k=2\)：\(p_0p_2p_3=12\) → 選 \(k=1\)，\(A_1(A_2A_3)\)：\(2\cdot3\cdot4+8=32\)。<br>
@@ -226,7 +229,7 @@ $$\begin{aligned}
 
 <section class="ex" id="ex-14-3-5">
 <header><span class="id">14.3-5</span><span class="t">限量的鋼條：optimal substructure 失效</span></header>
-<div class="q">鋼條切割加上限制：長度 \(i\) 的段最多只能切出 \(l_i\) 段。說明 14.1 節的 optimal substructure 不再成立。</div>
+<div class="q"><p class="orig" lang="en">Suppose that the rod-cutting problem of Section 14.1 also had a limit \(l_i\) on the number of pieces of length \(i\) allowed to be produced, for \(i=1,2,\dots,n\). Show that the optimal-substructure property described in Section 14.1 no longer holds.</p><p class="zh">鋼條切割加上限制：長度 \(i\) 的段最多只能切出 \(l_i\) 段。說明 14.1 節的 optimal substructure 不再成立。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">不成立：子問題不再獨立——第一段用掉了長度 \(i\) 的名額，剩下 \(n-i\) 的最佳解可能也要用長度 \(i\)。</p>
 <p><span class="lbl">Example</span>\(p_1..p_4=1,5,5,6\)，\(l_2=1\)（長度 2 最多一段），\(n=4\)。</p>
@@ -243,7 +246,7 @@ $$\begin{aligned}
 
 <section class="ex" id="ex-14-4-2">
 <header><span class="id">14.4-2</span><span class="t">不用 b 表，在 O(m + n) 時間印出 LCS</span></header>
-<div class="q">只用完成的 \(c\) 表和原本的 \(X, Y\)（不用 \(b\) 表），在 \(O(m+n)\) 時間重建一個 LCS。</div>
+<div class="q"><p class="orig" lang="en">Give pseudocode to reconstruct an LCS from the completed \(c\) table and the original sequences \(X=\langle x_1,x_2,\dots,x_m\rangle\) and \(Y=\langle y_1,y_2,\dots,y_n\rangle\) in \(O(m+n)\) time, without using the \(b\) table.</p><p class="zh">只用完成的 \(c\) 表和原本的 \(X, Y\)（不用 \(b\) 表），在 \(O(m+n)\) 時間重建一個 LCS。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>\(b[i,j]\) 的方向可以在 \(O(1)\) 時間由 \(x_i, y_j\) 和 \(c\) 表重新判斷（和 LCS-LENGTH 的條件相同）。</p>
 <pre data-code="PRINT-LCS-NO-B(c, X, Y, i, j)">
@@ -263,7 +266,7 @@ else                                   // 原本的 "←"
 
 <section class="ex" id="ex-14-4-3">
 <header><span class="id">14.4-3</span><span class="t">Memoized 版本的 LCS-LENGTH</span></header>
-<div class="q">寫出 \(O(mn)\) 的 memoized LCS-LENGTH。</div>
+<div class="q"><p class="orig" lang="en">Give a memoized version of LCS-LENGTH that runs in \(O(mn)\) time.</p><p class="zh">寫出 \(O(mn)\) 的 memoized LCS-LENGTH。</p></div>
 <details><summary>詳解</summary><div class="a">
 <div class="two">
 <pre data-code="MEMOIZED-LCS-LENGTH(X, Y)">
@@ -294,7 +297,7 @@ return c[i, j]
 
 <section class="ex" id="ex-14-4-5">
 <header><span class="id">14.4-5</span><span class="t">O(n²) 的最長遞增子序列</span></header>
-<div class="q">給 \(O(n^2)\) 演算法，找 \(n\) 個數的序列中最長的 monotonically increasing subsequence。</div>
+<div class="q"><p class="orig" lang="en">Give an \(O(n^2)\)-time algorithm to find the longest monotonically increasing subsequence of a sequence of \(n\) numbers.</p><p class="zh">給 \(O(n^2)\) 演算法，找 \(n\) 個數的序列中最長的 monotonically increasing subsequence。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>\(L[i]\) = 以 \(A[i]\) <strong>結尾</strong>的最長子序列長度（monotonically increasing 允許相等）：
 $$L[i]=1+\max\bigl(\{0\}\cup\{L[j]: j\lt i,\ A[j]\le A[i]\}\bigr),\qquad \text{answer}=\max_i L[i].$$</p>
@@ -318,7 +321,7 @@ best = argmax_i L[i]
 
 <section class="ex" id="ex-14-5-2">
 <header><span class="id">14.5-2</span><span class="t">7 個 keys 的最佳 BST</span></header>
-<div class="q">求 \(n=7\)、下列機率的最佳 BST 的成本與結構。</div>
+<div class="q"><p class="orig" lang="en">Determine the cost and structure of an optimal binary search tree for a set of \(n=7\) keys with the following probabilities:</p><p class="zh">求 \(n=7\)、下列機率的最佳 BST 的成本與結構。</p></div>
 <div class="q">
 <table class="plain small">
   <tr><th>\(i\)</th><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td></tr>
@@ -368,7 +371,7 @@ best = argmax_i L[i]
 
 <section class="ex" id="ex-14-5-3">
 <header><span class="id">14.5-3</span><span class="t">不存 w 表，每次直接加總</span></header>
-<div class="q">如果不維護 \(w[i,j]\) 表，而是在第 9 行用定義 \(w(i,j)=\sum_{l=i}^{j}p_l+\sum_{l=i-1}^{j}q_l\) 直接算，OPTIMAL-BST 的漸近時間會改變嗎？</div>
+<div class="q"><p class="orig" lang="en">Suppose that instead of maintaining the table \(w[i,j]\), you computed the value of \(w(i,j)\) directly from equation (14.12) in line 9 of OPTIMAL-BST and used this computed value in line 11. How would this change affect the asymptotic running time of OPTIMAL-BST?</p><p class="zh">如果不維護 \(w[i,j]\) 表，而是在第 9 行用定義 \(w(i,j)=\sum_{l=i}^{j}p_l+\sum_{l=i-1}^{j}q_l\) 直接算，OPTIMAL-BST 的漸近時間會改變嗎？</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">不會，仍是 \(\Theta(n^3)\)。</p>
 <p><span class="lbl">Why</span>直接加總 \(w(i,j)\) 要 \(\Theta(l)\)（\(l=j-i+1\)）。第 9 行在 \(r\) 迴圈外，每個 \((i,j)\) 只做一次：

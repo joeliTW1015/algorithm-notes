@@ -452,4 +452,104 @@ check('16.3-6 DELETE-LARGER-HALF: keeps the floor(s/2) smallest, m operations <=
   assert.deepStrictEqual(dup.steps[8].S.slice().sort(), [2, 2, 5]);
 });
 
+// ---------- Midterm past papers (Ch14–16) ----------
+const MT = require('../assets/midterm.js');
+
+check('midterm MCM: 2012 / 2025 / 2022 / 2023 papers', () => {
+  const run = (d) => { const r = DP.matrixChain(d); return [r.m[1][r.n], DP.parens(r.s, 1, r.n), r]; };
+  let [c, p, r] = run([10, 15, 8, 4, 10, 20]);           // 2012 Q11 (answer key: 2680)
+  assert.strictEqual(c, 2680); assert.strictEqual(p, '((A1(A2A3))(A4A5))');
+  assert.deepStrictEqual([r.m[1][2], r.m[2][3], r.m[3][4], r.m[4][5]], [1200, 480, 320, 800]);
+  assert.deepStrictEqual([r.m[1][3], r.m[2][4], r.m[3][5], r.m[1][4], r.m[2][5]], [1080, 1080, 1440, 1480, 2480]);
+  [c, p] = run([10, 15, 8, 4, 10]);                       // 2025 Q6
+  assert.strictEqual(c, 1480); assert.strictEqual(p, '((A1(A2A3))A4)');
+  [c, p] = run([5, 4, 6, 4, 5, 2]);                       // 2022 Q3 (answer key: 176)
+  assert.strictEqual(c, 176); assert.strictEqual(p, '(A1(A2(A3(A4A5))))');
+  [c, p, r] = run([5, 12, 5, 10, 3, 5]);                  // 2023 Q11
+  assert.strictEqual(c, 585); assert.strictEqual(p, '((A1(A2(A3A4)))A5)');
+  assert.deepStrictEqual([r.m[1][3], r.m[2][4], r.m[3][5], r.m[1][4], r.m[2][5]], [550, 330, 225, 510, 510]);
+});
+
+check('midterm P(n) >= 3^n / 18 (2023 Q10)', () => {
+  const P = [0, 1];
+  for (let n = 2; n <= 30; n++) { let t = 0; for (let k = 1; k < n; k++) t += P[k] * P[n - k]; P[n] = t; }
+  for (let n = 1; n <= 30; n++) assert.ok(P[n] >= 3 ** n / 18, 'n=' + n);
+  for (let n = 7; n <= 30; n++) assert.ok(P[n] >= 2 * P[n - 1] + 2 * P[n - 2] + 4 * P[n - 3]);
+});
+
+check('midterm LCS / OBST / rod / LIS / stairs / tiling', () => {
+  assert.strictEqual(DP.lcs('abcbdaa', 'dcbadbca').c[7][8], 4);  // 2012 Q12
+  const o = DP.optimalBST([0, 0.15, 0.05, 0.2, 0.05, 0.1], [0.1, 0.1, 0.05, 0.05, 0.1, 0.05]); // 2013 Q11
+  assert.strictEqual(DP.fmt(o.cost), '2.65'); assert.strictEqual(o.root[1][5], 3);
+  assert.strictEqual(DP.rodCut([0, 1, 5, 8, 9, 10, 17, 17, 20], 8).r[8], 22); // 2019 Q2
+  assert.strictEqual(DP.increasingSubseq([11, 17, 5, 8, 6, 4, 7, 12, 3], 'len').best, 4); // 2021 Q1
+  assert.deepStrictEqual(DP.stairs(5), [1, 1, 2, 4, 7, 13]);          // 2013 Q12 / 2025 Q5
+  assert.strictEqual(DP.tiling(2, 3)[3], 3);                           // 2018 Q5 / 2020 Q3
+});
+
+check('midterm non-adjacent / resource allocation / coin DP', () => {
+  const r = MT.maxNonAdjacent([3, 5, 3, 1, 2, 5, 1]);                 // 2020 Q1
+  assert.strictEqual(r.best, 11); assert.deepStrictEqual(r.dp, [0, 3, 5, 6, 6, 8, 11, 11]);
+  const P = [null, [0, 2, 8, 9], [0, 5, 6, 7], [0, 4, 4, 4], [0, 2, 4, 5]]; // 2022 Q2
+  const a = MT.resourceAlloc(P, 3);
+  assert.strictEqual(a.best, 13); assert.deepStrictEqual(a.alloc, [2, 1, 0, 0]);
+  assert.deepStrictEqual(a.X.slice(1, 4), [[0, 2, 8, 9], [0, 5, 8, 13], [0, 5, 9, 13]]);
+  assert.strictEqual(GR.coinDP([1, 4, 5], 8).best[8], 2);             // 2018 Q6
+});
+
+check('midterm Huffman (2022 Q4, 2019/2020 Q5)', () => {
+  const h = GR.huffman([['a', 35], ['b', 8], ['c', 10], ['d', 12], ['e', 15], ['f', 20]].map(([ch, f]) => ({ ch, f })));
+  assert.strictEqual(h.cost, 245);
+  assert.deepStrictEqual(h.codes, { a: '11', b: '000', c: '001', d: '100', e: '101', f: '01' });
+  const f = MT.fib(8), g = GR.huffman(f.map((x, i) => ({ ch: 'abcdefgh'[i], f: x })));
+  assert.deepStrictEqual('abcdefgh'.split('').map((c) => g.codes[c].length), [7, 7, 6, 5, 4, 3, 2, 1]);
+});
+
+check('midterm greedy: bag / tasks / bus', () => {
+  const brute = (w, x) => { let c = 0, t = 0; for (const v of w.slice().sort((a, b) => a - b)) { if (t + v > x) break; t += v; c++; } return c; };
+  let seed = 7; const rnd = (m) => (seed = (seed * 1103515245 + 12345) % 2147483648) % m;
+  for (let k = 0; k < 400; k++) {
+    const w = Array.from({ length: 1 + rnd(9) }, () => 1 + rnd(12)), x = rnd(40);
+    assert.strictEqual(MT.bagMaxCount(w, x).count, brute(w, x));
+    const n = 1 + rnd(6), p = Array.from({ length: n }, () => 1 + rnd(50)), d = Array.from({ length: n }, () => 1 + rnd(n));
+    assert.strictEqual(MT.taskSchedule(p, d).total, MT.taskBrute(p, d));
+  }
+  for (let N = 1; N <= 14; N++) for (let M = 1; M <= 5; M++) for (const X of [1, 3, 7]) for (const V of [0, 1, 2])
+    assert.strictEqual(MT.busCost(N, M, X, V).cost, MT.busBrute(N, M, X, V));
+});
+
+check('midterm dynamic table traces (2022 Q6 key, 2017 Q11)', () => {
+  const a = MT.dynTable('IIIIIDIDDDID').rows;
+  assert.deepStrictEqual(a.map((r) => r.alpha), [2, 3, 3, 3, 3, -1, 3, -1, 2, 2, 0, 2]);
+  assert.deepStrictEqual(a.map((r) => r.c), [1, 2, 3, 1, 5, 1, 1, 1, 1, 1, 1, 1]);
+  assert.deepStrictEqual(a.map((r) => r.phi), [1, 2, 2, 4, 2, 0, 2, 0, 1, 2, 1, 2]);
+  const b = MT.dynTable('IIIIDIIDDDDI').rows;
+  assert.deepStrictEqual(b.map((r) => r.c), [1, 2, 3, 1, 1, 1, 5, 1, 1, 1, 2, 1]);
+  assert.deepStrictEqual(b.map((r) => r.alpha), [2, 3, 3, 3, -1, 3, 3, -1, 2, 2, 1, 0]);
+  assert.deepStrictEqual(b.map((r) => r.size), [1, 2, 4, 4, 4, 4, 8, 8, 8, 8, 4, 4]);
+  // Amortized cost is at most 3 for insert and 2 for delete on any sequence.
+  let seed = 3; const rnd = (m) => (seed = (seed * 1103515245 + 12345) % 2147483648) % m;
+  for (let k = 0; k < 200; k++) {
+    let ops = '', num = 0;
+    for (let i = 0; i < 40; i++) { if (num && rnd(2)) { ops += 'D'; num--; } else { ops += 'I'; num++; } }
+    for (const r of MT.dynTable(ops).rows) assert.ok(r.op === 'I' ? r.alpha <= 3 : r.alpha <= 2);
+  }
+});
+
+check('midterm c_i = i at powers of 2 (2019 Q6, 2020 Q6, 2024 Q2)', () => {
+  for (const n of [1, 2, 5, 16, 100, 1000]) assert.ok(AM.powTotal(n) < 3 * n);
+  const bad = MT.powPotential(64, 1), good = MT.powPotential(64, 2);
+  assert.strictEqual(bad[63].amort, 33);                 // i = 64: 1 + i/2
+  assert.ok(good.every((r) => r.amort <= 3));
+});
+
+check('midterm stack with CUT: PUSH 3 / POP 0 / CUT 0 never overdraws (2022 Q7)', () => {
+  let seed = 11; const rnd = (m) => (seed = (seed * 1103515245 + 12345) % 2147483648) % m;
+  for (let k = 0; k < 300; k++) {
+    const ops = Array.from({ length: 30 }, () => 'POC'[rnd(3)]).join('');
+    assert.ok(MT.cutStackRun(ops).minBank >= 0);
+  }
+  assert.ok(MT.cutStackRun('PPPC', { P: 2 }).minBank < 0);  // charging 2 is not enough
+});
+
 console.log(`\n${passed} checks passed`);

@@ -25,7 +25,7 @@
 
 <p class="eyebrow">Practice at Home · CLRS 4th ed. Chapter 15</p>
 <h1>課本習題詳解</h1>
-<p class="lede">投影片 p.44 指定的 10 題習題、Problem 15-1，以及「用貪婪法解最大子陣列」。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p class="lede">投影片 p.44 指定的 10 題習題、Problem 15-1，以及「用貪婪法解最大子陣列」。每題先列 CLRS 4th ed. 的英文原題（考試題目就是這個格式），下面附中譯；可按「隱藏中譯」只看英文。詳解預設收合，先自己想再打開。</p>
 <p><button type="button" id="toggle-all">全部展開</button></p>
 
 
@@ -41,7 +41,7 @@
 
 <section class="ex" id="ex-15-1-2">
 <header><span class="id">15.1-2</span><span class="t">改選「最晚開始」的活動也對</span></header>
-<div class="q">不選最早結束的，改成每次選「和已選活動相容、而且開始時間最晚」的活動。說明這也是貪婪演算法，並證明它得到最佳解。</div>
+<div class="q"><p class="orig" lang="en">Suppose that instead of always selecting the first activity to finish, you instead select the last activity to start that is compatible with all previously selected activities. Describe how this approach is a greedy algorithm, and prove that it yields an optimal solution.</p><p class="zh">不選最早結束的，改成每次選「和已選活動相容、而且開始時間最晚」的活動。說明這也是貪婪演算法，並證明它得到最佳解。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">是 greedy：每步只選目前開始最晚的活動、不回頭，剩下子問題「在 \(s_m\) 前結束的活動」。它是最佳的。</p>
 <p><span class="lbl">Greedy choice</span>Let \(a_m\) = 開始最晚的活動，\(A\) = 任一最佳解，\(a_j\) = \(A\) 中開始最晚的。若 \(a_j\ne a_m\)，令 \(A'=A-\{a_j\}\cup\{a_m\}\)。
@@ -53,7 +53,7 @@
 
 <section class="ex" id="ex-15-1-3">
 <header><span class="id">15.1-3</span><span class="t">三種錯的貪婪：最短、最少衝突、最早開始</span></header>
-<div class="q">舉例說明以下三種貪婪都不一定最佳：(1) 選時間最短的；(2) 選和其他剩下活動重疊最少的；(3) 選最早開始的。</div>
+<div class="q"><p class="orig" lang="en">Not just any greedy approach to the activity-selection problem produces a maximum-size set of mutually compatible activities. Give an example to show that the approach of selecting the activity of least duration from among those that are compatible with previously selected activities does not work. Do the same for the approaches of always selecting the compatible activity that overlaps the fewest other remaining activities and always selecting the compatible remaining activity with the earliest start time.</p><p class="zh">舉例說明以下三種貪婪都不一定最佳：(1) 選時間最短的；(2) 選和其他剩下活動重疊最少的；(3) 選最早開始的。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">三種都不一定最佳，反例如下。</p>
 <table class="plain small">
@@ -74,7 +74,7 @@
 
 <section class="ex" id="ex-15-1-5">
 <header><span class="id">15.1-5</span><span class="t">活動有價值：最大化總價值</span></header>
-<div class="q">每個活動 \(a_i\) 除了 \(s_i, f_i\) 還有價值 \(v_i\)，目標改成選出相容活動使 \(\sum v_i\) 最大。給一個多項式時間演算法。</div>
+<div class="q"><p class="orig" lang="en">Consider a modification to the activity-selection problem in which each activity \(a_i\) has, in addition to a start and finish time, a value \(v_i\). The objective is no longer to maximize the number of activities scheduled, but instead to maximize the total value of the activities scheduled. That is, the goal is to choose a set \(A\) of compatible activities such that \(\sum_{a_k\in A}v_k\) is maximized. Give a polynomial-time algorithm for this problem.</p><p class="zh">每個活動 \(a_i\) 除了 \(s_i, f_i\) 還有價值 \(v_i\)，目標改成選出相容活動使 \(\sum v_i\) 最大。給一個多項式時間演算法。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">Greedy 不行（最早結束的可能價值很低），用 DP，\(O(n\lg n)\)。</p>
 <p><span class="lbl">Idea</span>依 \(f\) 排序，\(p(j)\) = 最大的 \(i&lt;j\) 使 \(f_i\le s_j\)（沒有則 0）。\(V[j]\) = 只用 \(a_1..a_j\) 的最大價值，看 \(a_j\) 選或不選：
@@ -98,7 +98,7 @@ return V[n]       // 從 n 往回：v[j] + V[p[j]] ≥ V[j-1] 就選 a_j 並跳�
 
 <section class="ex" id="ex-15-2-2">
 <header><span class="id">15.2-2</span><span class="t">0-1 knapsack 的 \(O(nW)\) DP</span></header>
-<div class="q">給一個 \(O(nW)\) 的動態規劃解 0-1 knapsack，\(n\) 是物品數、\(W\) 是背包容量。</div>
+<div class="q"><p class="orig" lang="en">Give a dynamic-programming solution to the 0-1 knapsack problem that runs in \(O(nW)\) time, where \(n\) is the number of items and \(W\) is the maximum weight of items that the thief can put in the knapsack.</p><p class="zh">給一個 \(O(nW)\) 的動態規劃解 0-1 knapsack，\(n\) 是物品數、\(W\) 是背包容量。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>\(K[i,x]\) = 只用物品 \(1..i\)、容量 \(x\) 的最大價值，看物品 \(i\) 拿或不拿：
 $$K[0,x]=0,\qquad K[i,x]=\begin{cases}K[i-1,x] & w_i&gt;x\\ \max\bigl(K[i-1,x],\ v_i+K[i-1,x-w_i]\bigr) & w_i\le x\end{cases}$$</p>
@@ -121,7 +121,7 @@ return K[n, W]
 
 <section class="ex" id="ex-15-2-3">
 <header><span class="id">15.2-3</span><span class="t">越輕越值錢的 0-1 knapsack</span></header>
-<div class="q">0-1 knapsack 中，若物品依重量遞增排序的順序，恰好也是依價值遞減排序的順序。給一個有效率的演算法並證明正確。</div>
+<div class="q"><p class="orig" lang="en">Suppose that in a 0-1 knapsack problem, the order of the items when sorted by increasing weight is the same as their order when sorted by decreasing value. Give an efficient algorithm to find an optimal solution to this variant of the knapsack problem, and argue that your algorithm is correct.</p><p class="zh">0-1 knapsack 中，若物品依重量遞增排序的順序，恰好也是依價值遞減排序的順序。給一個有效率的演算法並證明正確。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">依重量由輕到重拿，放不下就停。\(O(n\lg n)\)（已排序則 \(O(n)\)）。</p>
 <pre data-code="LIGHT-FIRST(v, w, n, W)">
@@ -142,7 +142,7 @@ return {1, …, k}                      // 後面更重，都放不下
 
 <section class="ex" id="ex-15-2-5">
 <header><span class="id">15.2-5</span><span class="t">用最少的單位長度區間蓋住所有點</span></header>
-<div class="q">給實數線上的點 \(\{x_1,\dots,x_n\}\)，找最少個長度為 1 的閉區間蓋住所有點，並證明正確。</div>
+<div class="q"><p class="orig" lang="en">Describe an efficient algorithm that, given a set \(\{x_1,x_2,\dots,x_n\}\) of points on the real line, determines the smallest set of unit-length closed intervals that contains all of the given points. Argue that your algorithm is correct.</p><p class="zh">給實數線上的點 \(\{x_1,\dots,x_n\}\)，找最少個長度為 1 的閉區間蓋住所有點，並證明正確。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">排序後，每次以最左邊未覆蓋的點 \(x\) 為左端放 \([x,x+1]\)。\(O(n\lg n)\)。</p>
 <pre data-code="UNIT-COVER(x, n)">
@@ -165,7 +165,7 @@ return S
 
 <section class="ex" id="ex-15-2-6">
 <header><span class="id">15.2-6</span><span class="t">\(O(n)\) 解 fractional knapsack</span></header>
-<div class="q">說明如何在 \(O(n)\) 時間解 fractional knapsack。</div>
+<div class="q"><p class="orig" lang="en">Show how to solve the fractional knapsack problem in \(O(n)\) time.</p><p class="zh">說明如何在 \(O(n)\) 時間解 fractional knapsack。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">不排序，用 linear-time SELECT 找密度 \(d_i=v_i/w_i\) 的中位數，每次丟掉一半：\(T(n)=T(n/2)+\Theta(n)=\Theta(n)\)。</p>
 <pre data-code="FRAC-KNAP(I, W)">
@@ -188,7 +188,7 @@ return v(G) + v(E) + FRAC-KNAP(L, W - w(G) - w(E))   // G、E 全拿
 
 <section class="ex" id="ex-15-3-2">
 <header><span class="id">15.3-2</span><span class="t">不是 full binary tree 就不是最佳 prefix code</span></header>
-<div class="q">證明非 full 的二元樹不可能對應最佳的 prefix code。</div>
+<div class="q"><p class="orig" lang="en">Prove that a non-full binary tree cannot correspond to an optimal prefix-free code.</p><p class="zh">證明非 full 的二元樹不可能對應最佳的 prefix code。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Proof</span>Suppose \(T\) is not full ⇒ 有內部節點 \(u\) 只有一個小孩 \(v\)。刪掉 \(u\)，讓 \(v\) 的子樹 \(T_v\) 接到 \(u\) 的位置，得到 \(T'\)。</p>
 <ul>
@@ -201,7 +201,7 @@ return v(G) + v(E) + FRAC-KNAP(L, W - w(G) - w(E))   // G、E 全拿
 
 <section class="ex" id="ex-15-3-4">
 <header><span class="id">15.3-4</span><span class="t">\(B(T)\) = 所有內部節點的頻率和</span></header>
-<div class="q">證明 full binary tree \(T\) 的成本 \(B(T)\) 等於所有內部節點「兩個小孩頻率和」的總和。</div>
+<div class="q"><p class="orig" lang="en">Prove that the total cost \(B(T)\) of a full binary tree \(T\) for a code equals the sum, over all internal nodes, of the combined frequencies of the two children of the node.</p><p class="zh">證明 full binary tree \(T\) 的成本 \(B(T)\) 等於所有內部節點「兩個小孩頻率和」的總和。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Proof</span>令內部節點 \(u\) 的頻率 \(f_u\) = 兩個小孩頻率和 = \(u\) 底下所有葉子的頻率和。葉子 \(c\) 的深度 \(d_T(c)\) = 它的內部祖先個數，所以
 $$B(T)=\sum_{c}f_c\,d_T(c)=\sum_{c}\ \sum_{u\text{ ancestor of }c}f_c=\sum_{u\text{ internal}}\ \sum_{c\text{ under }u}f_c=\sum_{u\text{ internal}}f_u.\ ∎$$</p>
@@ -211,7 +211,7 @@ $$B(T)=\sum_{c}f_c\,d_T(c)=\sum_{c}\ \sum_{u\text{ ancestor of }c}f_c=\sum_{u\te
 
 <section class="ex" id="ex-15-3-5">
 <header><span class="id">15.3-5</span><span class="t">用 \(2n-1+n\lceil\lg n\rceil\) bits 傳送編碼本身</span></header>
-<div class="q">有一個 \(n\) 個字元的最佳 prefix code，想用最少 bits 把「編碼表」傳出去。說明如何只用 \(2n-1+n\lceil\lg n\rceil\) bits 表示。（提示：用 \(2n-1\) bits 描述樹的形狀。）</div>
+<div class="q"><p class="orig" lang="en">Given an optimal prefix-free code on a set \(C\) of \(n\) characters, you wish to transmit the code itself using as few bits as possible. Show how to represent any optimal prefix-free code on \(C\) using only \(2n-1+n\lceil\lg n\rceil\) bits. (<em>Hint:</em> Use \(2n-1\) bits to specify the structure of the tree, as discovered by a walk of the tree.)</p><p class="zh">有一個 \(n\) 個字元的最佳 prefix code，想用最少 bits 把「編碼表」傳出去。說明如何只用 \(2n-1+n\lceil\lg n\rceil\) bits 表示。（提示：用 \(2n-1\) bits 描述樹的形狀。）</p></div>
 <details><summary>詳解</summary><div class="a">
 <ol class="steps">
   <li><strong>形狀 \(2n-1\) bits</strong>：最佳樹是 full（15.3-2），有 \(n\) 片葉子、\(n-1\) 個內部節點。Preorder 走訪，內部節點寫 1、葉子寫 0。Full tree 看到 1 就知道後面接左右兩棵子樹，可唯一重建。</li>
@@ -226,7 +226,11 @@ $$B(T)=\sum_{c}f_c\,d_T(c)=\sum_{c}\ \sum_{u\text{ ancestor of }c}f_c=\sum_{u\te
 
 <section class="ex" id="p15-1">
 <header><span class="id">15-1</span><span class="t">Coin changing</span></header>
-<div class="q">用最少枚硬幣找 \(n\) 分錢。(a) 面額 25、10、5、1 時設計貪婪並證明最佳。(b) 面額是 \(c^0,c^1,\dots,c^k\)（\(c&gt;1, k\ge1\)）時證明貪婪最佳。(c) 給一組（含 1）讓貪婪失敗的面額。(d) 給 \(O(nk)\) 的演算法處理任意 \(k\) 種面額（含 1）。</div>
+<div class="q"><p class="orig" lang="en"><b>15-1 Coin changing</b><br>Consider the problem of making change for \(n\) cents using the smallest number of coins. Assume that each coin’s value is an integer.<br>
+<b>a.</b> Describe a greedy algorithm to make change consisting of quarters, dimes, nickels, and pennies. Prove that your algorithm yields an optimal solution.<br>
+<b>b.</b> Suppose that the available coins are in denominations that are powers of \(c\): the denominations are \(c^0,c^1,\dots,c^k\) for some integers \(c&gt;1\) and \(k\ge1\). Show that the greedy algorithm always yields an optimal solution.<br>
+<b>c.</b> Give a set of coin denominations for which the greedy algorithm does not yield an optimal solution. Your set should include a penny so that there is a solution for every value of \(n\).<br>
+<b>d.</b> Give an \(O(nk)\)-time algorithm that makes change for any set of \(k\) different coin denominations using the smallest number of coins, assuming that one of the coins is a penny.</p><p class="zh">用最少枚硬幣找 \(n\) 分錢。(a) 面額 25、10、5、1 時設計貪婪並證明最佳。(b) 面額是 \(c^0,c^1,\dots,c^k\)（\(c&gt;1, k\ge1\)）時證明貪婪最佳。(c) 給一組（含 1）讓貪婪失敗的面額。(d) 給 \(O(nk)\) 的演算法處理任意 \(k\) 種面額（含 1）。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">(a)</span>Greedy：依序拿最多的 25、10、5、1（\(q=\lfloor n/25\rfloor\)，對餘數重複）。<br>
 Proof：最佳解中 1 分 \(\le4\) 枚（5 枚可換一枚 5）、5 分 \(\le1\)（2 枚換 10）、10 分 \(\le2\)（3 枚換 25+5），且不會同時有 2 枚 10 和 1 枚 5（換 25）。
@@ -254,7 +258,7 @@ return C[n]       // 從 j = n 起印 coin[j]，j = j - coin[j]
 
 <section class="ex" id="maxsub">
 <header><span class="id">p.44</span><span class="t">用貪婪法解 maximum-subarray</span></header>
-<div class="q">之前用 divide-and-conquer 解過 maximum-subarray（\(O(n\log n)\)）。寫出貪婪演算法的虛擬碼並分析時間。</div>
+<div class="q"><p class="orig" lang="en">We have learned a solution to solving the maximum-subarray problem by using divide-and-conquer. We can solve the maximum-subarray problem with a greedy algorithm. Please write down the pseudo code and analyze the time complexity.</p><p class="zh">之前用 divide-and-conquer 解過 maximum-subarray（\(O(n\log n)\)）。寫出貪婪演算法的虛擬碼並分析時間。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>由左往右累加 \(cur\)；累加和 \(&lt;0\) 時接在後面只會變小，直接丟掉、從下一個重新開始（Kadane）。</p>
 <pre data-code="GREEDY-MAX-SUBARRAY(A, n)">

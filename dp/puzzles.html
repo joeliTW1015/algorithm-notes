@@ -25,12 +25,19 @@
 <p class="lede">兩題都不是填表，但思考方式和 DP 一樣：<strong>先解最小的情況，再用小情況的答案推出大情況</strong>（backward induction）。</p>
 
 <h2 id="pirates" data-short="海盜分金">Sharing Gold Coins：海盜分金</h2>
-<div class="note"><span class="tag">題目</span>5 個海盜（Rank-1 到 Rank-5）找到 1000 枚金幣。由 Rank-1 先提出分配方式：
+<div class="note"><span class="tag">題目</span><p class="orig" lang="en">Five lucky pirates has discovered a treasure box with 1000 gold coins … There are rankings among the pirates: 1 2 3 4 5 … and they decide to share the gold coins in the following way:<br>
+First, Rank-1 pirate proposes how to share the coins…<br>
+• If at least half of them agree, go with the proposal<br>
+• Else, Rank-1 pirate is out of the game<br>
+In general, if Rank-1, Rank-2, …, Rank-k pirates are out, then Rank-(k+1) pirate proposes how to share the coins…<br>
+• If at least half of the remaining agree, go with the proposal<br>
+• Else, Rank-(k+1) pirate is out of the game<br>
+Question: If all the pirates are smart, who will get the most coin? Why?</p><div class="zh">5 個海盜（Rank-1 到 Rank-5）找到 1000 枚金幣。由 Rank-1 先提出分配方式：
 <ul style="margin-bottom:0">
   <li>若<strong>至少一半</strong>的人（含提案者）同意，就照這個提案分；</li>
   <li>否則 Rank-1 出局，換 Rank-2 對剩下的人提案，規則相同……</li>
 </ul>
-所有海盜都很聰明。誰會拿到最多金幣？為什麼？</div>
+所有海盜都很聰明。誰會拿到最多金幣？為什麼？</div></div>
 
 <h3>需要先講清楚的假設</h3>
 <ul>
@@ -60,7 +67,7 @@
 <div class="note key"><span class="tag">和 DP 的關係</span>子問題是「剩下 \(k\) 個海盜時的分配」，答案只依賴「剩 \(k-1\) 個」的子問題。由小到大算，每一步只需查上一步的表——這就是 bottom-up。若從 Rank-1 直接往下想（top-down 不存結果），每個人都要重新推理一遍後面所有人的反應。</div>
 
 <h2 id="village" data-short="外遇村">Brainstorm：外遇村</h2>
-<div class="note"><span class="tag">題目</span>外遇村有 50 對夫妻，丈夫全都外遇。每個妻子都知道其他所有外遇的男人，就是不知道自己的先生有沒有外遇；妻子之間不交換訊息。村規：妻子若能證明自己的先生外遇，就必須在當天晚上 12:00 殺死他。有一天，公認不會說謊的皇后宣布「至少有一位丈夫不忠」。結果會發生什麼事？</div>
+<div class="note"><span class="tag">題目</span><span class="muted small">（投影片原題為中文，沒有英文版。）</span>外遇村有 50 對夫妻，丈夫全都外遇。每個妻子都知道其他所有外遇的男人，就是不知道自己的先生有沒有外遇；妻子之間不交換訊息。村規：妻子若能證明自己的先生外遇，就必須在當天晚上 12:00 殺死他。有一天，公認不會說謊的皇后宣布「至少有一位丈夫不忠」。結果會發生什麼事？</div>
 
 <p><strong>答案：前 49 個晚上什麼事都沒發生；第 50 個晚上，50 位妻子同時殺死自己的丈夫。</strong></p>
 

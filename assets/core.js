@@ -7,8 +7,19 @@
     { id: 'dp', href: '../dp/index.html', text: 'Ch14 Dynamic Programming' },
     { id: 'greedy', href: '../greedy/index.html', text: 'Ch15 Greedy Algorithms' },
     { id: 'amortized', href: '../amortized/index.html', text: 'Ch16 Amortized Analysis' },
+    { id: 'midterm', href: '../midterm/index.html', text: '期中考古題 Ch14–16' },
   ];
   const NAVS = {};
+  NAVS.midterm = [
+    { title: '期中考古題 Ch14–16', items: [
+      { id: 'hub', href: 'index.html', text: '總覽：常考題型與概念' },
+    ] },
+    { title: '依章節（同題型合併）', items: [
+      { id: 'dp', href: 'dp.html', text: 'DP 考古題' },
+      { id: 'greedy', href: 'greedy.html', text: 'Greedy 考古題' },
+      { id: 'amortized', href: 'amortized.html', text: 'Amortized 考古題' },
+    ] },
+  ];
   NAVS.amortized = [
     { title: 'Ch16 Amortized Analysis', items: [
       { id: 'hub', href: 'index.html', text: '總覽與速查表' },
@@ -330,8 +341,31 @@
 
   window.UI = { h, s, code, StepPlayer, table, tree, nums, bench, legend, renderMath, esc };
 
+  // English original + Chinese translation: one button hides the translations (remembered across pages).
+  function zhToggle() {
+    if (!document.querySelector('.zh')) return;
+    const KEY = 'algo-notes-hide-zh';
+    let hide = false;
+    try { hide = localStorage.getItem(KEY) === '1'; } catch (e) { /* storage blocked */ }
+    const btn = h('button', { type: 'button', class: 'zh-toggle', 'aria-pressed': 'false' });
+    function apply() {
+      document.body.classList.toggle('hide-zh', hide);
+      btn.textContent = hide ? '顯示中譯' : '隱藏中譯（只看英文原題）';
+      btn.setAttribute('aria-pressed', String(hide));
+    }
+    btn.onclick = () => { hide = !hide; try { localStorage.setItem(KEY, hide ? '1' : '0'); } catch (e) { /* ignore */ } apply(); };
+    const all = document.getElementById('toggle-all');
+    if (all) all.after(' ', btn);
+    else {
+      const lede = document.querySelector('main .lede');
+      if (lede) lede.after(h('p', null, btn));
+    }
+    apply();
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     buildNav();
+    zhToggle();
     // Static pseudocode: <pre data-code="TITLE">…</pre> becomes a numbered listing.
     document.querySelectorAll('pre[data-code]').forEach((pre) => {
       let lines = pre.textContent.replace(/^\n+|\s+$/g, '').split('\n');

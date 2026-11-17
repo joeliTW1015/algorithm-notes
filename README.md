@@ -5,9 +5,10 @@
 - `dp/` — Chapter 14 Dynamic Programming：Rod cutting、Matrix-chain、LCS、Optimal BST、練習與習題詳解
 - `greedy/` — Chapter 15 Greedy Algorithms：Coin changing、Activity selection、Knapsack、Huffman code、習題 15.x 詳解
 - `amortized/` — Chapter 16 Amortized Analysis：Aggregate method、Super stack、Binary counter、Amortized vs average-case（16-1）；Accounting method、Potential method（16-2）；習題 16.1–16.3 詳解
-- `assets/algos.js`（DP）、`assets/greedy.js`（Greedy）、`assets/amortized.js`（Amortized）— 純演算法（含逐步記錄），網頁與測試共用
+- `midterm/` — 期中考古題（Ch14–16）：2011–2025 考卷中範圍內的題目，依題型合併（DP / Greedy / Amortized 三頁）＋總覽（常考題型排行、概念速記、答案鍵勘誤）
+- `assets/algos.js`（DP）、`assets/greedy.js`（Greedy）、`assets/amortized.js`（Amortized）、`assets/midterm.js`（考古題：dynamic table、resource allocation 等，及題型統計 `TOPICS`）— 純演算法（含逐步記錄），網頁與測試共用
 - `assets/core.js` — 共用 UI：側欄（依 `data-chapter` 切換章節目錄）、逐步播放器、表格、樹狀圖
-- `assets/w-*.js` — 各主題的互動元件（Ch16：`w-amort.js` 16-1、`w-amort2.js` 16-2 與 16.2/16.3 習題）
+- `assets/w-*.js` — 各主題的互動元件（Ch16：`w-amort.js` 16-1、`w-amort2.js` 16-2 與 16.2/16.3 習題；`w-midterm.js` 考古題頁）
 
 純靜態 HTML/JS，不需要 build。本機預覽：
 

@@ -77,7 +77,7 @@
 
   /* Problem in the slides: maximum subarray, greedily. */
   W.maxSub = function (el) {
-    const inp = h('input', { type: 'text', value: '13 -3 -25 20 -3 -16 -23 18 20 -7 12 -5 -22 15 -4 7', spellcheck: 'false', style: 'width:420px', 'aria-label': 'A' });
+    const inp = h('input', { type: 'text', value: el.dataset.a || '13 -3 -25 20 -3 -16 -23 18 20 -7 12 -5 -22 15 -4 7', spellcheck: 'false', style: 'width:420px', 'aria-label': 'A' });
     const err = h('div', { class: 'err' });
     const tbl = h('div', { class: 'scroll-x' });
     const player = new StepPlayer({ render });

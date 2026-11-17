@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amortized 考古題 · 期中考古題 Ch14–16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/amortized.js"></script>
+<script defer src="../assets/midterm.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-amort.js"></script>
+<script defer src="../assets/w-amort2.js"></script>
+<script defer src="../assets/w-midterm.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="midterm" data-page="amortized"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">期中考古題 · Ch16 Amortized Analysis（舊卷標 Ch17）</p>
+<h1>Amortized 考古題</h1>
+<p class="lede">Amortized 題型很集中：<strong>觀念填空</strong>、<strong>c<sub>i</sub> = i（i 是 2 的冪）</strong>、<strong>dynamic table 的 Φ</strong>、<strong>stack / counter 的變形</strong>。常要求「用指定的方法」（aggregate / accounting / potential）——照指定方法寫才給分。</p>
+<p><button type="button" id="toggle-all">全部展開</button></p>
+
+<div class="note key"><span class="tag">三種方法的答題模板</span>
+<table class="plain small">
+  <tr><th>方法</th><th>要寫的東西</th></tr>
+  <tr><td><strong>Aggregate</strong></td><td>對<em>任意</em> n 個操作算總成本上界 \(T(n)\)（換個角度數），amortized = \(T(n)/n\)。</td></tr>
+  <tr><td><strong>Accounting</strong></td><td>列出每種操作的收費 \(\hat c\)；說明多收的錢存在哪個物件上、付哪個未來操作；證明<strong>任何時刻</strong>存款 ≥ 0 ⇒ \(\sum c_i\le\sum\hat c_i\)。</td></tr>
+  <tr><td><strong>Potential</strong></td><td>定義 \(\Phi\)，證 \(\Phi(D_0)=0\)、\(\Phi(D_i)\ge0\)；每種操作算 \(\hat c_i=c_i+\Phi(D_i)-\Phi(D_{i-1})\)；\(\sum c_i=\sum\hat c_i-\Phi(D_n)+\Phi(D_0)\le\sum\hat c_i\)。</td></tr>
+</table></div>
+
+<!-- ======================================================= -->
+<h2 id="concept" data-short="觀念填空 / 是非">觀念：amortized vs actual</h2>
+<p class="yrs"><span class="yr-tag amort">2017 Q1b</span><span class="yr-tag amort">2017 Q2b</span><span class="yr-tag amort">2018 Q1</span></p>
+
+<section class="ex" id="mt-seefoo">
+<header><span class="id">2017 Q1b · 2018 Q1</span><span class="t">seefoo：amortized 與單次最壞</span><span class="yrs"><span class="yr-tag">6%</span></span></header>
+<div class="q"><p class="orig" lang="en">If a data structure supports an operation seefoo such that a sequence of n seefoo's operations takes Θ(n log n) time to perform in the worst case, then the amortized cost of a seefoo operation is Θ(__(1)__), while the actual time of a seefoo operation could be as high as Θ(__(2)__).</p><p class="zh">若某資料結構的操作 seefoo，做 n 次最壞要 \(\Theta(n\log n)\)，則 seefoo 的 amortized cost 是 Θ(__(1)__)，而單一次 seefoo 的實際時間最高可達 Θ(__(2)__)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">(1) \(\Theta(\log n)\)　(2) \(\Theta(n\log n)\)</p>
+<p><span class="lbl">Why</span>amortized = 總成本 / 操作數 = \(\Theta(n\log n)/n\)。單次沒有限制：可能前 n − 1 次都 O(1)，最後一次把 \(\Theta(n\log n)\) 全做完。</p>
+<div class="rubric"><b>2018 給分</b>：每格 3%。</div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2017-q2b">
+<header><span class="id">2017 Q2b</span><span class="t">True / False：總 amortized cost 是總 actual cost 的上界</span><span class="yrs"><span class="yr-tag">2%</span></span></header>
+<div class="q"><p class="orig" lang="en">For each of the following statements, determine whether it is true or false. If the statement is correct, briefly state why. If the statement is wrong, explain why. Your answer will be evaluated based on your explanation and not the True/False marking alone. (b) The total amortized cost of a sequence of operations gives an upper bound on the actual cost of the sequence.</p><p class="zh">是非題（看解釋給分）：一串操作的總 amortized cost 是這串操作實際總成本的上界。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">True。</p>
+<p><span class="lbl">Why</span>定義 amortized cost 時就要求對<strong>所有</strong>序列 \(\sum_{i=1}^{n}\hat c_i\ge\sum_{i=1}^{n}c_i\)：accounting 是存款永不為負；potential 是 \(\sum\hat c_i=\sum c_i+\Phi(D_n)-\Phi(D_0)\) 且 \(\Phi(D_n)\ge\Phi(D_0)\)。</p>
+<p class="more">注意是「總和」的上界；單一操作的 \(\hat c_i\) 可以比 \(c_i\) 小（例如 SUPER-POP 的 \(\hat c=0\)）。</p>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="pow2" data-short="cᵢ = i（2 的冪）">第 i 次成本 = i（i 是 2 的冪）否則 1</h2>
+<p class="yrs"><span class="yr-tag hot">3 次</span><span class="yr-tag amort">2019 Q6</span><span class="yr-tag amort">2020 Q6</span><span class="yr-tag amort">2024 Q2</span></p>
+
+<section class="ex" id="mt-pow2">
+<header><span class="id">2019 Q6</span><span class="t">同一題用 aggregate、accounting、potential 三種方法</span><span class="yrs"><span class="yr-tag">21%</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose we perform a sequence of n operations on a data structure in which the i<sup>th</sup> operation costs i if i is an exact power of 2, and 1 otherwise.<br>
+(a) Use the aggregate method to determine the amortized cost per operation.<br>
+(b) Use the accounting method to determine the amortized cost per operation.<br>
+(c) Use the potential method to determine the amortized cost per operation.</p><p class="zh">對資料結構做 n 個操作，第 i 個操作成本是 i（若 i 剛好是 2 的冪），否則是 1。分別用 (a) aggregate (b) accounting (c) potential method 求每個操作的 amortized cost。</p>
+<p class="small muted">2024 Q2（10%）只問 aggregate，要寫 Big-Oh。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">三種方法都得到 amortized \(O(1)\)（每個操作 ≤ 3），總成本 \(&lt;3n=O(n)\)。</p>
+<p><span class="lbl">(a) Aggregate</span>
+$$\sum_{i=1}^{n}c_i\ \le\ \underbrace{n}_{\text{非 2 的冪，各 1}}+\underbrace{\sum_{j=0}^{\lfloor\lg n\rfloor}2^j}_{\text{2 的冪}}= n+(2^{\lfloor\lg n\rfloor+1}-1)\le n+2n-1&lt;3n.$$
+所以 amortized cost \(=3n/n=O(1)\)。</p>
+<p><span class="lbl">(b) Accounting</span>每個操作收 $3。非 2 的冪：花 $1、存 $2。由 (a)，任何前 i 個操作的實際總成本 \(&lt;3i\) = 已收的錢，所以存款 \(3i-\sum_{t\le i}c_t&gt;0\) 永不為負 ⇒ 總成本 ≤ 3n。直覺：第 \(2^j\) 次要付 \(2^j\)，前面 \(2^{j-1}+1\ldots2^j-1\) 這 \(2^{j-1}-1\) 次各存 $2，共 \(2^j-2\)，加上自己收的 $3 就夠。</p>
+<p><span class="lbl">(c) Potential</span>\(\Phi(D_0)=0\)，\(\Phi(D_i)=2\bigl(i-2^{\lfloor\lg i\rfloor}\bigr)\ge0\)（距離上一個 2 的冪的兩倍）。
+<ul>
+  <li>i 不是 2 的冪：\(\Delta\Phi=2\)，\(\hat c_i=1+2=3\)。</li>
+  <li>\(i=2^j\ (j\ge1)\)：\(\Phi(D_i)=0\)，\(\Phi(D_{i-1})=2(i-1-\tfrac i2)=i-2\)，\(\hat c_i=i+0-(i-2)=2\)。</li>
+  <li>\(i=1\)：\(\hat c_1=1+0-0=1\)。</li>
+</ul>
+故 \(\hat c_i\le3\)，\(\sum c_i\le\sum\hat c_i\le3n\)。</p>
+<table class="plain small"><tr><th>i</th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td></tr>
+<tr><th>c<sub>i</sub></th><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">4</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">8</td></tr>
+<tr><th>Φ(D<sub>i</sub>)</th><td class="num">0</td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td class="num">2</td><td class="num">4</td><td class="num">6</td><td class="num">0</td></tr>
+<tr><th>ĉ<sub>i</sub></th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">2</td><td class="num">3</td><td class="num">3</td><td class="num">3</td><td class="num">2</td></tr></table>
+<div class="rubric"><b>2024 給分</b>：正確分析 10%（官方：\(\sum c_i\le n+\sum_{j=0}^{\lfloor\lg n\rfloor}2^j=n+(2n-1)&lt;3n\)）。</div>
+<p class="more">相關：<a href="../amortized/exercises.html#ex-16-1-3">課本 16.1-3（aggregate）</a>。</p>
+<p class="try">互動驗證（aggregate）</p>
+<div data-widget="powCost"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2020-q6">
+<header><span class="id">2020 Q6</span><span class="t">Φ = i − 2<sup>⌊lg i⌋</sup> 為什麼不夠？怎麼改？</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose we perform a sequence of n operations on a data structure where the i<sup>th</sup> operation costs i if i is an exact power of 2, and 1 otherwise.<br>
+a. (4%) Use aggregate analysis to determine the total amortized cost in Big-Oh notation.<br>
+b. (4%) Using the potential method, show that the potential function Φ(D<sub>i</sub>) = i − 2<sup>⌊lg i⌋</sup> cannot yield useful result.<br>
+c. (2%) Show how to modify Φ(D<sub>i</sub>) so that the potential method analysis gives the exact result.</p><p class="zh">同上的成本序列。(a) 用 aggregate 求總 amortized cost（Big-O）。(b) 用 potential method 說明 \(\Phi(D_i)=i-2^{\lfloor\lg i\rfloor}\) 得不到有用的結果。(c) 怎麼修改 Φ 才能得到正確結果。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">(a) \(O(n)\)（見上題）。(b) 在 \(i=2^j\) 時 \(\hat c_i=1+i/2\)，不是常數。(c) 改成 \(\Phi'(D_i)=2(i-2^{\lfloor\lg i\rfloor})\)，\(\hat c_i\in\{3,2\}\)，總共 \(O(n)\)。</p>
+<p><span class="lbl">(b)</span>非 2 的冪：\(\Delta\Phi=1\)，\(\hat c_i=1+1=2\)。\(i=2^j\)：\(\Phi(D_{i-1})=(i-1)-\tfrac i2=\tfrac i2-1\)，\(\hat c_i=i+0-(\tfrac i2-1)=1+\tfrac i2\)。每一段只存了約 \(i/2\)，付不起第 i 次的 i，所以 amortized cost 還含 i，得不到 \(O(1)\)。</p>
+<p><span class="lbl">(c)</span>乘 2 之後非 2 的冪 \(\Delta\Phi'=2\)、\(\hat c=3\)；2 的冪 \(\Delta\Phi'=2-i\)、\(\hat c=2\)。\(\sum\hat c_i\le3n=O(n)\)。</p>
+<p class="more">直覺：從 \(2^{j-1}\) 到 \(2^j\) 中間只有約 \(2^{j-1}\) 個操作，要存夠 \(2^j\) 元，每個操作得存 2 元，不是 1 元。</p>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="dyntable" data-short="Dynamic table Φ">Dynamic table：擴張 + 收縮的 potential</h2>
+<p class="yrs"><span class="yr-tag hot">4 次</span><span class="yr-tag amort">2011 Q8</span><span class="yr-tag amort">2017 Q11</span><span class="yr-tag amort">2020 Q7</span><span class="yr-tag amort">2022 Q6</span><span class="yr-tag">2026 投影片沒教</span></p>
+
+<div class="note warn"><span class="tag">投影片沒教</span>2026 的 16-1、16-2 投影片沒有 dynamic table（CLRS 4th ed. 16.4），但它在舊卷出現 4 次、每次都是 10–15 分。下面把需要的東西一次補齊。</div>
+<div class="note key"><span class="tag">規則與 Φ</span>
+<ul>
+  <li>load factor \(\alpha=\text{num}/\text{size}\)。INSERT 時若 table <strong>滿了</strong>（α = 1）→ size 加倍，搬 num 個，再插入：\(c=\text{num}+1\)。</li>
+  <li>DELETE 後若 \(\alpha&lt;1/4\) → size 減半，搬剩下的 num 個：\(c=1+\text{num}\)。剛好 1/4 不縮。</li>
+  <li>\(\Phi(T)=\begin{cases}2\cdot\text{num}-\text{size} & \alpha\ge 1/2\\ \text{size}/2-\text{num} & \alpha&lt;1/2\end{cases}\)　空 table：\(\Phi=0\)。永遠 \(\Phi\ge0\)；擴張 / 收縮剛完成時 α = 1/2 附近，Φ 很小。</li>
+</ul></div>
+
+<table class="plain small">
+  <tr><th>操作</th><th>情況</th><th class="num">\(c_i\)</th><th class="num">\(\Delta\Phi\)</th><th class="num">\(\hat c_i\)</th></tr>
+  <tr><td rowspan="4">INSERT</td><td>\(\alpha_{i-1}\ge1/2\)，不擴張</td><td class="num">1</td><td class="num">+2</td><td class="num"><b>3</b></td></tr>
+  <tr><td>擴張（num = size = s → size 2s）</td><td class="num">s + 1</td><td class="num">2 − s</td><td class="num"><b>3</b></td></tr>
+  <tr><td>\(\alpha_{i-1}&lt;1/2,\ \alpha_i&lt;1/2\)</td><td class="num">1</td><td class="num">−1</td><td class="num"><b>0</b></td></tr>
+  <tr><td>\(\alpha_{i-1}&lt;1/2,\ \alpha_i=1/2\)</td><td class="num">1</td><td class="num">−1</td><td class="num"><b>0</b></td></tr>
+  <tr><td rowspan="4">DELETE</td><td>\(\alpha_{i-1}&gt;1/2\)（刪後 \(\ge1/2\)）</td><td class="num">1</td><td class="num">−2</td><td class="num"><b>−1</b></td></tr>
+  <tr><td>\(\alpha_{i-1}=1/2\)，刪後 \(&lt;1/2\)</td><td class="num">1</td><td class="num">+1</td><td class="num"><b>2</b></td></tr>
+  <tr><td>\(\alpha_{i-1}&lt;1/2\)，不收縮</td><td class="num">1</td><td class="num">+1</td><td class="num"><b>2</b></td></tr>
+  <tr><td>收縮（刪後 num = size/4 − 1 → size/2）</td><td class="num">1 + num</td><td class="num">1 − size/4</td><td class="num"><b>1</b></td></tr>
+</table>
+<p>結論：INSERT 的 \(\hat c\le3\)、DELETE 的 \(\hat c\le2\)，任意 n 個操作總成本 \(O(n)\)。</p>
+
+<section class="ex" id="mt-2011-q8">
+<header><span class="id">2011 Q8</span><span class="t">求 insertion 和 deletion 的 amortized cost</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">In the dynamic table problem, if the table T is full before insertion of an item, we expand T by doubling its size and if table T is below (1/4)-full after deletion of an item, we contract table T by halving its size. We define a potential function Φ as follows: (a) If table T is at least half full Φ(T) = 2 num(T) – size(T). (b) If table T is less than half full Φ(T) = size(T)/2 – num(T). Please find the amortized cost of insertion and deletion.</p><p class="zh">Dynamic table：插入前若滿了就把 size 加倍；刪除後若少於 1/4 滿就減半。Φ 定義為：至少半滿時 \(2\,\text{num}-\text{size}\)，不到半滿時 \(\text{size}/2-\text{num}\)。求插入與刪除的 amortized cost。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">INSERT：\(\hat c_i\le3\)；DELETE：\(\hat c_i\le2\)。都是 \(O(1)\)。</p>
+<p>逐一列出上表 8 種情況的 \(c_i\)、\(\Phi_{i-1}\)、\(\Phi_i\)。兩個關鍵情況：</p>
+<p><span class="lbl">擴張</span>\(\text{num}_{i-1}=\text{size}_{i-1}=s\)：\(\Phi_{i-1}=2s-s=s\)；插入後 num = s + 1、size = 2s：\(\Phi_i=2(s+1)-2s=2\)。\(\hat c_i=(s+1)+2-s=3\)。</p>
+<p><span class="lbl">收縮</span>刪除前 \(\text{num}_{i-1}=\text{size}/4\)，刪後 \(\text{num}_i=\text{size}/4-1\)，size 變 size/2：\(\Phi_{i-1}=\text{size}/2-\text{size}/4=\text{size}/4\)，\(\Phi_i=\text{size}/4-\text{num}_i=1\)。\(\hat c_i=(1+\text{num}_i)+1-\text{size}/4=1\)。</p>
+<p class="more">易錯：跨過 α = 1/2 的那一步要用<strong>兩個不同</strong>的 Φ 公式（前後各一個）。只算「不擴張 / 不收縮」的情況會被扣分。</p>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2020-q7">
+<header><span class="id">2020 Q7</span><span class="t">三種指定情況的 amortized cost</span><span class="yrs"><span class="yr-tag">10% + 4% bonus</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose that we wish to implement a dynamic table T with insertion and deletion operations. Let α be the load factor of the table T. Each insertion (deletion) operation will insert (delete) an item from the table T. If T is full before insertion of an item, we expand T by doubling its size. If T is below (1/4)-full after deletion, we contract T by halving its size. Let α<sub>i</sub> denote the load factor of table T after the i<sup>th</sup> operation.<br>
+(a) (5%) What is the amortized cost of the i<sup>th</sup> operation if the i<sup>th</sup> operation is an insertion, α<sub>i−1</sub> &lt; 1/2, and α<sub>i</sub> &lt; 1/2?<br>
+(b) (5%) What is the amortized cost of the i<sup>th</sup> operation if the i<sup>th</sup> operation is a deletion and α<sub>i−1</sub> &gt; 1/2?<br>
+(c) (4% Bonus) What is the amortized cost of the i<sup>th</sup> operation if α<sub>i−1</sub> = 1/2 and α<sub>i</sub> &lt; 1/2?</p><p class="zh">Dynamic table（滿了加倍、刪後少於 1/4 減半），\(\alpha_i\) 是第 i 個操作後的 load factor。求下列情況第 i 個操作的 amortized cost：(a) 插入且 \(\alpha_{i-1}&lt;1/2\)、\(\alpha_i&lt;1/2\)；(b) 刪除且 \(\alpha_{i-1}&gt;1/2\)；(c) \(\alpha_{i-1}=1/2\) 且 \(\alpha_i&lt;1/2\)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">(a) 0　(b) −1　(c) 2</p>
+<p><span class="lbl">(a)</span>\(\hat c_i=1+(\tfrac{s}{2}-\text{num}_i)-(\tfrac s2-\text{num}_{i-1})=1+(\text{num}_{i-1}-\text{num}_i)=1-1=0\)。</p>
+<p><span class="lbl">(b)</span>\(\alpha_{i-1}&gt;1/2\) ⇒ 刪後 \(\alpha_i\ge1/2\)，不會收縮：\(\hat c_i=1+(2\text{num}_i-s)-(2\text{num}_{i-1}-s)=1-2=-1\)。</p>
+<p><span class="lbl">(c)</span>α 從 1/2 變小只能是 DELETE：\(\Phi_{i-1}=2\cdot\tfrac s2-s=0\)，\(\Phi_i=\tfrac s2-(\tfrac s2-1)=1\)，\(\hat c_i=1+1-0=2\)。</p>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2022-q6">
+<header><span class="id">2022 Q6</span><span class="t">12 個操作的 c<sub>i</sub>、α<sub>i</sub> 表（I I I I I D I D D D I D）</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">In the dynamic table problem, if the table T is full before insertion of an item, we expand T by doubling its size and if table T is below (1/4)-full after deletion of an item, we contract table T by halving its size. We define a potential function Φ as follows: (a) If table T is at least half full Φ(T) = 2 num(T) – size(T). (b) If table T is less than half full Φ(T) = size(T)/2 – num(T). Initially, the table T is empty. Assume we have the following 12 operations on the table T: Insert, Insert, Insert, Insert, Insert, Delete, Insert, Delete, Delete, Delete, Insert, Delete. Please show the amortized cost α<sub>i</sub> and actual cost c<sub>i</sub> of the above operations, for 1 ≤ i ≤ 12.</p><p class="zh">Dynamic table 規則與 Φ 同 2011 Q8。table 一開始是空的，依序做 I I I I I D I D D D I D 共 12 個操作，寫出每一步的 amortized cost \(\alpha_i\) 與實際成本 \(c_i\)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(c_i\) = 1, 2, 3, 1, 5, 1, 1, 1, 1, 1, 1, 1；\(\alpha_i\) = 2, 3, 3, 3, 3, −1, 3, −1, 2, 2, 0, 2（與官方答案相同）。</p>
+<table class="plain small"><tr><th>i</th><th>op</th><th class="num">num</th><th class="num">size</th><th class="num">c<sub>i</sub></th><th class="num">Φ<sub>i</sub></th><th class="num">α<sub>i</sub></th><th>說明</th></tr>
+<tr><td>1</td><td>ins</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td>size 0 → 1</td></tr>
+<tr><td>2</td><td>ins</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">3</td><td>擴張，搬 1</td></tr>
+<tr><td>3</td><td>ins</td><td class="num">3</td><td class="num">4</td><td class="num">3</td><td class="num">2</td><td class="num">3</td><td>擴張，搬 2</td></tr>
+<tr><td>4</td><td>ins</td><td class="num">4</td><td class="num">4</td><td class="num">1</td><td class="num">4</td><td class="num">3</td><td></td></tr>
+<tr><td>5</td><td>ins</td><td class="num">5</td><td class="num">8</td><td class="num">5</td><td class="num">2</td><td class="num">3</td><td>擴張，搬 4</td></tr>
+<tr><td>6</td><td>del</td><td class="num">4</td><td class="num">8</td><td class="num">1</td><td class="num">0</td><td class="num">−1</td><td>α = 1/2</td></tr>
+<tr><td>7</td><td>ins</td><td class="num">5</td><td class="num">8</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td></td></tr>
+<tr><td>8</td><td>del</td><td class="num">4</td><td class="num">8</td><td class="num">1</td><td class="num">0</td><td class="num">−1</td><td></td></tr>
+<tr><td>9</td><td>del</td><td class="num">3</td><td class="num">8</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td>跨過 1/2，換 Φ 公式</td></tr>
+<tr><td>10</td><td>del</td><td class="num">2</td><td class="num">8</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td>α = 1/4，<b>不</b>收縮</td></tr>
+<tr><td>11</td><td>ins</td><td class="num">3</td><td class="num">8</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>12</td><td>del</td><td class="num">2</td><td class="num">8</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td></td></tr></table>
+<div class="rubric"><b>2022 給分</b>：每錯一列 −1，最多扣 10。</div>
+<p class="more">易錯：第 10 步 2/8 剛好 = 1/4，題目是「below 1/4」才收縮；第 1 步從空 table（size 0）擴成 1，搬 0 個。</p>
+<p class="try">互動驗證</p>
+<div data-widget="dynTable" data-ops="IIIIIDIDDDID"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2017-q11">
+<header><span class="id">2017 Q11</span><span class="t">12 個操作（I I I I D I I D D D D I）</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">In the dynamic table problem, if the table T is full before insertion of an item, we expand T by doubling its size and if table T is below (1/4)-full after deletion of an item, we contract table T by halving its size. We define a potential function Φ as follows: (a) If table T is at least half full: Φ(T) = 2 num(T) – size(T). (b) If table T is less than half full: Φ(T) = size(T)/2 – num(T). Initially, the table T is empty. Assume we have the following 12 operations on the table T: Insert, Insert, Insert, Insert, Delete, Insert, Insert, Delete, Delete, Delete, Delete, Insert. Please show the amortized cost α<sub>i</sub> and actual cost c<sub>i</sub> of the above operations, for 1 ≤ i ≤ 12.</p><p class="zh">同上，操作序列為 I I I I D I I D D D D I，寫出每一步的 \(\alpha_i\) 與 \(c_i\)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(c_i\) = 1, 2, 3, 1, 1, 1, 5, 1, 1, 1, 2, 1；\(\alpha_i\) = 2, 3, 3, 3, −1, 3, 3, −1, 2, 2, 1, 0。</p>
+<table class="plain small"><tr><th>i</th><th>op</th><th class="num">num</th><th class="num">size</th><th class="num">c<sub>i</sub></th><th class="num">Φ<sub>i</sub></th><th class="num">α<sub>i</sub></th><th>說明</th></tr>
+<tr><td>1</td><td>ins</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td>size 0 → 1</td></tr>
+<tr><td>2</td><td>ins</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">3</td><td>擴張</td></tr>
+<tr><td>3</td><td>ins</td><td class="num">3</td><td class="num">4</td><td class="num">3</td><td class="num">2</td><td class="num">3</td><td>擴張</td></tr>
+<tr><td>4</td><td>ins</td><td class="num">4</td><td class="num">4</td><td class="num">1</td><td class="num">4</td><td class="num">3</td><td></td></tr>
+<tr><td>5</td><td>del</td><td class="num">3</td><td class="num">4</td><td class="num">1</td><td class="num">2</td><td class="num">−1</td><td></td></tr>
+<tr><td>6</td><td>ins</td><td class="num">4</td><td class="num">4</td><td class="num">1</td><td class="num">4</td><td class="num">3</td><td>滿了（下次才擴張）</td></tr>
+<tr><td>7</td><td>ins</td><td class="num">5</td><td class="num">8</td><td class="num">5</td><td class="num">2</td><td class="num">3</td><td>擴張，搬 4</td></tr>
+<tr><td>8</td><td>del</td><td class="num">4</td><td class="num">8</td><td class="num">1</td><td class="num">0</td><td class="num">−1</td><td></td></tr>
+<tr><td>9</td><td>del</td><td class="num">3</td><td class="num">8</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td>跨過 1/2</td></tr>
+<tr><td>10</td><td>del</td><td class="num">2</td><td class="num">8</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td>剛好 1/4，不縮</td></tr>
+<tr><td>11</td><td>del</td><td class="num">1</td><td class="num">4</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td>1/8 &lt; 1/4 → 收縮，搬 1</td></tr>
+<tr><td>12</td><td>ins</td><td class="num">2</td><td class="num">4</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td>α = 1/2</td></tr></table>
+<p class="more">這份是掃描檔、沒有官方答案；數字由程式計算並列入測試。第 11 步 \(\Phi_{10}=2\)、\(\Phi_{11}=4/2-1=1\)，\(\hat c=2+1-2=1\)，正好是表格中「收縮」那一列。</p>
+<p class="try">互動驗證</p>
+<div data-widget="dynTable" data-ops="IIIIDIIDDDDI"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="stack" data-short="Stack 變形">Stack 變形：MULTIPOP 從 S₀ 開始、CUT</h2>
+<p class="yrs"><span class="yr-tag amort">2017 Q10</span><span class="yr-tag amort">2022 Q7</span></p>
+
+<section class="ex" id="mt-2017-q10">
+<header><span class="id">2017 Q10</span><span class="t">從 S₀ 個開始、結束時 Sₙ 個</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">What is the total cost of executing n of the stack operations PUSH, POP, and MULTIPOP, assuming that the stack begins with S<sub>0</sub> objects and finishes with S<sub>n</sub> objects?</p><p class="zh">stack 一開始有 \(S_0\) 個物件、最後剩 \(S_n\) 個，做 n 個 PUSH、POP、MULTIPOP 的總成本是多少？</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">總成本 \(\le 2n-S_n+S_0\)；若 \(S_0=O(n)\) 則為 \(O(n)\)。</p>
+<p><span class="lbl">Potential</span>\(\Phi\) = stack 中的物件數。\(\Phi(D_0)=S_0\)、\(\Phi(D_n)=S_n\)。PUSH：\(\hat c=1+1=2\)；POP：\(1-1=0\)；MULTIPOP(k)：\(k'-k'=0\)（\(k'=\min(k,s)\)）。
+$$\sum c_i=\sum\hat c_i-\Phi(D_n)+\Phi(D_0)\le 2n-S_n+S_0.$$</p>
+<p class="more">這題 Φ(D<sub>0</sub>) ≠ 0，所以不能直接說 \(\sum c_i\le\sum\hat c_i\)，要把 \(\Phi(D_0)-\Phi(D_n)\) 帶著。相關：<a href="../amortized/exercises.html#ex-16-3-4">課本 16.3-4（同一題）</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="potStack" data-s0="5"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2022-q7">
+<header><span class="id">2022 Q7</span><span class="t">PUSH / POP / CUT（成本 2s），accounting method</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">For a stack S, there are two fundamental stack operations, PUSH(S, x) and POP(S), where PUSH(S, x) pushes object x onto stack S, and POP(S) pops the top of stack S and returns the popped object, while calling POP on an empty stack generates an error. Both functions take O(1) time. Now, we introduce a stack operation CUT(S).<br>
+<code>CUT(S′, S)<br>&nbsp;&nbsp;while not STACK-EMPTY(S)<br>&nbsp;&nbsp;&nbsp;&nbsp;PUSH(S′, S.top())<br>&nbsp;&nbsp;&nbsp;&nbsp;POP(S)<br>&nbsp;&nbsp;return S′</code><br>
+For the stack S with s objects, CUT(S′, S) will cut off all elements from S, and paste them to S′, so after CUT, the stack S has 0 object, and it takes O(2s) time. The actual costs of the operations are PUSH 1, POP 1, CUT 2s. Assume that stack S is empty in the beginning. For a sequence of n PUSH, POP, and CUT operations, please design amortized costs for each of the operations, and use the accounting method to show that the time complexity of the sequence of the operations is O(n).</p><p class="zh">stack 加一個 CUT：把 S 的元素全部搬到 S′，s 個元素花 2s。實際成本 PUSH 1、POP 1、CUT 2s，S 一開始是空的。為每種操作設計 amortized cost，用 accounting method 證明 n 個操作共 \(O(n)\)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">Amortized cost：PUSH = 3、POP = 0、CUT = 0。總成本 \(\le3n=O(n)\)。</p>
+<p><span class="lbl">Credit</span>PUSH 收 $3：$1 付自己，$2 存在被 push 的物件上。<span class="lbl">Invariant</span>stack 中每個物件身上都有 $2 ⇒ 存款 \(\ge 2s\ge0\)。</p>
+<ul>
+  <li>POP：用被 pop 物件身上的 $1 付（剩 $1 沒用到），其他物件不受影響。</li>
+  <li>CUT：每個物件用自己的 $2 付搬移（PUSH 到 S′ + POP），共 \(2s\)，正好付清。</li>
+</ul>
+<p>Invariant 對每一步都成立 ⇒ 存款永不為負 ⇒ \(\sum c_i\le\sum\hat c_i\le3n=O(n)\)。</p>
+<div class="rubric"><b>2022 給分</b>：amortized cost 設計 4%；accounting 證明與複雜度 6%；每錯 −1。官方寫法：k 次 PUSH、m 次 POP 後存款 ≥ 2k − m，CUT 需要 2(k − m) ≤ 2k − m。</div>
+<p class="more">易錯：PUSH 只收 $2 不夠（CUT 每個物件要 $2，PUSH 自己還要 $1）；可以在互動元件把 PUSH 收費改成 2 看存款變負。</p>
+<p class="try">互動驗證</p>
+<div data-widget="cutStack"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="counter" data-short="Binary counter 變形">Binary counter 變形</h2>
+<p class="yrs"><span class="yr-tag amort">2011 Q7</span><span class="yr-tag amort">2018 Q4</span></p>
+
+<section class="ex" id="mt-2011-q7">
+<header><span class="id">2011 Q7</span><span class="t">從 b 個 1 開始，n = Ω(b) 時 O(n)</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose that a counter begins at a number with b 1s in its binary representation, rather than at 0. Show that the cost of performing n INCREMENT operations is O(n) if n = Ω(b). (Do not assume that b is constant.)</p><p class="zh">計數器一開始的二進位表示有 b 個 1（不是從 0 開始）。證明當 \(n=\Omega(b)\) 時，n 次 INCREMENT 的成本是 \(O(n)\)。（b 不能當常數。）</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(\Phi\) = 1 的個數，\(\hat c\le2\) ⇒ \(\sum c_i\le 2n-b_n+b\le2n+b\)；\(n=\Omega(b)\) 即 \(b\le cn\) ⇒ \(\le(2+c)n=O(n)\)。</p>
+<p><span class="lbl">Potential</span>第 i 次 INCREMENT 把 \(t_i\) 個 1 變 0、至多 1 個 0 變 1：\(c_i\le t_i+1\)，\(\Delta\Phi\le1-t_i\)，\(\hat c_i\le2\)。\(\Phi(D_0)=b\)、\(\Phi(D_n)=b_n\ge0\)：
+$$\sum_{i=1}^{n}c_i=\sum\hat c_i-\Phi(D_n)+\Phi(D_0)\le 2n-b_n+b\le2n+b.$$
+Since \(n=\Omega(b)\), \(\exists c&gt;0\) with \(b\le cn\) for large n，所以總成本 \(\le(2+c)n=O(n)\)。∎</p>
+<p class="more">易錯：b 不能當常數丟掉（題目特別提醒）；要寫出 \(b\le cn\) 才能吸收。Accounting 版本：一開始的 b 個 1 身上沒有 credit，補 $b 即可。相關：<a href="../amortized/accounting.html#nonzero">投影片 p.14：初始值 ≠ 0</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="counter"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2018-q4">
+<header><span class="id">2018 Q4</span><span class="t">INCREMENT + RESET，n 個操作 O(n)</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Suppose we wish not only to increment a counter but also to reset it to zero (i.e., make all bits in it 0). Counting the time to examine or modify a bit as Θ(1), show how to implement a counter as an array of bits so that any sequence of n INCREMENT and RESET operations takes time O(n) on an initially zero counter.</p><p class="zh">計數器除了 INCREMENT 還要能 RESET（全部歸零）。檢查或修改一個位元算 \(\Theta(1)\)，說明如何用位元陣列實作，使從 0 開始的任意 n 個 INCREMENT / RESET 共 \(O(n)\)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">記 A.max = 最高位 1 的 index；RESET 只清 A[0..max]。INCREMENT 收 $4、RESET 收 $1，存款不為負 ⇒ \(O(n)\)。</p>
+<pre data-code="INCREMENT(A)">
+i = 0
+while i < A.length and A[i] == 1
+    A[i] = 0;  i = i + 1               // 用 bit 上的 credit 付
+if i < A.length
+    A[i] = 1                           // 收的 $4 之一付這裡
+    if i > A.max  A.max = i            // $1 更新 max
+else A.max = -1                        // overflow
+</pre>
+<pre data-code="RESET(A)">
+for i = 0 to A.max
+    A[i] = 0                           // 用每個位置存的 credit 付
+A.max = -1
+</pre>
+<p><span class="lbl">Accounting</span>INCREMENT 收 $4：$1 把一個 bit 設成 1；$1 存在這個 bit 上，付它之後被清成 0（進位或 RESET）；$1 存給 RESET 檢查這個位置；$1 更新 max。RESET 收 $1（設 max = −1 等常數工作）。</p>
+<p><span class="lbl">Why</span>上次 RESET 以來，0..max 的每個位置都至少被設成 1 一次（max 被設時，下面的位元剛因進位全部經過 1），所以每個位置都有 $1 付 RESET 的檢查。存款永不為負 ⇒ 總成本 \(\le4n=O(n)\)。</p>
+<div class="rubric"><b>2018 給分</b>：只有 pseudocode、沒有成本分析 4%；分析 8%（INCREMENT：set bit / credit / update max / examine 各 $1；RESET $1）；結論 2%。答案鍵文字寫 "$4 (作業筆誤)"，對照給分表是 $4。</div>
+<p class="more">相關：<a href="../amortized/exercises.html#ex-16-2-3">課本 16.2-3（同一題）</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="resetCounter"></div>
+</div></details>
+</section>
+
+</article>
+<footer class="site">題目取自 2011–2025 許健平老師「計算方法設計 / Algorithms」期中考卷（<code>exams/</code>），官方答案與給分標準引用自附答案的考卷；其餘詳解為自行整理，dynamic table 等數值由 <code>assets/midterm.js</code> 計算並在 <code>tests/run.js</code> 檢查。</footer>
+</main>
+</div>
+<script>
+  document.getElementById('toggle-all').addEventListener('click', function () {
+    var all = document.querySelectorAll('.ex details');
+    var open = this.textContent === '全部展開';
+    all.forEach(function (d) { d.open = open; });
+    this.textContent = open ? '全部收合' : '全部展開';
+  });
+</script>
+</body>
+</html>

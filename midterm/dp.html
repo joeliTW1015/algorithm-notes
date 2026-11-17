@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DP 考古題 · 期中考古題 Ch14–16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/algos.js"></script>
+<script defer src="../assets/greedy.js"></script>
+<script defer src="../assets/midterm.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-mcm.js"></script>
+<script defer src="../assets/w-lcs.js"></script>
+<script defer src="../assets/w-obst.js"></script>
+<script defer src="../assets/w-rod.js"></script>
+<script defer src="../assets/w-practice.js"></script>
+<script defer src="../assets/w-coin.js"></script>
+<script defer src="../assets/w-knap.js"></script>
+<script defer src="../assets/w-gex.js"></script>
+<script defer src="../assets/w-midterm.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="midterm" data-page="dp"></aside>
+<main>
+<article class="prose">
+
+<p class="eyebrow">期中考古題 · Ch14 Dynamic Programming（舊卷標 Ch15）</p>
+<h1>DP 考古題</h1>
+<p class="lede">2011–2025 期中考裡所有 DP 題，<strong>同題型合併</strong>，標出考過的年份。每題列出<strong>考卷英文原題</strong>（附中譯，可隱藏），詳解先放<strong>考試可以直接寫的答案</strong>，再放理由、易錯點和互動驗證。數字題（填表）的表格都由網站的演算法程式算出並經測試對照答案鍵。</p>
+<p><button type="button" id="toggle-all">全部展開</button></p>
+
+<div class="note exam"><span class="tag">作答格式</span>考卷開頭固定寫：<em>If you design an algorithm, you must have a pseudo code … and analyze the time complexity in the worst case.</em>
+<ul>
+  <li>設計 DP：<strong>定義子問題 → 遞迴式（含 base case）→ pseudocode（加註解）→ time / space</strong>。</li>
+  <li>填表題：<strong>兩張表都要寫</strong>（m 與 s、c 與箭頭、e 與 root），加最後答案；2022 給分「無計算過程只得 4 分、最後答案錯 0 分」。</li>
+  <li>是非 / 觀念題：先寫結論，再寫理由；「只寫 True/False 不給分」。</li>
+</ul></div>
+
+<!-- ======================================================= -->
+<h2 id="elements" data-short="DP 兩要素">DP 兩要素 + 不能用 DP 的例子</h2>
+<p class="yrs"><span class="yr-tag hot">4 次</span><span class="yr-tag dp">2012 Q10</span><span class="yr-tag dp">2013 Q10</span><span class="yr-tag dp">2022 Q1</span><span class="yr-tag dp">2023 Q9</span></p>
+
+<section class="ex" id="mt-dp-elements">
+<header><span class="id">2012·13·22·23</span><span class="t">Two key ingredients of DP</span></header>
+<div class="q"><p class="orig" lang="en">What are the two key properties that an optimization problem must have in order for dynamic programming to apply? Please give an example that the dynamic programming cannot be applied.</p><p class="zh">一個最佳化問題要具備哪兩個關鍵性質，才能用動態規劃？請舉一個不能用動態規劃的例子。</p>
+<p class="small muted">2012 只問兩要素（5%）；2013、2022 加問反例（10%）；2023 問 "two key properties of the problems that DP can solve efficiently"（6%）。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">(1) Optimal substructure　(2) Overlapping subproblems。反例：longest simple path。</p>
+<ol>
+  <li><strong>Optimal substructure</strong>：an optimal solution to the problem contains within it optimal solutions to subproblems.（問題的最佳解裡，子問題的解也是最佳的 → 可以寫成遞迴式。）</li>
+  <li><strong>Overlapping subproblems</strong>：a recursive algorithm revisits the same subproblem over and over; the number of <em>distinct</em> subproblems is small (polynomial).（同一個子問題被重複計算 → 存表只算一次。）</li>
+</ol>
+<p><span class="lbl">Example</span><strong>Longest simple path</strong>（unweighted directed graph）沒有 optimal substructure：</p>
+<pre class="ascii">
+ q ⇄ r
+ ↕   ↕      q→r→t 是 q 到 t 的最長簡單路徑，
+ s ⇄ t      但子路徑 q→r 不是 q 到 r 的最長路徑（q→s→t→r 更長），
+            r→t 也不是 r 到 t 的最長路徑（r→q→s→t 更長）。
+</pre>
+<p><span class="lbl">Why</span>兩個子問題的最長路徑會<strong>共用頂點</strong>（q→s→t→r 和 r→q→s→t 都用到 s、t），接起來 q→s→t→r→q→s→t 不是 simple path——子問題不 independent，最佳解不能由子問題最佳解組成，所以 DP 不能用。對照：<em>shortest</em> path 的子路徑一定是最短的（cut-and-paste），DP 可用。</p>
+<div class="rubric"><b>2022 給分</b>：overlapping 3%、optimal substructure 3%、反例 4%（<b>要解釋為什麼不能用</b>）。答案鍵另舉 n-queen，但 n-queen 不是最佳化問題，建議寫 longest simple path。</div>
+<p class="more">易錯：只寫名稱不寫意思會被扣分；反例只說「NP-hard」不算解釋。2013 答案鍵把兩個性質的說明寫成同一段（筆誤）。</p>
+<p class="more">相關：<a href="../dp/elements.html">何時用 DP：兩大性質</a>、<a href="greedy.html#mt-2011-q5">Greedy 的兩性質（2011 Q5）</a>。</p>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="mcm" data-short="Matrix-chain 填表">Matrix-chain：bottom-up 填 m、s 表</h2>
+<p class="yrs"><span class="yr-tag hot">4 次</span><span class="yr-tag dp">2012 Q11</span><span class="yr-tag dp">2022 Q3</span><span class="yr-tag dp">2023 Q11</span><span class="yr-tag dp">2025 Q6</span></p>
+<div class="note key"><span class="tag">固定寫法</span>
+$$m[i,j]=\begin{cases}0 & i=j\\ \displaystyle\min_{i\le k<j}\bigl\{m[i,k]+m[k+1,j]+p_{i-1}p_kp_j\bigr\} & i<j\end{cases}\qquad s[i,j]=\text{達到最小的 }k$$
+依 chain length \(l=2,3,\dots,n\) 由短到長填。時間 \(\Theta(n^3)\)、空間 \(\Theta(n^2)\)。最後用 s 遞迴印出括號。</div>
+
+<pre data-code="MATRIX-CHAIN-ORDER(p, n)">
+let m[1:n, 1:n] and s[1:n-1, 2:n] be new tables
+for i = 1 to n
+    m[i, i] = 0                        // chain length 1
+for l = 2 to n                         // l = chain length
+    for i = 1 to n - l + 1
+        j = i + l - 1
+        m[i, j] = ∞
+        for k = i to j - 1             // try every split
+            q = m[i, k] + m[k+1, j] + p[i-1]·p[k]·p[j]
+            if q < m[i, j]
+                m[i, j] = q;  s[i, j] = k
+return m and s
+</pre>
+
+<section class="ex" id="mt-2025-q6">
+<header><span class="id">2025 Q6</span><span class="t">A1A2A3A4，要 pseudocode + m、s 表</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">Please use the bottom-up approach of Dynamic Programming to find the optimal solution of the following matrix-chain problem A1A2A3A4, where A1 = (10 × 15), A2 = (15 × 8), A3 = (8 × 4), and A4 = (4 × 10). (You need to show the pseudocode and the final result with the two-dimensional tables m[i, j] and s[i, j].)</p><p class="zh">用 bottom-up DP 求矩陣鏈 \(A_1A_2A_3A_4\) 的最佳解，\(A_1=10\times15\)、\(A_2=15\times8\)、\(A_3=8\times4\)、\(A_4=4\times10\)。要寫 pseudocode，以及最後的 \(m[i,j]\)、\(s[i,j]\) 兩張表。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(p=\langle10,15,8,4,10\rangle\)，最少 1480 次，順序 \(((A_1(A_2A_3))A_4)\)。</p>
+<p><span class="lbl">Pseudocode</span>寫上面的 MATRIX-CHAIN-ORDER（這題<strong>要寫</strong>）。</p>
+<div class="two tables"><table class="plain small mt-tri"><tr><th>m[i, j]</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th></tr><tr><th>i=1</th><td class="num">0</td><td class="num">1200</td><td class="num">1080</td><td class="num">1480</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">0</td><td class="num">480</td><td class="num">1080</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">320</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td></tr></table><table class="plain small mt-tri"><tr><th>s[i, j]</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th></tr><tr><th>i=1</th><td class="num">1</td><td class="num">1</td><td class="num">3</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">2</td><td class="num">3</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">3</td></tr></table></div>
+<details class="calc-d"><summary>每一格的計算過程</summary><ul class="calc"><li>\(m[1,2]\) = min{ 0+0+10·15·8=1200 } = <b>1200</b>（k = 1）</li><li>\(m[2,3]\) = min{ 0+0+15·8·4=480 } = <b>480</b>（k = 2）</li><li>\(m[3,4]\) = min{ 0+0+8·4·10=320 } = <b>320</b>（k = 3）</li><li>\(m[1,3]\) = min{ 0+480+10·15·4=1080，1200+0+10·8·4=1520 } = <b>1080</b>（k = 1）</li><li>\(m[2,4]\) = min{ 0+320+15·8·10=1520，480+0+15·4·10=1080 } = <b>1080</b>（k = 3）</li><li>\(m[1,4]\) = min{ 0+1080+10·15·10=2580，1200+320+10·8·10=2320，1080+0+10·4·10=1480 } = <b>1480</b>（k = 3）</li></ul></details>
+<p>最佳順序 <b>((A1(A2A3))A4)</b>，最少 <b>1480</b> 次純量乘法。</p>
+<p class="more">這題的矩陣就是 2012 Q11 的前四個，m、s 表是 2012 那張的左上角。</p>
+<p class="try">互動驗證</p>
+<div data-widget="mcmBottomUp" data-dims="10 15 8 4 10"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2012-q11">
+<header><span class="id">2012 Q11</span><span class="t">A1…A5，求最佳順序與成本</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Please use the bottom-up approach of Dynamic Programming to find the optimal order, and its cost, for computing the product A1A2A3A4A5, where A1 = (10 × 15), A2 = (15 × 8), A3 = (8 × 4), A4 = (4 × 10), and A5 = (10 × 20). (You need to show your answer in two-dimensional tables.)</p><p class="zh">用 bottom-up DP 求 \(A_1\cdots A_5\) 的最佳乘法順序與成本（維度如題）。答案要用二維表格呈現。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(p=\langle10,15,8,4,10,20\rangle\)，最少 2680 次，順序 \(((A_1(A_2A_3))(A_4A_5))\)。</p>
+<div class="two tables"><table class="plain small mt-tri"><tr><th>m[i, j]</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">0</td><td class="num">1200</td><td class="num">1080</td><td class="num">1480</td><td class="num">2680</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">0</td><td class="num">480</td><td class="num">1080</td><td class="num">2480</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">320</td><td class="num">1440</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">800</td></tr><tr><th>i=5</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td></tr></table><table class="plain small mt-tri"><tr><th>s[i, j]</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">1</td><td class="num">1</td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">2</td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">4</td></tr></table></div>
+<details class="calc-d"><summary>每一格的計算過程</summary><ul class="calc"><li>\(m[1,2]\) = min{ 0+0+10·15·8=1200 } = <b>1200</b>（k = 1）</li><li>\(m[2,3]\) = min{ 0+0+15·8·4=480 } = <b>480</b>（k = 2）</li><li>\(m[3,4]\) = min{ 0+0+8·4·10=320 } = <b>320</b>（k = 3）</li><li>\(m[4,5]\) = min{ 0+0+4·10·20=800 } = <b>800</b>（k = 4）</li><li>\(m[1,3]\) = min{ 0+480+10·15·4=1080，1200+0+10·8·4=1520 } = <b>1080</b>（k = 1）</li><li>\(m[2,4]\) = min{ 0+320+15·8·10=1520，480+0+15·4·10=1080 } = <b>1080</b>（k = 3）</li><li>\(m[3,5]\) = min{ 0+800+8·4·20=1440，320+0+8·10·20=1920 } = <b>1440</b>（k = 3）</li><li>\(m[1,4]\) = min{ 0+1080+10·15·10=2580，1200+320+10·8·10=2320，1080+0+10·4·10=1480 } = <b>1480</b>（k = 3）</li><li>\(m[2,5]\) = min{ 0+1440+15·8·20=3840，480+800+15·4·20=2480，1080+0+15·10·20=4080 } = <b>2480</b>（k = 3）</li><li>\(m[1,5]\) = min{ 0+2480+10·15·20=5480，1200+1440+10·8·20=4240，1080+800+10·4·20=2680，1480+0+10·10·20=3480 } = <b>2680</b>（k = 3）</li></ul></details>
+<p>最佳順序 <b>((A1(A2A3))(A4A5))</b>，最少 <b>2680</b> 次純量乘法。</p>
+<div class="rubric"><b>2012 給分</b>：方法 4、計算 3、解答 3。數值與官方答案鍵相同（m[1,5] = 2680）。</div>
+<p class="try">互動驗證</p>
+<div data-widget="mcmBottomUp" data-dims="10 15 8 4 10 20"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2022-q3">
+<header><span class="id">2022 Q3</span><span class="t">A1…A5 = 5×4, 4×6, 6×4, 4×5, 5×2</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Please use the bottom-up approach of Dynamic Programming to find the optimal order, and its cost, for computing the product A1A2A3A4A5, where A1 = (5 × 4), A2 = (4 × 6), A3 = (6 × 4), A4 = (4 × 5), and A5 = (5 × 2). (You need to show your computation steps.)</p><p class="zh">用 bottom-up DP 求 \(A_1\cdots A_5\)（\(5\times4,\ 4\times6,\ 6\times4,\ 4\times5,\ 5\times2\)）的最佳順序與成本，要寫出計算步驟。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(p=\langle5,4,6,4,5,2\rangle\)，最少 176 次，順序 \((A_1(A_2(A_3(A_4A_5))))\)。</p>
+<div class="two tables"><table class="plain small mt-tri"><tr><th>m[i, j]</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">0</td><td class="num">120</td><td class="num">176</td><td class="num">276</td><td class="num">176</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">0</td><td class="num">96</td><td class="num">176</td><td class="num">136</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">120</td><td class="num">88</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">40</td></tr><tr><th>i=5</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td></tr></table><table class="plain small mt-tri"><tr><th>s[i, j]</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">2</td><td class="num">3</td><td class="num">2</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">4</td></tr></table></div>
+<details class="calc-d"><summary>每一格的計算過程</summary><ul class="calc"><li>\(m[1,2]\) = min{ 0+0+5·4·6=120 } = <b>120</b>（k = 1）</li><li>\(m[2,3]\) = min{ 0+0+4·6·4=96 } = <b>96</b>（k = 2）</li><li>\(m[3,4]\) = min{ 0+0+6·4·5=120 } = <b>120</b>（k = 3）</li><li>\(m[4,5]\) = min{ 0+0+4·5·2=40 } = <b>40</b>（k = 4）</li><li>\(m[1,3]\) = min{ 0+96+5·4·4=176，120+0+5·6·4=240 } = <b>176</b>（k = 1）</li><li>\(m[2,4]\) = min{ 0+120+4·6·5=240，96+0+4·4·5=176 } = <b>176</b>（k = 3）</li><li>\(m[3,5]\) = min{ 0+40+6·4·2=88，120+0+6·5·2=180 } = <b>88</b>（k = 3）</li><li>\(m[1,4]\) = min{ 0+176+5·4·5=276，120+120+5·6·5=390，176+0+5·4·5=276 } = <b>276</b>（k = 1）</li><li>\(m[2,5]\) = min{ 0+88+4·6·2=136，96+40+4·4·2=168，176+0+4·5·2=216 } = <b>136</b>（k = 2）</li><li>\(m[1,5]\) = min{ 0+136+5·4·2=176，120+88+5·6·2=268，176+40+5·4·2=256，276+0+5·5·2=326 } = <b>176</b>（k = 1）</li></ul></details>
+<p>最佳順序 <b>(A1(A2(A3(A4A5))))</b>，最少 <b>176</b> 次純量乘法。</p>
+<div class="rubric"><b>2022 給分</b>：最後答案錯 0%；沒有計算過程 4%；每錯一處 −1。要寫 pseudocode 或詳細步驟。</div>
+<p class="more">m[1,4] = 276 在 k = 1 和 k = 3 平手，s 寫哪個都對（程式取第一個）。最後一步 m[1,5] 的四個候選是 176、268、256、326。</p>
+<p class="try">互動驗證</p>
+<div data-widget="mcmBottomUp" data-dims="5 4 6 4 5 2"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2023-q11">
+<header><span class="id">2023 Q11</span><span class="t">A1…A5 = 5×12, 12×5, 5×10, 10×3, 3×5</span><span class="yrs"><span class="yr-tag">12%</span></span></header>
+<div class="q"><p class="orig" lang="en">Please use the bottom-up dynamic programming approach to find the optimal solution for evaluating the multiplication order of the matrix-chain multiplication A<sub>1</sub> × A<sub>2</sub> × A<sub>3</sub> × A<sub>4</sub> × A<sub>5</sub>, where A<sub>1</sub> = 5 × 12, A<sub>2</sub> = 12 × 5, A<sub>3</sub> = 5 × 10, A<sub>4</sub> = 10 × 3, and A<sub>5</sub> = 3 × 5. You don’t need to show the pseudocode, but you must show the values of the two tables m[1..5, 1..5] and s[1..4, 2..5]. The table m[i, j] stores the minimum number of multiplications needed to compute the matrix chain from A<sub>i</sub> to A<sub>j</sub>. The table s[i, j] keeps the index k, achieving the optimal cost of computing m[i, j].</p><p class="zh">用 bottom-up DP 求 \(A_1\cdots A_5\) 的乘法順序。不用寫 pseudocode，但一定要寫出 \(m[1..5,1..5]\) 與 \(s[1..4,2..5]\) 兩張表；\(m[i,j]\) 是算 \(A_i..A_j\) 的最少乘法數，\(s[i,j]\) 記錄達到最佳的 k。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(p=\langle5,12,5,10,3,5\rangle\)，最少 585 次，順序 \(((A_1(A_2(A_3A_4)))A_5)\)。</p>
+<div class="two tables"><table class="plain small mt-tri"><tr><th>m[i, j]</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">0</td><td class="num">300</td><td class="num">550</td><td class="num">510</td><td class="num">585</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">0</td><td class="num">600</td><td class="num">330</td><td class="num">510</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">150</td><td class="num">225</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td><td class="num">150</td></tr><tr><th>i=5</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0</td></tr></table><table class="plain small mt-tri"><tr><th>s[i, j]</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">4</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">2</td><td class="num">2</td><td class="num">4</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">3</td><td class="num">4</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">4</td></tr></table></div>
+<details class="calc-d"><summary>每一格的計算過程</summary><ul class="calc"><li>\(m[1,2]\) = min{ 0+0+5·12·5=300 } = <b>300</b>（k = 1）</li><li>\(m[2,3]\) = min{ 0+0+12·5·10=600 } = <b>600</b>（k = 2）</li><li>\(m[3,4]\) = min{ 0+0+5·10·3=150 } = <b>150</b>（k = 3）</li><li>\(m[4,5]\) = min{ 0+0+10·3·5=150 } = <b>150</b>（k = 4）</li><li>\(m[1,3]\) = min{ 0+600+5·12·10=1200，300+0+5·5·10=550 } = <b>550</b>（k = 2）</li><li>\(m[2,4]\) = min{ 0+150+12·5·3=330，600+0+12·10·3=960 } = <b>330</b>（k = 2）</li><li>\(m[3,5]\) = min{ 0+150+5·10·5=400，150+0+5·3·5=225 } = <b>225</b>（k = 4）</li><li>\(m[1,4]\) = min{ 0+330+5·12·3=510，300+150+5·5·3=525，550+0+5·10·3=700 } = <b>510</b>（k = 1）</li><li>\(m[2,5]\) = min{ 0+225+12·5·5=525，600+150+12·10·5=1350，330+0+12·3·5=510 } = <b>510</b>（k = 4）</li><li>\(m[1,5]\) = min{ 0+510+5·12·5=810，300+225+5·5·5=650，550+150+5·10·5=950，510+0+5·3·5=585 } = <b>585</b>（k = 4）</li></ul></details>
+<p>最佳順序 <b>((A1(A2(A3A4)))A5)</b>，最少 <b>585</b> 次純量乘法。</p>
+<p class="more">這份沒有官方答案，數字由程式計算並列入測試。</p>
+<p class="try">互動驗證</p>
+<div data-widget="mcmBottomUp" data-dims="5 12 5 10 3 5"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2023-q10">
+<header><span class="id">2023 Q10</span><span class="t">括號數 P(n) 用 substitution 證 Ω(3ⁿ)</span><span class="yrs"><span class="yr-tag">8%</span></span></header>
+<div class="q"><p class="orig" lang="en">Use the substitution method to show that the solution to the recurrence (1) is Ω(3ⁿ).
+$$P(n)=\begin{cases}1 & n=1\\ \sum_{k=1}^{n-1}P(k)P(n-k) & n\ge 2\end{cases}\quad(1)$$</p><p class="zh">用 substitution method 證明遞迴式 (1)（矩陣鏈的括號數）的解是 \(\Omega(3^n)\)。</p>
+<p class="small muted">掃描檔的指數被筆跡蓋住，看起來是 3ⁿ；課本 14.2-3 是 \(\Omega(2^n)\)。下面兩個都證。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">Claim：\(P(n)\ge c\,3^n\) for all \(n\ge1\)，取 \(c=1/18\)。故 \(P(n)=\Omega(3^n)\)。</p>
+<p><span class="lbl">Base</span>\(n=1\ldots6\)：\(P=1,1,2,5,14,42\ \ge\ 3^n/18=0.17,\,0.5,\,1.5,\,4.5,\,13.5,\,40.5\)。✓</p>
+<p><span class="lbl">Induction</span>Let \(n\ge7\) and assume \(P(k)\ge c3^k\) for \(1\le k<n\)。和式中所有項 \(\ge0\)，只留 \(k=1,2,3,n-3,n-2,n-1\) 六項（\(n\ge7\) 時互不相同），用 \(P(1)=P(2)=1,\ P(3)=2\)：
+$$P(n)\ \ge\ 2P(n-1)+2P(n-2)+4P(n-3)\ \ge\ c\,3^{n-3}(2\cdot9+2\cdot3+4)=28c\,3^{n-3}\ \ge\ 27c\,3^{n-3}=c\,3^n.$$
+Hence \(P(n)\ge \frac{1}{18}3^n\) for all \(n\ge1\)。∎</p>
+<p><span class="lbl">若題目是 2ⁿ</span>Claim \(P(n)\ge 2^{n-2}\)（\(c=1/4\)）。Base \(n=1,2\)：\(1\ge\frac12,\ 1\ge1\)。\(n\ge3\)：取 \(k=1\) 與 \(k=n-1\) 兩項，\(P(n)\ge 2P(n-1)\ge 2\cdot2^{n-3}=2^{n-2}\)。∎</p>
+<p class="more">易錯：直接代 \(\sum c3^k\cdot c3^{n-k}=(n-1)c^23^n\) 需要 \((n-1)c\ge1\)，只對大 n 成立，小 n 的 base case 要另外驗——沒處理就是不完整的證明。實際上 \(P(n)=C_{n-1}=\Theta(4^n/n^{3/2})\)。</p>
+<p class="more">相關：<a href="../dp/exercises.html#ex-14-2-3">課本 14.2-3</a>、<a href="../dp/matrix-chain.html">Matrix-chain 主題頁</a>。</p>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2017-q6">
+<header><span class="id">2017 Q6</span><span class="t">改成「最多」乘法次數，還有 optimal substructure 嗎？</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Consider a variant of the matrix-chain multiplication problem in which the goal is to parenthesize the sequence of matrices so as to maximize, rather than minimize, the number of scalar multiplications. Does this problem exhibit optimal substructure? Please explain in detail.</p><p class="zh">矩陣鏈乘的變形：加括號使純量乘法次數<strong>最多</strong>而不是最少。這個問題有 optimal substructure 嗎？請詳細說明。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">Yes，仍有 optimal substructure：\(m[i,j]=\max_{i\le k<j}\{m[i,k]+m[k+1,j]+p_{i-1}p_kp_j\}\)。</p>
+<p><span class="lbl">Proof</span>設 \(A_i\cdots A_j\) 的最大括號法在 k 切開，成本 \(=\text{cost}(A_i..A_k)+\text{cost}(A_{k+1}..A_j)+p_{i-1}p_kp_j\)。最後一項只跟 k 有關；左右兩段的括號法互不影響（independent）。若左段不是 \(A_i..A_k\) 的<em>最大</em>括號法，把它換成最大的（cut-and-paste），總成本變大，與「原本最大」矛盾。右段同理。∎</p>
+<p class="more">對照：longest simple path 換成「最大」就失去 optimal substructure，因為子問題共用頂點；矩陣鏈的左右兩段沒有共用資源，所以 max / min 都可以。</p>
+<p class="more">相關：<a href="../dp/exercises.html#ex-14-3-3">課本 14.3-3</a>。</p>
+<p class="try">互動驗證（最大化版本）</p>
+<div data-widget="mcmBottomUp" data-dims="10 15 8 4 10" data-mode="max"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="lis" data-short="LIS / 壽司">LIS 與壽司：以 i 結尾的 O(n²) DP</h2>
+<p class="yrs"><span class="yr-tag hot">4 次</span><span class="yr-tag dp">2011 Q3</span><span class="yr-tag dp">2017 Q7</span><span class="yr-tag dp">2021 Q1</span><span class="yr-tag dp">2025 Q7</span></p>
+
+<section class="ex" id="mt-lis">
+<header><span class="id">2011·21·25</span><span class="t">Longest monotonically increasing subsequence, O(n²)</span></header>
+<div class="q"><p class="orig" lang="en">Give an O(n²)-time algorithm to find the longest monotonically increasing subsequence of a sequence of n numbers.</p><p class="zh">給 \(O(n^2)\) 演算法，找出 n 個數的序列中最長的單調遞增子序列。（2021 版：A 是相異整數、只求長度、不必連續，例如 11, 17, 5, 8, 6, 4, 7, 12, 3 的 LIS 是 5, 6, 7, 12；要分析最壞時間與空間。）</p>
+<p class="small muted">2021 版：A[1..n] 是 distinct integers，只要長度；例子 11, 17, 5, 8, 6, 4, 7, 12, 3 → 5, 6, 7, 12；要分析 worst-case time 與 space（15%）。2011（10%）、2025（12%）同上題。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(L[i]\) = 以 \(A[i]\) <strong>結尾</strong>的最長遞增子序列長度；\(L[i]=1+\max(\{0\}\cup\{L[j]: j<i,\ A[j]<A[i]\})\)，答案 \(\max_i L[i]\)。Time \(O(n^2)\)、space \(O(n)\)。</p>
+<pre data-code="LIS(A, n)">
+for i = 1 to n
+    L[i] = 1;  prev[i] = NIL              // A[i] 自己一個
+    for j = 1 to i - 1
+        if A[j] < A[i] and L[j] + 1 > L[i]  // 接在 A[j] 後面
+            L[i] = L[j] + 1;  prev[i] = j
+best = argmax over i of L[i]              // O(n)
+// 印出序列：從 best 沿 prev 往回走
+return L[best]
+</pre>
+<p><span class="lbl">Time</span>內圈跑 \(i-1\) 次：\(\sum_{i=1}^{n}(i-1)=\frac{n(n-1)}{2}=O(n^2)\)；找最大值 \(O(n)\)。共 \(O(n^2)\)。<span class="lbl">Space</span>L、prev 兩個陣列 \(O(n)\)。</p>
+<p><span class="lbl">Example</span>A = 11, 17, 5, 8, 6, 4, 7, 12, 3 → L = 1, 2, 1, 2, 2, 1, 3, 4, 1，最大 4：5, 6, 7, 12。</p>
+<p class="more">易錯：定義成「前 i 個的 LIS 長度」不知道最後一個數是誰，無法判斷能不能接——一定要「以 i 結尾」。加分：維護 tails 陣列 + binary search 可做到 \(O(n\lg n)\)。</p>
+<p class="more">相關：<a href="../dp/practice.html#lis">Practice：LIS</a>、<a href="../dp/exercises.html#ex-14-4-5">課本 14.4-5</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="incSubseq" data-a="11 17 5 8 6 4 7 12 3"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2017-q7">
+<header><span class="id">2017 Q7</span><span class="t">壽司：價格遞增、總價最大</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">Peter is an owner of a Japanese sushi restaurant and today he invites you for dinner at his restaurant. In front of you are n sushi dishes that are arranged in a line. All dishes are different and they have different costs. Peter hopes that you can select the dishes you want, starting from the left to the right. However, there is a further restriction: when you select a dish, say A, the next dish you can select must cost higher than A. Design an O(n<sup>2</sup>)-time algorithm to select the dishes so as to maximize the total costs. (You need to give the algorithm and analysis the time complexity step by step in your algorithm.)</p><p class="zh">n 盤價格各不相同的壽司排成一列，由左到右挑，下一盤一定要比上一盤貴。設計 \(O(n^2)\) 演算法讓總價最大，並逐步分析時間。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(S[i]\) = 最後一盤是第 i 盤時的最大總價；\(S[i]=c_i+\max(\{0\}\cup\{S[j]:j<i,\ c_j<c_i\})\)，答案 \(\max_i S[i]\)，\(O(n^2)\)。</p>
+<pre data-code="MAX-SUSHI(c, n)">
+for i = 1 to n                            // n 次
+    S[i] = c[i];  prev[i] = NIL           // 只拿第 i 盤
+    for j = 1 to i - 1                    // i-1 次
+        if c[j] < c[i] and S[j] + c[i] > S[i]
+            S[i] = S[j] + c[i];  prev[i] = j
+k = argmax over i of S[i]                 // O(n)
+output dishes by following prev from k    // O(n)
+</pre>
+<p><span class="lbl">Time</span>雙迴圈 \(\sum(i-1)=n(n-1)/2=O(n^2)\)，找最大與回溯 \(O(n)\)，合計 \(O(n^2)\)。</p>
+<p class="more">就是 LIS 把「長度 +1」換成「價格 +c<sub>i</sub>」。相關：<a href="../dp/practice.html#sushi">Practice：壽司（Lecture 14-1）</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="incSubseq" data-mode="sum" data-a="3 9 2 5 7 4 8"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="linear" data-short="一維計數 DP">一維 DP：樓梯、鋪磚、不相鄰最大和</h2>
+<p class="yrs"><span class="yr-tag hot">4 次</span><span class="yr-tag dp">2013 Q12</span><span class="yr-tag dp">2018 Q5</span><span class="yr-tag dp">2020 Q1</span><span class="yr-tag dp">2020 Q3</span><span class="yr-tag dp">2025 Q5</span></p>
+<div class="note key"><span class="tag">套路</span>看<strong>最後一步</strong>（最後一階走幾步 / 最左一欄怎麼鋪 / 最後一個選不選），把所有可能分成互斥的幾類，每一類剩下的就是更小的同型問題。</div>
+
+<section class="ex" id="mt-stairs">
+<header><span class="id">2013 Q12 · 2025 Q5</span><span class="t">爬樓梯：一次 1、2 或 3 階</span><span class="yrs"><span class="yr-tag">10–12%</span></span></header>
+<div class="q"><p class="orig" lang="en">There is a staircase with n steps. Your friend, Jack, wants to count how many different ways he can walk up this staircase. Because John is quite tall, he can take one, two, or three steps in a single move. Let F<sub>k</sub> denote the number of ways John can walk up a staircase with k steps. Derive a recurrence for F<sub>k</sub>, and show that F<sub>n</sub> can be computed in O(n) time.</p><p class="zh">n 階樓梯，一步可以走 1、2 或 3 階。令 \(F_k\) 為走上 k 階的方法數，推出 \(F_k\) 的遞迴式，並說明 \(F_n\) 可以在 \(O(n)\) 算出。（題目中 Jack / John 是同一人。）</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(F_0=1,\ F_1=1,\ F_2=2,\ \ F_k=F_{k-1}+F_{k-2}+F_{k-3}\ (k\ge3)\)；由小到大填表 \(O(n)\)。</p>
+<p><span class="lbl">Why</span>依<strong>最後一步</strong>走 1、2、3 階分三類（互斥且涵蓋全部）：之前分別要先到第 \(k-1,k-2,k-3\) 階。</p>
+<pre data-code="STAIRS(n)">
+let F[0:n] be a new array
+F[0] = 1;  F[1] = 1;  F[2] = 2          // base cases
+for k = 3 to n
+    F[k] = F[k-1] + F[k-2] + F[k-3]     // 最後一步走 1 / 2 / 3 階
+return F[n]
+</pre>
+<p><span class="lbl">Time</span>迴圈 \(n-2\) 次、每次 \(O(1)\) → \(O(n)\)（只留三個變數則空間 \(O(1)\)）。F = 1, 1, 2, 4, 7, 13, 24, 44, …</p>
+<div class="rubric"><b>2013 給分</b>：base case 2%、遞迴式到 6%、說明 O(n) 到 10%。</div>
+<p class="more">易錯：直接遞迴不存表是 \(\Theta(1.84^n)\)（tribonacci 成長率），題目要的是「存表 → O(n)」。相關：<a href="../dp/practice.html#stairs">Practice：爬樓梯</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="stairs"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-tiling">
+<header><span class="id">2018 Q5 · 2020 Q3</span><span class="t">k × n 棋盤用 k×1 長條鋪滿</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Consider a chessboard of size k × n. How many ways are there to cover the chessboard completely with n rectangular bars, each of size k × 1 or 1 × k? For instance, when k = 2, n = 3, there are three different ways: (a) cover the leftmost column by a vertical bar, and the remaining region by two horizontal bars; (b) cover the rightmost column by a vertical bar, and the remaining region by two horizontal bars; or (c) cover each column with a vertical bar. Design an O(n)-time algorithm to compute the desired answer for any input k and n.</p><p class="zh">用 n 條 \(k\times1\) 或 \(1\times k\) 的長條鋪滿 \(k\times n\) 棋盤有幾種方法？例如 k = 2、n = 3 有 3 種。設計 \(O(n)\) 演算法。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(f(x)=1\ (0\le x<k)\)，\(f(x)=f(x-1)+f(x-k)\ (x\ge k)\)；\(k=1\) 時答案 1。填表 \(O(n)\)。k = 2, n = 3：f = 1, 1, 2, 3 → 3。</p>
+<p><span class="lbl">Why</span>看最左一欄：(a) 一條<strong>直的</strong> k×1 蓋住整欄 → 剩 \(k\times(x-1)\)；(b) 否則左上角是一條橫的 1×k，它下面的格子也只能放橫條 → k 條橫條疊成 k×k 方塊 → 剩 \(k\times(x-k)\)。</p>
+<pre data-code="TILING(k, n)">
+if k == 1 return 1                      // 直條 = 橫條 = 1×1
+let f[0:n] be a new array
+for x = 0 to min(n, k - 1)
+    f[x] = 1                            // 寬度 < k：只能全部直放
+for x = k to n
+    f[x] = f[x-1] + f[x-k]              // 最左一欄：直條 / k 條橫條
+return f[n]
+</pre>
+<p><span class="lbl">Time</span>兩個迴圈共 \(n+1\) 次、每次 \(O(1)\) → \(O(n)\)。</p>
+<div class="rubric"><b>2018 給分</b>：不是 O(n) 的演算法 0 分；觀念正確、每個錯誤 −1~2。</div>
+<p class="more"><strong>答案鍵錯誤</strong>：2020 答案設 dp[0] = 0、dp[1] = 1，k = 2、n = 3 會算出 2（應為 3）——base case 應是 \(f(0)=1\)（空棋盤有一種鋪法）。2018 答案也設 A[0] = 0，但另外硬設 A[k] = 2 才湊對。</p>
+<p class="more">k = 2 就是 Fibonacci。相關：<a href="../dp/practice.html#tiling">作業 2：鋪磚</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="tiling"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2020-q1">
+<header><span class="id">2020 Q1</span><span class="t">不相鄰元素的最大和，O(N)</span><span class="yrs"><span class="yr-tag">12%</span></span></header>
+<div class="q"><p class="orig" lang="en">Design an O(N) algorithm to solve the following problem. Given an array A of length N, which consists of positive integers. A subset of A is called valid if any two elements in the subset are not adjacent in A. Among all valid subsets of A, find the one with the maximum sum. The algorithm only needs to return the sum, not the actual subset. For example, if N = 7 and A = [3, 5, 3, 1, 2, 5, 1], the algorithm should return 11 since among all valid subsets, {A<sub>1</sub>, A<sub>3</sub>, A<sub>6</sub>} and {A<sub>2</sub>, A<sub>4</sub>, A<sub>6</sub>} both have the maximum sum 11. (Hint: This problem can be solved using dynamic programming. Define the state dp[i] as the answer for the subarray A[1] … A[i].)</p><p class="zh">正整數陣列 A，子集合中任兩個元素在 A 裡都不相鄰才合法。求合法子集合的最大總和（只要回傳總和），\(O(N)\)。提示：dp[i] = A[1..i] 的答案。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(dp[0]=0,\ dp[1]=A[1],\ dp[i]=\max(dp[i-1],\ dp[i-2]+A[i])\)；\(O(N)\)。例子 dp = 0, 3, 5, 6, 6, 8, 11, 11 → 11。</p>
+<p><span class="lbl">Why</span>A[1..i] 的合法子集分兩類：<strong>不選 A[i]</strong> → 就是 A[1..i−1] 的答案 \(dp[i-1]\)；<strong>選 A[i]</strong> → A[i−1] 不能選，其餘是 A[1..i−2] 的合法子集 → \(dp[i-2]+A[i]\)。取大者。</p>
+<pre data-code="MAX-NONADJ(A, N)">
+let dp[0:N] be a new array
+dp[0] = 0;  dp[1] = A[1]
+for i = 2 to N
+    dp[i] = max(dp[i-1], dp[i-2] + A[i])   // 不選 / 選 A[i]
+return dp[N]
+</pre>
+<p><span class="lbl">Time</span>一個迴圈 \(N-1\) 次 → \(O(N)\)。</p>
+<p class="more">易錯：「挑最大的、刪掉鄰居」的 greedy 錯：A = [5, 9, 5] greedy 拿 9，最佳是 5 + 5 = 10。這題是 <a href="../dp/practice.html#mwis">作業 1 樹上 MWIS</a> 在「路徑」上的特例。</p>
+<p class="try">互動驗證</p>
+<div data-widget="nonAdjacent"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="maxsub" data-short="Max subarray O(n)">Maximum subarray：O(n) DP</h2>
+<p class="yrs"><span class="yr-tag dp">2011 Q4</span><span class="yr-tag dp">2025 Q8</span></p>
+
+<section class="ex" id="mt-maxsub">
+<header><span class="id">2011 Q4 · 2025 Q8</span><span class="t">最大連續子陣列和</span><span class="yrs"><span class="yr-tag">12–15%</span></span></header>
+<div class="q"><p class="orig" lang="en">We have learned a solution to the maximum subarray problem using the divide-and-conquer approach. We can solve the maximum subarray problem using an O(n) algorithm. Please write down the algorithm pseudocode and analyze the time complexity. (Input: An array A[1..n] of n numbers. Assume that some of the numbers are negative. Output: A nonempty subarray A[i..j] having the largest sum S[i, j] = A[i] + A[i + 1] + … + A[j].)</p><p class="zh">最大子陣列問題除了 divide-and-conquer，也能 \(O(n)\) 解。寫出 pseudocode 並分析時間。輸入 n 個數（有負數），輸出總和最大的非空連續子陣列。</p>
+<p class="small muted">2011 版：Use the dynamic programming approach to write an algorithm to find the maximum sum in any contiguous sub-array of n real values.</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(E[j]\) = 以 \(A[j]\) <strong>結尾</strong>的最大子陣列和；\(E[1]=A[1]\)，\(E[j]=\max(A[j],\ E[j-1]+A[j])\)，答案 \(\max_j E[j]\)。\(O(n)\)。</p>
+<pre data-code="MAX-SUBARRAY-DP(A, n)">
+cur = A[1];  curL = 1                  // E[1]：以 A[1] 結尾
+best = A[1];  bL = 1;  bR = 1
+for j = 2 to n
+    if cur + A[j] < A[j]               // 前面的和是負的 → 丟掉
+        cur = A[j];  curL = j          // 從 A[j] 重新開始
+    else cur = cur + A[j]              // 接上 A[j]
+    if cur > best                      // 更新答案
+        best = cur;  bL = curL;  bR = j
+return (bL, bR, best)
+</pre>
+<p><span class="lbl">Why</span>以 j 結尾的最佳子陣列，要嘛只有 A[j]，要嘛是「以 j−1 結尾的最佳」再接 A[j]（optimal substructure）。<span class="lbl">Time</span>一個迴圈 \(n-1\) 次、每次 \(O(1)\) → \(O(n)\)。</p>
+<p class="more">易錯：初始值設 best = 0 在全部是負數時會回傳空陣列（題目要 nonempty）。對照 divide-and-conquer 版 \(\Theta(n\lg n)\)。相關：<a href="../greedy/exercises.html#maxsub">Greedy 投影片 p.44 的同一題</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="maxSub"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="lcs" data-short="LCS 三題">LCS：填表、省空間、子序列判斷</h2>
+<p class="yrs"><span class="yr-tag dp">2012 Q12</span><span class="yr-tag dp">2019 Q1</span><span class="yr-tag dp">2020 Q2</span></p>
+
+<section class="ex" id="mt-2012-q12">
+<header><span class="id">2012 Q12</span><span class="t">X = abcbdaa、Y = dcbadbca 的 LCS 表</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Determine an LCS of two sequences X = abcbdaa and Y = dcbadbca. (You need to show your answer in two-dimensional tables.)</p><p class="zh">求 X = abcbdaa、Y = dcbadbca 的一個 LCS，要用二維表格呈現。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">LCS 長度 4（例如 abca），c 表與箭頭如下。</p>
+<p>\(c[i,j]=\begin{cases}0 & i=0\text{ or }j=0\\ c[i-1,j-1]+1\ (↖) & x_i=y_j\\ \max(c[i-1,j]\ (↑),\ c[i,j-1]\ (←)) & x_i\ne y_j\end{cases}\)（平手取 ↑，同 CLRS）</p>
+<div class="scroll-x"><table class="plain small mt-tri lcs-t"><tr><th></th><th></th><th>d</th><th>c</th><th>b</th><th>a</th><th>d</th><th>b</th><th>c</th><th>a</th></tr><tr><th></th><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr><tr><th>a</th><td class="num">0</td><td class="num">↑0</td><td class="num">↑0</td><td class="num">↑0</td><td class="num on">↖1</td><td class="num on">←1</td><td class="num">←1</td><td class="num">←1</td><td class="num">↖1</td></tr><tr><th>b</th><td class="num">0</td><td class="num">↑0</td><td class="num">↑0</td><td class="num">↖1</td><td class="num">↑1</td><td class="num">↑1</td><td class="num on">↖2</td><td class="num">←2</td><td class="num">←2</td></tr><tr><th>c</th><td class="num">0</td><td class="num">↑0</td><td class="num">↖1</td><td class="num">↑1</td><td class="num">↑1</td><td class="num">↑1</td><td class="num">↑2</td><td class="num on">↖3</td><td class="num">←3</td></tr><tr><th>b</th><td class="num">0</td><td class="num">↑0</td><td class="num">↑1</td><td class="num">↖2</td><td class="num">←2</td><td class="num">←2</td><td class="num">↖2</td><td class="num on">↑3</td><td class="num">↑3</td></tr><tr><th>d</th><td class="num">0</td><td class="num">↖1</td><td class="num">↑1</td><td class="num">↑2</td><td class="num">↑2</td><td class="num">↖3</td><td class="num">←3</td><td class="num on">↑3</td><td class="num">↑3</td></tr><tr><th>a</th><td class="num">0</td><td class="num">↑1</td><td class="num">↑1</td><td class="num">↑2</td><td class="num">↖3</td><td class="num">↑3</td><td class="num">↑3</td><td class="num on">↑3</td><td class="num">↖4</td></tr><tr><th>a</th><td class="num">0</td><td class="num">↑1</td><td class="num">↑1</td><td class="num">↑2</td><td class="num">↖3</td><td class="num">↑3</td><td class="num">↑3</td><td class="num">↑3</td><td class="num on">↖4</td></tr></table><p>長度 <b>4</b>，沿箭頭回溯得到 LCS = <b>abca</b>（答案不唯一）。</p></div>
+<div class="rubric"><b>2012 給分</b>：數字 6、箭頭 2、答案 2。答案鍵把 Y 放在列、X 放在行，所以箭頭方向不同，但長度一樣是 4、答案鍵寫 abca（答案不只一種）。</div>
+<p class="try">互動驗證</p>
+<div data-widget="lcsTable" data-x="abcbdaa" data-y="dcbadbca"></div>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2019-q1">
+<header><span class="id">2019 Q1</span><span class="t">LCS 長度只用 2·min(m,n) 格、再到 min(m,n) 格</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Show how to compute the length of an LCS using only 2·min(m, n) entries in the c table plus O(1) additional space. Then show how to do the same thing but using min(m, n) entries plus O(1) additional space.</p><p class="zh">說明如何只用 c 表中 \(2\cdot\min(m,n)\) 格加 \(O(1)\) 額外空間算出 LCS 長度；再說明如何只用 \(\min(m,n)\) 格加 \(O(1)\) 空間做到。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(c[i,j]\) 只用到第 \(i-1\) 列和第 \(i\) 列 → 讓短的序列當「行」，只留兩列（\(2\min(m,n)\)）；再進一步只留一列，用一個變數記住被覆蓋前的左上角值（\(\min(m,n)+O(1)\)）。時間仍 \(O(mn)\)。</p>
+<p><span class="lbl">Two rows</span>若 \(m<n\) 就交換 X、Y，使行數 \(n'=\min(m,n)\)。用 prev[0..n′]、cur[0..n′]，算完一列後 prev ↔ cur 交換指標（O(1)）。</p>
+<pre data-code="LCS-LENGTH-ONE-ROW(X, Y)">
+if |X| < |Y| swap X and Y                // 讓 n = |Y| = min(m, n)
+let c[0:n] be a new array, all 0         // 只存一列
+for i = 1 to m
+    diag = 0                             // = c[i-1, 0]
+    for j = 1 to n
+        up = c[j]                        // = c[i-1, j]，還沒被覆蓋
+        if x_i == y_j
+            c[j] = diag + 1              // ↖
+        else c[j] = max(c[j], c[j-1])    // max(↑, ←)
+        diag = up                        // 下一格的左上角
+return c[n]
+</pre>
+<p><span class="lbl">Why</span>由左到右覆蓋時，c[j−1] 已是新列（←）、c[j] 還是舊列（↑），只有舊的 c[j−1]（↖）被蓋掉，所以用 diag 先存起來。<span class="lbl">Time</span>\(O(mn)\)。</p>
+<p class="more">易錯：省空間後<strong>沒有 b 表，無法印出 LCS</strong>（只能求長度）；要印出需 Hirschberg 演算法。相關：<a href="../dp/exercises.html#ex-14-4-2">課本 14.4-2</a>。</p>
+</div></details>
+</section>
+
+<section class="ex" id="mt-2020-q2">
+<header><span class="id">2020 Q2</span><span class="t">B 是不是 A 的 subsequence？O(N + M)</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Design an O(N + M) algorithm to solve the following problem. Given an array A of length N, an array B of length M, and both consist of positive integers. Determine if B is a subsequence of A. A subsequence of an array is some array that can be formed by deleting zero or more elements from the array while maintaining the relative position of the remaining elements. For example, if A = [3, 1, 4, 1] and B = [3, 4, 1], the algorithm should return true. If A = [3, 1, 4, 1] and B = [4, 3], the algorithm should return false.</p><p class="zh">給長度 N 的陣列 A 和長度 M 的陣列 B，判斷 B 是不是 A 的子序列（刪掉 0 個以上元素、保持相對順序），\(O(N+M)\)。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">兩個指標：掃 A，遇到等於 B 下一個要配的元素就配上；最後全部配完就是 true。\(O(N+M)\)。</p>
+<pre data-code="IS-SUBSEQ(A, N, B, M)">
+c = 0                                 // 已配對 B[1..c]
+for i = 1 to N
+    if c < M and A[i] == B[c + 1]
+        c = c + 1                     // 用最早出現的位置配 B[c+1]
+return c == M
+</pre>
+<p><span class="lbl">Why</span>（greedy-choice）若 B 是 A 的子序列，存在一組配對；把 B[1] 的位置換成 A 中<strong>最早</strong>的相同元素不會讓後面配不上（剩下的 A 只變長）。歸納下去即正確。<span class="lbl">Time</span>迴圈 N 次 + 初始化 → \(O(N+M)\)。</p>
+<p class="more">例：A = [3, 1, 4, 1]、B = [4, 3]：配到 4 時 c = 1，之後沒有 3 → false。用 LCS 表（\(O(NM)\)）判斷 \(\text{LCS}=M\) 也對，但超過題目要求的時間。</p>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="obst" data-short="OBST 填表">Optimal BST 填表</h2>
+<p class="yrs"><span class="yr-tag dp">2013 Q11</span></p>
+
+<section class="ex" id="mt-2013-q11">
+<header><span class="id">2013 Q11</span><span class="t">n = 5 keys 的 optimal BST</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">Determine the cost and structure of an optimal binary search tree for a set of n = 5 keys with the following probabilities:</p><p class="zh">給 n = 5 個 key 與下表機率，求最佳二元搜尋樹的成本與結構。</p>
+<table class="plain small"><tr><th>i</th><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td></tr>
+<tr><th>p<sub>i</sub></th><td></td><td class="num">0.15</td><td class="num">0.05</td><td class="num">0.2</td><td class="num">0.05</td><td class="num">0.1</td></tr>
+<tr><th>q<sub>i</sub></th><td class="num">0.1</td><td class="num">0.1</td><td class="num">0.05</td><td class="num">0.05</td><td class="num">0.1</td><td class="num">0.05</td></tr></table></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">期望成本 2.65；root = k<sub>3</sub>，左子樹 k<sub>1</sub>（右子 k<sub>2</sub>），右子樹 k<sub>5</sub>（左子 k<sub>4</sub>）。</p>
+<p>\(e[i,i-1]=w[i,i-1]=q_{i-1}\)；\(w[i,j]=w[i,j-1]+p_j+q_j\)；\(e[i,j]=\min_{i\le r\le j}\{e[i,r-1]+e[r+1,j]+w[i,j]\}\)。</p>
+<div class="scroll-x"><div class="two tables"><table class="plain small mt-tri"><tr><th>e</th><th class="num">j=0</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">0.10</td><td class="num">0.55</td><td class="num">0.90</td><td class="num">1.65</td><td class="num">2.10</td><td class="num">2.65</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">0.10</td><td class="num">0.35</td><td class="num">0.85</td><td class="num">1.30</td><td class="num">1.85</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">0.05</td><td class="num">0.40</td><td class="num">0.85</td><td class="num">1.40</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0.05</td><td class="num">0.35</td><td class="num">0.75</td></tr><tr><th>i=5</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0.10</td><td class="num">0.40</td></tr><tr><th>i=6</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0.05</td></tr></table><table class="plain small mt-tri"><tr><th>w</th><th class="num">j=0</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">0.10</td><td class="num">0.35</td><td class="num">0.45</td><td class="num">0.70</td><td class="num">0.85</td><td class="num">1.00</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">0.10</td><td class="num">0.20</td><td class="num">0.45</td><td class="num">0.60</td><td class="num">0.75</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">0.05</td><td class="num">0.30</td><td class="num">0.45</td><td class="num">0.60</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0.05</td><td class="num">0.20</td><td class="num">0.35</td></tr><tr><th>i=5</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0.10</td><td class="num">0.25</td></tr><tr><th>i=6</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">0.05</td></tr></table></div><table class="plain small mt-tri"><tr><th>root</th><th class="num">j=1</th><th class="num">j=2</th><th class="num">j=3</th><th class="num">j=4</th><th class="num">j=5</th></tr><tr><th>i=1</th><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=2</th><td class="num"></td><td class="num">2</td><td class="num">3</td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=3</th><td class="num"></td><td class="num"></td><td class="num">3</td><td class="num">3</td><td class="num">3</td></tr><tr><th>i=4</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">4</td><td class="num">5</td></tr><tr><th>i=5</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">5</td></tr></table><p>期望搜尋成本 <b>2.65</b>，root = k3。</p></div>
+<pre class="ascii">
+          k3
+        /    \
+      k1      k5
+     /  \    /  \
+   d0   k2  k4   d5
+       / \  / \
+      d1 d2 d3 d4
+</pre>
+<p class="more">易錯：w 要包含 dummy key 的 q；root 平手時任一都可。這份答案鍵的表是圖片沒附上，數字由程式算並列入測試。相關：<a href="../dp/obst.html">OBST 主題頁</a>、<a href="../dp/exercises.html#ex-14-5-2">課本 14.5-2</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="obstTable" data-preset="exam2013"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="rod" data-short="Rod cutting">Rod cutting O(n²)</h2>
+<p class="yrs"><span class="yr-tag dp">2019 Q2</span></p>
+
+<section class="ex" id="mt-2019-q2">
+<header><span class="id">2019 Q2</span><span class="t">鋼條切割，n = 8 → 22</span><span class="yrs"><span class="yr-tag">15%</span></span></header>
+<div class="q"><p class="orig" lang="en">Given a rod of length n inches and an array of prices that contains prices of all pieces of size smaller than n. Determine the maximum value obtainable by cutting up the rod and selling the pieces. For example, if the length of the rod is 8 and the values of different pieces are given as following, then the maximum obtainable value is 22 (by cutting in two pieces of lengths 2 and 6). Design an O(n<sup>2</sup>) algorithm to solve this problem. (Note: pseudo-code is needed.)</p><p class="zh">長度 n 的鋼條與各長度價格，求切割後能賣到的最高總價。例如 n = 8、價格如下表時答案是 22（切成 2 和 6）。設計 \(O(n^2)\) 演算法，要寫 pseudocode。</p>
+<table class="plain small"><tr><th>size</th><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">6</td><td class="num">7</td><td class="num">8</td></tr>
+<tr><th>price</th><td class="num">1</td><td class="num">5</td><td class="num">8</td><td class="num">9</td><td class="num">10</td><td class="num">17</td><td class="num">17</td><td class="num">20</td></tr></table></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(r_0=0,\ r_j=\max_{1\le i\le j}(p_i+r_{j-i})\)，bottom-up \(\Theta(n^2)\)。r = 0, 1, 5, 8, 10, 13, 17, 18, 22 → \(r_8=22\)（2 + 6）。</p>
+<pre data-code="BOTTOM-UP-CUT-ROD(p, n)">
+let r[0:n] and s[1:n] be new arrays
+r[0] = 0
+for j = 1 to n                        // 由短到長
+    q = -∞
+    for i = 1 to j                    // 第一段長 i
+        if p[i] + r[j - i] > q
+            q = p[i] + r[j - i];  s[j] = i
+    r[j] = q
+return r[n]   // 切法：while n > 0: print s[n]; n = n - s[n]
+</pre>
+<p><span class="lbl">Time</span>內圈跑 j 次：\(\sum_{j=1}^{n}j=\frac{n(n+1)}{2}=\Theta(n^2)\)。</p>
+<p class="more">易錯：遞迴不存表是 \(2^n\)；「單位價格最高的先切」greedy 不對（<a href="../dp/exercises.html#ex-14-1-2">14.1-2</a>）。考卷上同學在旁邊算 p/i 就是在試這個 greedy。相關：<a href="../dp/rod-cutting.html">Rod cutting 主題頁</a>。</p>
+<p class="try">互動驗證</p>
+<div data-widget="rodBottomUp" data-prices="1 5 8 9 10 17 17 20" data-n="8"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="coindp" data-short="找零錢 DP O(nk)">找零錢 DP：O(nk)</h2>
+<p class="yrs"><span class="yr-tag dp">2018 Q6</span><span class="yr-tag dp">2021 Q2b</span></p>
+
+<section class="ex" id="mt-coin-dp">
+<header><span class="id">2018 Q6 · 2021 Q2b</span><span class="t">任意面額、最少硬幣數</span><span class="yrs"><span class="yr-tag">10–15%</span></span></header>
+<div class="q"><p class="orig" lang="en">(2021 Q2b) Give an O(nk)-time algorithm that makes change for any set of k different coins, assuming that one of the coins is a penny. (Hint: Since we have optimal substructure, dynamic programming might apply. Let us define c[j] as the minimum number of coins we need to change for j cents. Let the coins be d<sub>1</sub>, d<sub>2</sub>, …, d<sub>k</sub>. Since one of the coins is a penny, there is a way to make change for any amount j ≥ 1. Because of the optimal substructure, if we knew that an optimal solution for the problem of making change for j cents used a coin d<sub>i</sub>, we would have c[j] = 1 + c[j − d<sub>i</sub>].)<br><br>
+(2018 Q6) Please give an algorithm to solve the following problem. You need to analyze the time complexity of your algorithm. We want to find minimum number of coins that make a given value. Given a value V, if we want to make change for V cents, and we have infinite supply of each of C = {C<sub>1</sub>, C<sub>2</sub>, …, C<sub>m</sub>} valued coins, what is the minimum number of coins to make the change and time-complexity? Example: Input: coins[] = {1, 4, 5}, V = 8, Output: Two coins of 4 cents.</p><p class="zh">任意 k 種面額（含 1 元）時，用最少硬幣找 n 元，設計 \(O(nk)\) 演算法。提示：\(c[j]\) = 找 j 元的最少枚數，若最佳解用了 \(d_i\)，則 \(c[j]=1+c[j-d_i]\)。2018 版：面額 {1, 4, 5}、V = 8 → 兩枚 4。</p>
+</div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(c[0]=0,\ c[j]=1+\min_{d_i\le j}c[j-d_i]\)；兩層迴圈 \(O(nk)\)。例：\(c[8]=2\)（4 + 4）；greedy 會給 5+1+1+1 = 4 枚。</p>
+<pre data-code="MAKE-CHANGE(d, k, n)">
+let c[0:n] and denom[1:n] be new arrays
+c[0] = 0
+for j = 1 to n                        // n 個金額
+    c[j] = ∞
+    for i = 1 to k                    // k 種硬幣
+        if d[i] <= j and c[j - d[i]] + 1 < c[j]
+            c[j] = c[j - d[i]] + 1    // 最後一枚用 d[i]
+            denom[j] = d[i]
+return c, denom   // 找法：while n > 0: print denom[n]; n = n - denom[n]
+</pre>
+<p><span class="lbl">Why</span>optimal substructure：最佳找法拿掉最後一枚 \(d_i\)，剩下的一定是 \(j-d_i\) 的最佳找法（否則換掉更少）。有 penny 保證 \(c[j-1]\) 一定有解。<span class="lbl">Time</span>外圈 n、內圈 k → \(O(nk)\)；印出 \(O(n)\)。</p>
+<p>例 {1, 4, 5}：c = 0, 1, 2, 3, 1, 1, 2, 3, <b>2</b>。</p>
+<div class="rubric"><b>2018 給分</b>：外迴圈 3%、雙迴圈 6%、全對 8%、複雜度 2%。<b>答案鍵 bug</b>：內圈寫成 <code>for i</code>（應為 j）、比較寫成 <code>sub_prob &lt; table[i]</code>（應為 <code>sub_prob + 1</code>）。</div>
+<p class="more">相關：<a href="greedy.html#coin">Greedy 找零錢證明</a>、<a href="../greedy/exercises.html#p15-1">Problem 15-1</a>。</p>
+<p class="try">互動驗證（greedy vs 最佳）</p>
+<div data-widget="coinGreedy" data-coins="1 4 5" data-x="8"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="pseudo" data-short="O(nW) 是 polynomial？">0/1 knapsack 的 O(nW) 是 polynomial 嗎？</h2>
+<p class="yrs"><span class="yr-tag hot">3 次</span><span class="yr-tag dp">2017 Q2a</span><span class="yr-tag dp">2018 Q2</span><span class="yr-tag dp">2019 Q3</span></p>
+
+<section class="ex" id="mt-knap-poly">
+<header><span class="id">2017·18·19</span><span class="t">True or False（看解釋給分）</span><span class="yrs"><span class="yr-tag">4%</span></span></header>
+<div class="q"><p class="orig" lang="en">For the following statement, determine whether it is true or false. If the statement is correct, briefly state why. If the statement is wrong, explain why. Your answer will be evaluated based on your explanation and not the True/False marking alone. We have a dynamic programming (DP) solution to the 0/1 Knapsack problem that runs in O(nW) time, where n is the number of items and W is the maximum weight of items that the thief can put in his knapsack. Therefore, the DP algorithm is a polynomial-time algorithm.</p><p class="zh">是非題（看解釋給分）：0/1 knapsack 的 DP 解是 \(O(nW)\)，n 是物品數、W 是背包容量，所以這個 DP 是 polynomial-time 演算法。</p></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">False。O(nW) 是 pseudo-polynomial：W 在輸入中只佔 \(\lg W\) 個 bits，令 \(b=\lg W\)，時間 \(O(n2^{b})\) 對輸入長度是指數。</p>
+<p><span class="lbl">Why</span>Polynomial time 是對<strong>輸入長度</strong>（bits）而言。n 個物品的輸入長度約 \(O(n\lg W)\)，但執行時間跟 W 的<strong>數值</strong>成正比；W 加一個 bit，時間就加倍。例如 \(W=2^{64}\) 時表格有 \(2^{64}\) 欄。</p>
+<div class="rubric"><b>2018 給分</b>：沒解釋 0；寫 False 但解釋錯 1；部分錯酌扣、最少 1。</div>
+<p class="more">0/1 knapsack 是 NP-complete，目前沒有真正的 polynomial-time 演算法。DP 解法見 <a href="../greedy/exercises.html#ex-15-2-2">課本 15.2-2</a>。</p>
+<p class="try">互動驗證：表格欄數就是 W + 1</p>
+<div data-widget="knap01Table" data-v="60 100 120" data-w="1 2 3" data-cap="5"></div>
+</div></details>
+</section>
+
+<!-- ======================================================= -->
+<h2 id="resource" data-short="Resource allocation">Resource allocation（二維 DP）</h2>
+<p class="yrs"><span class="yr-tag dp">2022 Q2</span></p>
+
+<section class="ex" id="mt-2022-q2">
+<header><span class="id">2022 Q2</span><span class="t">m 個資源分給 n 個專案，利潤最大</span><span class="yrs"><span class="yr-tag">10%</span></span></header>
+<div class="q"><p class="orig" lang="en">The resource allocate problem is defined as follows. We are given m identical resources and n projects. A profit P(i, j) will be obtained if j resources are allocated to project i, where 0 &lt; i ≤ n, 0 ≤ j ≤ m. The problem is to find an allocation of resources to maximize the total profit. For example, letting n = 4, m = 3, and the P(i, j) table as below, allocate 2, 1, 0, 0 resources, respectively, to project 1, 2, 3, 4, will obtain the maximum profit 5 + 8 = 13.<br>
+(1) (4%) Define X<sub>ij</sub> as the maximum profit obtained by allocating j resources to the first i projects, where 0 ≤ i ≤ n, 0 ≤ j ≤ m. Describe the recurrence of X<sub>ij</sub>, including boundary conditions.<br>
+(2) (6%) Using the concept of dynamic programming to design an algorithm that, given m, n and the profit table P, compute the maximum profit that can be obtained. Write down the pseudo code, and show that the time complexity of your algorithm is at most O(m<sup>2</sup>n).</p><p class="zh">m 個相同資源分給 n 個專案，給專案 i j 個資源得利潤 P(i, j)，求最大總利潤。(1) 定義 \(X_{ij}\) = 前 i 個專案分 j 個資源的最大利潤，寫出遞迴式與邊界條件。(2) 設計 DP 演算法（pseudocode），證明時間至多 \(O(m^2n)\)。</p>
+<table class="plain small"><tr><th>P(i, j)</th><th>j=0</th><th>1</th><th>2</th><th>3</th></tr>
+<tr><th>i=1</th><td class="num">0</td><td class="num">2</td><td class="num">8</td><td class="num">9</td></tr>
+<tr><th>i=2</th><td class="num">0</td><td class="num">5</td><td class="num">6</td><td class="num">7</td></tr>
+<tr><th>i=3</th><td class="num">0</td><td class="num">4</td><td class="num">4</td><td class="num">4</td></tr>
+<tr><th>i=4</th><td class="num">0</td><td class="num">2</td><td class="num">4</td><td class="num">5</td></tr></table></div>
+<details><summary>詳解</summary><div class="a">
+<p class="ans">\(X_{ij}=0\) if \(i=0\) or \(j=0\)；otherwise \(X_{ij}=\max_{0\le t\le j}\{X_{i-1,\,j-t}+P(i,t)\}\)。\(O(m^2n)\)，答案 \(X_{4,3}=13\)。</p>
+<p><span class="lbl">Why</span>看最後一個專案 i 拿了 t 個資源（\(t=0..j\)）：剩下 \(j-t\) 個最佳地分給前 \(i-1\) 個專案。</p>
+<pre data-code="RESOURCE-ALLOC(P, n, m)">
+let X[0:n, 0:m] and T[1:n, 1:m] be new tables
+for j = 0 to m:  X[0, j] = 0           // 沒有專案
+for i = 0 to n:  X[i, 0] = 0           // 沒有資源
+for i = 1 to n
+    for j = 1 to m
+        X[i, j] = -∞
+        for t = 0 to j                 // 專案 i 拿 t 個
+            if X[i-1, j-t] + P(i, t) > X[i, j]
+                X[i, j] = X[i-1, j-t] + P(i, t);  T[i, j] = t
+return X[n, m]   // 分配：j = m; for i = n downto 1: print T[i, j]; j = j - T[i, j]
+</pre>
+<p><span class="lbl">Time</span>\(\sum_{i=1}^{n}\sum_{j=1}^{m}(j+1)=n\cdot\frac{m(m+3)}{2}=O(m^2n)\)。</p>
+<table class="plain small"><tr><th>X</th><th>j=0</th><th>1</th><th>2</th><th>3</th></tr>
+<tr><th>i=0</th><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+<tr><th>i=1</th><td class="num">0</td><td class="num">2</td><td class="num">8</td><td class="num">9</td></tr>
+<tr><th>i=2</th><td class="num">0</td><td class="num">5</td><td class="num">8</td><td class="num">13</td></tr>
+<tr><th>i=3</th><td class="num">0</td><td class="num">5</td><td class="num">9</td><td class="num">13</td></tr>
+<tr><th>i=4</th><td class="num">0</td><td class="num">5</td><td class="num">9</td><td class="num"><b>13</b></td></tr></table>
+<div class="rubric"><b>2022 給分</b>：(1) boundary 1%、else 3%；(2) 演算法 4%、時間 2%，每錯 −1。</div>
+<p class="try">互動驗證</p>
+<div data-widget="resourceAlloc"></div>
+</div></details>
+</section>
+
+</article>
+<footer class="site">題目取自 2011–2025 許健平老師「計算方法設計 / Algorithms」期中考卷（<code>exams/</code>），官方答案與給分標準引用自附答案的考卷；其餘詳解為自行整理，數值由 <code>assets/algos.js</code>、<code>assets/midterm.js</code> 計算並在 <code>tests/run.js</code> 檢查。</footer>
+</main>
+</div>
+<script>
+  document.getElementById('toggle-all').addEventListener('click', function () {
+    var all = document.querySelectorAll('.ex details');
+    var open = this.textContent === '全部展開';
+    all.forEach(function (d) { d.open = open; });
+    this.textContent = open ? '全部收合' : '全部展開';
+  });
+</script>
+</body>
+</html>

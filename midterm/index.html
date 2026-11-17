@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>期中考古題 Ch14–16 · 互動筆記</title>
+<meta name="description" content="演算法期中考古題（2011–2025）中 DP、Greedy、Amortized Analysis 的題目整理：同題型合併、考試可直接寫的答案、官方給分標準、常考題型統計與速記。">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/midterm.js"></script>
+<script defer src="../assets/core.js"></script>
+<script defer src="../assets/w-midterm.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" data-chapter="midterm" data-page="hub"></aside>
+<main>
+<article class="prose">
+
+<div class="hero wide">
+  <div>
+    <p class="eyebrow">期中考古題 · 2026 期中範圍 Ch14–16</p>
+    <h1>考過的，<span class="hl">還會再考</span></h1>
+    <p class="lede">從 <code>exams/</code> 的 20 份考卷（2010–2025）挑出所有 <strong>DP、Greedy、Amortized Analysis</strong> 題目，同題型合併成 <strong>47 題</strong>。每題附考卷英文原題與中譯、考試可以直接寫的答案、官方給分標準（有的話）、易錯點，數字題都用網站的程式算過並列入測試。</p>
+    <p class="small muted">右邊是前 10 名題型的出現次數，點一下直接跳到那一題。Huffman、dynamic table、matrix-chain、DP 兩要素、LIS 幾乎每兩年就出現一次。</p>
+  </div>
+  <div data-widget="examHeat" data-limit="10"></div>
+</div>
+
+<h2 id="map" data-short="三個章節">三個章節</h2>
+<div class="cards">
+  <a class="card" href="dp.html"><span class="k">Ch14 · 舊卷 Ch15 · 21 題</span><h3>DP 考古題</h3><p>兩要素、Matrix-chain 四組數字、P(n) 下界、LIS / 壽司、樓梯 / 鋪磚 / 不相鄰、max subarray、LCS 三題、OBST、rod、找零 DP、pseudo-polynomial、resource allocation。</p></a>
+  <a class="card" href="greedy.html"><span class="k">Ch15 · 舊卷 Ch16 · 14 題</span><h3>Greedy 考古題</h3><p>兩性質、找零證明（美金 / c 的次方）、Huffman 四題、最晚開始的 activity、unit intervals、背包裝最多件 O(n)、knapsack 變形、task scheduling、公車、樹的 vertex cover。</p></a>
+  <a class="card" href="amortized.html"><span class="k">Ch16 · 舊卷 Ch17 · 12 題</span><h3>Amortized 考古題</h3><p>觀念填空、\(c_i=i\) 三種方法與 Φ 修正、dynamic table 四題（含兩張 12 步表）、stack 從 S₀ 開始、CUT 的 accounting、counter 從 b 個 1 開始、RESET。</p></a>
+</div>
+
+<h2 id="rank" data-short="常考題型排行">常考題型排行</h2>
+<p>「次數」= 出現在幾份考卷（共 12 份考卷有範圍內題目）。同一題型數字不同也算同一型。</p>
+<div data-widget="examRank"></div>
+
+<h2 id="concepts" data-short="常考概念速記">常考概念速記</h2>
+<div class="two">
+<div class="note key"><span class="tag">DP 兩要素</span><strong>Optimal substructure</strong>：最佳解含子問題最佳解。<strong>Overlapping subproblems</strong>：同一子問題被重複解，相異子問題只有 polynomial 個。反例：<strong>longest simple path</strong>（子路徑共用頂點，不 independent）。<a href="dp.html#mt-dp-elements">→</a></div>
+<div class="note key"><span class="tag">Greedy 兩性質</span><strong>Greedy-choice property</strong>：存在含 greedy 選擇的最佳解（exchange argument 證）。<strong>Optimal substructure</strong>：選完只剩一個子問題，其最佳解 + greedy choice = 最佳解。<a href="greedy.html#mt-2011-q5">→</a></div>
+</div>
+<table class="plain">
+  <tr><th>概念</th><th>考試要寫出的一句話 / 式子</th><th>題目</th></tr>
+  <tr><td>DP 設計流程</td><td>定義子問題（常用「以 i 結尾」）→ 遞迴式 + base case → bottom-up pseudocode → 逐層算 time / space</td><td><a href="dp.html#lis">LIS</a>、<a href="dp.html#linear">一維 DP</a></td></tr>
+  <tr><td>填表題</td><td>兩張表都寫（m / s、c / 箭頭、e / root）+ 每格計算過程 + 最後答案（括號、樹、LCS）</td><td><a href="dp.html#mcm">MCM ×4</a>、<a href="dp.html#mt-2013-q11">OBST</a></td></tr>
+  <tr><td>Pseudo-polynomial</td><td>\(O(nW)\) 對輸入長度 \(n\lg W\) 是指數 → <strong>不是</strong> polynomial</td><td><a href="dp.html#mt-knap-poly">3 次是非題</a></td></tr>
+  <tr><td>Exchange argument</td><td>最佳解 O 不含 g → 換出某 x、換入 g → 仍合法且不變差</td><td><a href="greedy.html#coin">找零</a>、<a href="greedy.html#mt-unit">intervals</a>、<a href="greedy.html#mt-2017-q9">Huffman</a></td></tr>
+  <tr><td>Huffman</td><td>min-heap，n − 1 次合併，\(O(n\lg n)\)；cost = Σ f·depth = 內部節點頻率和</td><td><a href="greedy.html#huffman">5 次</a></td></tr>
+  <tr><td>Amortized 定義</td><td>對所有序列 \(\sum\hat c_i\ge\sum c_i\)；單次可以很貴</td><td><a href="amortized.html#concept">填空 / 是非</a></td></tr>
+  <tr><td>Potential method</td><td>\(\hat c_i=c_i+\Phi(D_i)-\Phi(D_{i-1})\)；要 \(\Phi(D_i)\ge\Phi(D_0)\)；Φ(D₀) ≠ 0 時把差帶著</td><td><a href="amortized.html#mt-pow2">2 的冪</a>、<a href="amortized.html#mt-2017-q10">S₀</a></td></tr>
+  <tr><td>Dynamic table</td><td>\(\Phi=2\,\text{num}-\text{size}\ (\alpha\ge\frac12)\)、\(\text{size}/2-\text{num}\ (\alpha&lt;\frac12)\)；INSERT ≤ 3、DELETE ≤ 2</td><td><a href="amortized.html#dyntable">4 次</a></td></tr>
+</table>
+
+<h2 id="papers" data-short="考卷來源">考卷來源</h2>
+<div class="scroll-x"><table class="plain papers">
+  <tr><th>考試</th><th>檔案</th><th>範圍內題號</th><th>答案</th></tr>
+  <tr><td>2011/12/16</td><td><code>09910_…_mid.pdf</code> p.3–4</td><td>Q2–Q8（bag、LIS、max subarray、greedy 兩性質、activity、counter、dynamic table）</td><td>無</td></tr>
+  <tr><td>2012/11/09</td><td><code>10110_…_mid(_ans).pdf</code></td><td>Q10–12（DP 兩要素、MCM、LCS）</td><td>有，含給分</td></tr>
+  <tr><td>2013/11/15</td><td><code>10210_…_mid(_ans).pdf</code></td><td>Q10–12（兩要素 + 反例、OBST、樓梯）</td><td>有（OBST 表為缺圖）</td></tr>
+  <tr><td>2017/12/08</td><td><code>10610_…_mid.pdf</code>（掃描）</td><td>1b、2a、2b、Q6–Q11</td><td>無</td></tr>
+  <tr><td>2018/12/05</td><td><code>10710_…_mid2.pdf</code></td><td>Q1、2、4–8</td><td>有，含給分</td></tr>
+  <tr><td>2019/12/06</td><td><code>10810_…_mid.pdf</code>（掃描）</td><td>Q1–6</td><td>無</td></tr>
+  <tr><td>2020/12/09</td><td><code>10910_…_mid2.pdf</code></td><td>Q1–7</td><td>有</td></tr>
+  <tr><td>2021/12/01</td><td><code>11010_…_mid2.pdf</code></td><td>Q1–3</td><td>無</td></tr>
+  <tr><td>2022</td><td><code>11110_…_mid.pdf</code></td><td>Q1–7</td><td>有，含配分</td></tr>
+  <tr><td>2023/11/10</td><td><code>11210_…_mid.pdf</code>（掃描）</td><td>Q9–11</td><td>無</td></tr>
+  <tr><td>2024/01（?）</td><td><code>11210_…_mid_ans.pdf</code></td><td>Q1、Q2、Q7</td><td>有，含給分</td></tr>
+  <tr><td>2025/11/05</td><td><code>2025期中考1105.pdf</code></td><td>Q5–9</td><td>無</td></tr>
+</table></div>
+<p class="small muted">沒有範圍內題目的：<code>09910_…_mid1</code>、<code>09910_…_mid</code> p.1–2（2010 第一次考）、<code>10710_…_mid1</code>、<code>10910_…_mid1</code>、<code>11010_…_mid1</code>、2025 / 2026 第一次小考。</p>
+
+<h2 id="exam" data-short="考前檢查">考前檢查清單</h2>
+<ul>
+  <li>能在 10 分鐘內手算 5 個矩陣的 m、s 表並印出括號（練 <a href="dp.html#mt-2022-q3">2022</a>、<a href="dp.html#mt-2023-q11">2023</a> 兩組）。</li>
+  <li>能默寫 MATRIX-CHAIN-ORDER、LCS-LENGTH、OPTIMAL-BST、BOTTOM-UP-CUT-ROD、HUFFMAN 的 pseudocode。</li>
+  <li>DP 兩要素 + longest simple path 反例：能畫出 q, r, s, t 的圖並解釋「子問題不 independent」。</li>
+  <li>LIS / 壽司 / max subarray：都是「以 i 結尾」的 DP；能寫出遞迴式、pseudocode、\(\sum(i-1)=O(n^2)\)。</li>
+  <li>樓梯、鋪磚、不相鄰最大和：會用「最後一步」分類，base case 寫對（\(F_0=1\)、\(f(0)=1\)）。</li>
+  <li>能說出 0/1 knapsack 的 \(O(nW)\) 為什麼不是 polynomial。</li>
+  <li>找零錢：能寫出美金 Lemma（penny ≤ 4、nickel ≤ 1、dime ≤ 2、不同時 2D + 1N）和 c 次方的等比級數證明。</li>
+  <li>Huffman：能建樹、寫碼、算 cost，證明「最小兩個可以是最深兄弟」和「頻率遞減 ⇒ 碼長遞增」。</li>
+  <li>Greedy 證明一律寫兩段：greedy-choice（exchange）+ optimal substructure（cut-and-paste）。</li>
+  <li>\(c_i=i\)（2 的冪）：aggregate \(&lt;3n\)、accounting 收 $3、potential \(\Phi=2(i-2^{\lfloor\lg i\rfloor})\)；知道 \(\Phi=i-2^{\lfloor\lg i\rfloor}\) 為什麼不夠。</li>
+  <li>Dynamic table：會 8 種情況的 \(\hat c\)，能在 5 分鐘內填完 12 步的 num / size / c / Φ / α 表（剛好 1/4 不縮）。</li>
+  <li>Stack / counter 變形：Φ(D₀) ≠ 0 要帶著 \(\Phi(D_0)-\Phi(D_n)\)；CUT 每個物件存 $2；RESET 要記 max。</li>
+</ul>
+
+<h2 id="notes" data-short="補充說明">補充說明</h2>
+<h3>答案鍵的錯誤</h3>
+<ul>
+  <li><strong>2020 Q3（鋪磚）</strong>：dp[0] = 0 會讓 k = 2、n = 3 算出 2，應為 3；base case 要 \(f(0)=1\)。<a href="dp.html#mt-tiling">→</a></li>
+  <li><strong>2018 Q6（找零 DP）</strong>：內圈迴圈變數寫成 i、比較少了 +1。<a href="dp.html#mt-coin-dp">→</a></li>
+  <li><strong>2018 Q7（unit intervals）</strong>：「x′ &lt; 1」應為 x′ ≤ y₁。<a href="greedy.html#mt-unit">→</a></li>
+  <li><strong>2018 Q8（Huffman 碼長）</strong>：符號與結論寫反，正確是「交換後成本不增加」，不是推出矛盾。<a href="greedy.html#mt-2018-q8">→</a></li>
+  <li><strong>2013 Q10</strong>：兩個性質的說明文字貼成同一段；<strong>2022 Q1</strong> 的 n-queen 例子不是最佳化問題，建議寫 longest simple path。<a href="dp.html#mt-dp-elements">→</a></li>
+</ul>
+<h3>檔名與內容對不上</h3>
+<ul>
+  <li><code>09910_…_mid.pdf</code> 其實是兩份考卷：p.1–2 是 2010/10/26 第一次考（全部範圍外），p.3–4 是 2011/12/16 第二次考（範圍內 7 題）。</li>
+  <li><code>11210_…_mid_ans.pdf</code> 不是 2023/11/10 期中考（<code>11210_…_mid.pdf</code>）的答案，題目完全不同；它涵蓋 greedy、amortized、圖論、NP，檔案建立於 2024/01，推測是之後的另一次考試。這裡標為「2024」。</li>
+  <li>2023 Q10 掃描檔的指數被筆跡蓋住（看起來是 3ⁿ）；詳解把 3ⁿ 和 2ⁿ 都證了。<a href="dp.html#mt-2023-q10">→</a></li>
+</ul>
+<h3>投影片沒教但考過</h3>
+<ul>
+  <li><strong>Dynamic table</strong>（CLRS 4th 16.4）：考 4 次，2026 投影片沒有。<a href="amortized.html#dyntable">→</a></li>
+  <li><strong>Unit-time task scheduling</strong>（CLRS 3rd 16.5）：2021 考過。<a href="greedy.html#tasks">→</a></li>
+</ul>
+<h3>不收的範圍外題目</h3>
+<p class="small">排序（insertion / quick / heap / counting / radix / bucket）、遞迴式與 master method、asymptotic notation、SELECT / 中位數、Strassen、divide-and-conquer max subarray（2023 Q4 指定 Θ(n lg n)）、圖論（DFS、SCC、DAG 路徑數、Dijkstra、Floyd–Warshall、Johnson）、NP / 2-CNF、Branch-and-Bound（2018 Q11 knapsack、2021 Q7 找零）。</p>
+
+</article>
+<footer class="site">題目取自 <code>exams/</code> 內 2010–2025 許健平老師「計算方法設計 / Algorithms」考卷；範圍依 2026 Fall 期中考（CLRS 4th ed. 第 14–16 章）。統計表的資料在 <code>assets/midterm.js</code> 的 <code>TOPICS</code>。</footer>
+</main>
+</div>
+</body>
+</html>

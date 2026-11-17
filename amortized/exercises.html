@@ -23,7 +23,7 @@
 
 <p class="eyebrow">Homework · CLRS 4th ed. Chapter 16</p>
 <h1>課本習題詳解</h1>
-<p class="lede">Ch16-1 投影片 p.18 指定的 16.1-1 ~ 16.1-3，以及 Ch16-2 投影片 p.30 指定的 16.2-1、16.2-3、16.3-1、16.3-3 ~ 16.3-6。題目是中文改寫的重點（原文請看課本），詳解預設收合，先自己想再打開。</p>
+<p class="lede">Ch16-1 投影片 p.18 指定的 16.1-1 ~ 16.1-3，以及 Ch16-2 投影片 p.30 指定的 16.2-1、16.2-3、16.3-1、16.3-3 ~ 16.3-6。每題先列 CLRS 4th ed. 的英文原題（考試題目就是這個格式），下面附中譯；可按「隱藏中譯」只看英文。詳解預設收合，先自己想再打開。</p>
 <p><button type="button" id="toggle-all">全部展開</button></p>
 
 <div class="note exam"><span class="tag">作答格式</span>詳解依 2026 第一次小考的給分標準撰寫：
@@ -38,7 +38,7 @@
 
 <section class="ex" id="ex-16-1-1">
 <header><span class="id">16.1-1</span><span class="t">加入 MULTIPUSH，\(O(1)\) 還成立嗎？</span></header>
-<div class="q">stack 操作再加一個 MULTIPUSH(k)：一次 push k 個元素。stack 操作的 amortized cost 還是 \(O(1)\) 嗎？</div>
+<div class="q"><p class="orig" lang="en">If the set of stack operations includes a MULTIPUSH operation, which pushes \(k\) items onto the stack, does the \(O(1)\) bound on the amortized cost of stack operations continue to hold?</p><p class="zh">stack 操作再加一個 MULTIPUSH(k)：一次 push k 個元素。stack 操作的 amortized cost 還是 \(O(1)\) 嗎？</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">不成立。</p>
 <p><span class="lbl">Why</span>原本的論證是「pop 的總數 \(\le\) PUSH 的次數 \(\le n\)」；MULTIPUSH(k) 一次放入 \(k\) 個，push 的元素總數不再 \(\le n\)。</p>
@@ -48,7 +48,7 @@
 
 <section class="ex" id="ex-16-1-2">
 <header><span class="id">16.1-2</span><span class="t">加入 DECREMENT，n 個操作要 \(\Theta(nk)\)</span></header>
-<div class="q">在 k-bit counter 加入 DECREMENT 操作。證明 n 個操作的成本可以高達 \(\Theta(nk)\)。</div>
+<div class="q"><p class="orig" lang="en">Show that if a DECREMENT operation is included in the \(k\)-bit counter example, \(n\) operations can cost as much as \(\Theta(nk)\) time.</p><p class="zh">在 k-bit counter 加入 DECREMENT 操作。證明 n 個操作的成本可以高達 \(\Theta(nk)\)。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Upper</span>每個操作最多翻 \(k\) 個 bit → 總成本 \(O(nk)\)。</p>
 <p><span class="lbl">Lower</span>從 \(0\) 開始交替做 DECREMENT、INCREMENT：
@@ -63,7 +63,7 @@
 
 <section class="ex" id="ex-16-1-3">
 <header><span class="id">16.1-3</span><span class="t">第 i 個操作在 i 是 2 的冪時成本 i</span></header>
-<div class="q">一串 n 個操作，第 i 個操作的成本是 i（如果 i 剛好是 2 的冪），否則是 1。用 aggregate analysis 求每個操作的 amortized cost。</div>
+<div class="q"><p class="orig" lang="en">Use aggregate analysis to determine the amortized cost per operation for a sequence of \(n\) operations on a data structure in which the \(i\)th operation costs \(i\) if \(i\) is an exact power of 2, and 1 otherwise.</p><p class="zh">一串 n 個操作，第 i 個操作的成本是 i（如果 i 剛好是 2 的冪），否則是 1。用 aggregate analysis 求每個操作的 amortized cost。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">Amortized cost \(\lt3=O(1)\)。</p>
 <p>\(1..n\) 中 2 的冪有 \(2^0,\dots,2^m\)（\(m=\lfloor\lg n\rfloor\)），其餘每個成本 1：
@@ -78,7 +78,7 @@ Amortized cost \(=\sum c_i/n\lt3=O(1)\)。∎</p>
 
 <section class="ex" id="ex-16-2-1">
 <header><span class="id">16.2-1</span><span class="t">每 k 個操作備份一次的 stack</span></header>
-<div class="q">對一個大小永遠不超過 k 的 stack 做 PUSH、POP。每做完 k 個操作，就自動把整個 stack 複製一份備份。用 accounting method 指定適當的 amortized cost，證明 n 個操作（包含複製）的總成本是 \(O(n)\)。</div>
+<div class="q"><p class="orig" lang="en">You perform a sequence of PUSH and POP operations on a stack whose size never exceeds \(k\). After every \(k\) operations, a copy of the entire stack is made automatically, for backup purposes. Show that the cost of \(n\) stack operations, including copying the stack, is \(O(n)\) by assigning suitable amortized costs to the various stack operations.</p><p class="zh">對一個大小永遠不超過 k 的 stack 做 PUSH、POP。每做完 k 個操作，就自動把整個 stack 複製一份備份。用 accounting method 指定適當的 amortized cost，證明 n 個操作（包含複製）的總成本是 \(O(n)\)。</p></div>
 <details><summary>詳解</summary><div class="a">
 <table class="plain small">
   <tr><th>操作</th><th>actual \(c_i\)</th><th>amortized \(\hat c_i\)</th></tr>
@@ -95,7 +95,7 @@ Amortized cost \(=\sum c_i/n\lt3=O(1)\)。∎</p>
 
 <section class="ex" id="ex-16-2-3">
 <header><span class="id">16.2-3</span><span class="t">Counter 加上 RESET，n 個操作仍是 \(O(n)\)</span></header>
-<div class="q">counter 除了 INCREMENT，還要能 RESET（所有位元歸零）。檢查或修改一個位元算 \(\Theta(1)\)。說明怎麼用位元陣列實作，讓從 0 開始的任意 n 個 INCREMENT / RESET 總共 \(O(n)\) 時間。（提示：記住最高位的 1 在哪。）</div>
+<div class="q"><p class="orig" lang="en">You wish not only to increment a counter but also to reset it to 0 (i.e., make all bits in it 0). Counting the time to examine or modify a bit as \(\Theta(1)\), show how to implement a counter as an array of bits so that any sequence of \(n\) INCREMENT and RESET operations takes \(O(n)\) time on an initially zero counter. (<em>Hint:</em> Keep a pointer to the high-order 1.)</p><p class="zh">counter 除了 INCREMENT，還要能 RESET（所有位元歸零）。檢查或修改一個位元算 \(\Theta(1)\)。說明怎麼用位元陣列實作，讓從 0 開始的任意 n 個 INCREMENT / RESET 總共 \(O(n)\) 時間。（提示：記住最高位的 1 在哪。）</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>多存 <code>max</code> = 最高位的 1 的位置（全 0 時為 −1），RESET 只清 \(A[0..\max]\)。</p>
 <div class="two">
@@ -135,7 +135,7 @@ max = -1
 
 <section class="ex" id="ex-16-3-1">
 <header><span class="id">16.3-1</span><span class="t">\(\Phi(D_0)\ne0\) 時換成從 0 開始的 \(\Phi'\)</span></header>
-<div class="q">假設 \(\Phi(D_i)\ge\Phi(D_0)\) 對所有 i 成立，但 \(\Phi(D_0)\ne0\)。證明存在 \(\Phi'\) 使得 \(\Phi'(D_0)=0\)、\(\Phi'(D_i)\ge0\)（\(i\ge1\)），而且用 \(\Phi'\) 算出的 amortized cost 跟用 \(\Phi\) 的一樣。</div>
+<div class="q"><p class="orig" lang="en">Suppose you have a potential function \(\Phi\) such that \(\Phi(D_i)\ge\Phi(D_0)\) for all \(i\), but \(\Phi(D_0)\ne0\). Show that there exists a potential function \(\Phi'\) such that \(\Phi'(D_0)=0\), \(\Phi'(D_i)\ge0\) for all \(i\ge1\), and the amortized costs using \(\Phi'\) are the same as the amortized costs using \(\Phi\).</p><p class="zh">假設 \(\Phi(D_i)\ge\Phi(D_0)\) 對所有 i 成立，但 \(\Phi(D_0)\ne0\)。證明存在 \(\Phi'\) 使得 \(\Phi'(D_0)=0\)、\(\Phi'(D_i)\ge0\)（\(i\ge1\)），而且用 \(\Phi'\) 算出的 amortized cost 跟用 \(\Phi\) 的一樣。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p>Let \(\Phi'(D)=\Phi(D)-\Phi(D_0)\). Then</p>
 <ul>
@@ -148,7 +148,7 @@ max = -1
 
 <section class="ex" id="ex-16-3-3">
 <header><span class="id">16.3-3</span><span class="t">Min-heap：INSERT \(O(\lg n)\)、EXTRACT-MIN \(O(1)\)</span></header>
-<div class="q">一般的 binary min-heap，INSERT 和 EXTRACT-MIN 最壞都是 \(O(\lg n)\)（n = 目前 heap 裡的個數）。給一個 potential function \(\Phi\)，讓 INSERT 的 amortized cost 是 \(O(\lg n)\)、EXTRACT-MIN 是 \(O(1)\)，並證明。注意：不知道 heap 最多會有幾個元素。</div>
+<div class="q"><p class="orig" lang="en">Consider an ordinary binary min-heap data structure supporting the instructions INSERT and EXTRACT-MIN that, when there are \(n\) items in the heap, implements each operation in \(O(\lg n)\) worst-case time. Give a potential function \(\Phi\) such that the amortized cost of INSERT is \(O(\lg n)\) and the amortized cost of EXTRACT-MIN is \(O(1)\), and show that your potential function yields these amortized time bounds. Note that in the analysis, \(n\) is the number of items currently in the heap, and you do not know a bound on the maximum number of items that can ever be stored in the heap.</p><p class="zh">一般的 binary min-heap，INSERT 和 EXTRACT-MIN 最壞都是 \(O(\lg n)\)（n = 目前 heap 裡的個數）。給一個 potential function \(\Phi\)，讓 INSERT 的 amortized cost 是 \(O(\lg n)\)、EXTRACT-MIN 是 \(O(1)\)，並證明。注意：不知道 heap 最多會有幾個元素。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">\(\Phi(D)=c\sum_{j=1}^{n}\lg j=c\lg(n!)\)，\(n\) = heap 目前的大小。</p>
 <p><span class="lbl">Idea</span>INSERT 先預付將來 EXTRACT 的 \(O(\lg n)\)；\(\Phi\) 只依目前的 \(n\)，不需要知道最大值。</p>
@@ -164,7 +164,7 @@ max = -1
 
 <section class="ex" id="ex-16-3-4">
 <header><span class="id">16.3-4</span><span class="t">Stack 一開始有 \(s_0\) 個，最後 \(s_n\) 個</span></header>
-<div class="q">做 n 個 PUSH / POP / MULTIPOP，stack 一開始有 \(s_0\) 個元素、最後有 \(s_n\) 個。總成本是多少？</div>
+<div class="q"><p class="orig" lang="en">What is the total cost of executing \(n\) of the stack operations PUSH, POP, and MULTIPOP, assuming that the stack begins with \(s_0\) objects and finishes with \(s_n\) objects?</p><p class="zh">做 n 個 PUSH / POP / MULTIPOP，stack 一開始有 \(s_0\) 個元素、最後有 \(s_n\) 個。總成本是多少？</p></div>
 <details><summary>詳解</summary><div class="a">
 <p class="ans">總成本 \(=2\cdot\#\text{PUSH}+s_0-s_n\le2n+s_0-s_n\)。</p>
 <p>\(\Phi\) = stack 大小，\(\Phi(D_0)=s_0\)、\(\Phi(D_n)=s_n\)。\(\hat c\)：PUSH \(=1+1=2\)，POP \(=1-1=0\)，MULTIPOP(\(k'\)) \(=k'-k'=0\)。用 telescoping（不需要 \(\Phi(D_i)\ge\Phi(D_0)\)）：
@@ -177,7 +177,7 @@ $$\sum_{i=1}^{n}c_i=\sum_{i=1}^{n}\hat c_i-\Phi(D_n)+\Phi(D_0)\le2n-s_n+s_0.\ �
 
 <section class="ex" id="ex-16-3-5">
 <header><span class="id">16.3-5</span><span class="t">用兩個 stack 做 queue</span></header>
-<div class="q">用兩個普通的 stack 實作 queue，讓 ENQUEUE 和 DEQUEUE 的 amortized cost 都是 \(O(1)\)。</div>
+<div class="q"><p class="orig" lang="en">Show how to implement a queue with two ordinary stacks (Exercise 10.1-7) so that the amortized cost of each ENQUEUE and each DEQUEUE operation is \(O(1)\).</p><p class="zh">用兩個普通的 stack 實作 queue，讓 ENQUEUE 和 DEQUEUE 的 amortized cost 都是 \(O(1)\)。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>IN 收新元素；OUT 空了才把 IN 整個倒進 OUT（順序反轉，最舊的在 OUT 頂端）。</p>
 <pre data-code="ENQUEUE(Q, x) / DEQUEUE(Q)">
@@ -204,7 +204,10 @@ DEQUEUE(Q)
 
 <section class="ex" id="ex-16-3-6">
 <header><span class="id">16.3-6</span><span class="t">INSERT 與 DELETE-LARGER-HALF</span></header>
-<div class="q">設計一個資料結構存整數 multiset S（可以重複），支援 INSERT(S, x) 和 DELETE-LARGER-HALF(S)（刪掉最大的 \(\lceil|S|/2\rceil\) 個）。任意 m 個操作要 \(O(m)\) 時間，而且能在 \(O(|S|)\) 時間輸出 S 的所有元素。</div>
+<div class="q"><p class="orig" lang="en">Design a data structure to support the following two operations for a dynamic multiset \(S\) of integers, which allows duplicate values:<br>
+INSERT\((S,x)\) inserts \(x\) into \(S\).<br>
+DELETE-LARGER-HALF\((S)\) deletes the largest \(\lceil|S|/2\rceil\) elements from \(S\).<br>
+Explain how to implement this data structure so that any sequence of \(m\) INSERT and DELETE-LARGER-HALF operations runs in \(O(m)\) time. Your implementation should also include a way to output the elements of \(S\) in \(O(|S|)\) time.</p><p class="zh">設計一個資料結構存整數 multiset S（可以重複），支援 INSERT(S, x) 和 DELETE-LARGER-HALF(S)（刪掉最大的 \(\lceil|S|/2\rceil\) 個）。任意 m 個操作要 \(O(m)\) 時間，而且能在 \(O(|S|)\) 時間輸出 S 的所有元素。</p></div>
 <details><summary>詳解</summary><div class="a">
 <p><span class="lbl">Idea</span>用沒排序的陣列存 S；刪一半時用 linear-time SELECT 找門檻。輸出直接掃一次，\(O(|S|)\)。</p>
 <pre data-code="INSERT(S, x) / DELETE-LARGER-HALF(S)">

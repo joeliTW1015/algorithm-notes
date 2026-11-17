@@ -27,7 +27,7 @@
 
 <h2 id="sushi" data-short="壽司（Lecture 14-1）">壽司：價格遞增、總價最大</h2>
 <p class="eyebrow">Practice at Home · Lecture 14-1</p>
-<div class="note"><span class="tag">題目</span>Peter 的壽司店有 \(n\) 盤壽司排成一列，價格都不同。你要<strong>由左到右</strong>挑選，而且每次挑的下一盤必須比上一盤<strong>貴</strong>。設計 \(O(n^2)\) 演算法讓總價最大。</div>
+<div class="note"><span class="tag">題目</span><p class="orig" lang="en">Peter is an owner of a Japanese sushi restaurant and today he invites you for dinner at his restaurant. In front of you are \(n\) sushi dishes that are arranged in a line. All dishes are different and they have different costs. Peter hopes that you can select the dishes you want, starting from the left to the right. However, there is a further restriction: when you select a dish, say A, the next dish you can select must cost higher than A. Design an \(O(n^2)\)-time algorithm to select the dishes so as to maximize the total costs.</p><div class="zh">Peter 的壽司店有 \(n\) 盤壽司排成一列，價格都不同。你要<strong>由左到右</strong>挑選，而且每次挑的下一盤必須比上一盤<strong>貴</strong>。設計 \(O(n^2)\) 演算法讓總價最大。</div></div>
 <div class="a">
 <p><span class="lbl">Subproblem</span>\(S[i]\) = 最後一盤是第 \(i\) 盤時的最大總價（固定結尾，才知道下一盤能不能接）。</p>
 <p><span class="lbl">Recurrence</span>前一盤不存在，或是某個 \(j\lt i,\ c_j\lt c_i\)：
@@ -48,7 +48,7 @@ return S[best]        // 從 best 沿 prev 回溯出要拿的盤
 
 <h2 id="stairs" data-short="爬樓梯（Lecture 14-1）">爬樓梯：一次 1、2 或 3 階</h2>
 <p class="eyebrow">Practice at Home · Lecture 14-1</p>
-<div class="note"><span class="tag">題目</span>樓梯有 \(n\) 階，Jack 一步可以走 1、2 或 3 階。令 \(F_k\) 為走上 \(k\) 階的方法數，寫出 \(F_k\) 的遞迴式，並說明 \(F_n\) 可以在 \(O(n)\) 時間算出。<span class="muted">（投影片題目中途把 Jack 寫成 John，是同一個人。）</span></div>
+<div class="note"><span class="tag">題目</span><p class="orig" lang="en">There is a staircase with \(n\) steps. Your friend, Jack, wants to count how many different ways he can walk up this staircase. Because John is quite tall, in one move, he can choose either to walk up 1 step, 2 steps, or 3 steps. Let \(F_k\) denote the number of ways John can walk up a staircase with \(k\) steps. Derive a recurrence for \(F_k\), and show that \(F_n\) can be computed in \(O(n)\) time.</p><div class="zh">樓梯有 \(n\) 階，Jack 一步可以走 1、2 或 3 階。令 \(F_k\) 為走上 \(k\) 階的方法數，寫出 \(F_k\) 的遞迴式，並說明 \(F_n\) 可以在 \(O(n)\) 時間算出。<span class="muted">（投影片題目中途把 Jack 寫成 John，是同一個人。）</span></div></div>
 <div class="a">
 <p class="ans">\(F_k=F_{k-1}+F_{k-2}+F_{k-3}\ (k\ge3)\)，\(F_0=1,\ F_1=1,\ F_2=2\)。</p>
 <p><span class="lbl">Why</span>看最後一步走 1、2 或 3 階：三種情況互斥且涵蓋所有走法，最後一步走 \(m\) 階有 \(F_{k-m}\) 種。</p>
@@ -64,7 +64,7 @@ return F[n]
 
 <h2 id="lis" data-short="LIS（Lecture 14-1）">最長遞增子序列（LIS）</h2>
 <p class="eyebrow">Practice at Home · Lecture 14-1（也是課本習題 14.4-5）</p>
-<div class="note"><span class="tag">題目</span>\(A[1..n]\) 是 \(n\) 個相異整數，求最長遞增子序列的長度（不必連續）。例：11, 17, 5, 8, 6, 4, 7, 12, 3 的 LIS 是 5, 6, 7, 12。分析最壞情況的時間與空間。</div>
+<div class="note"><span class="tag">題目</span><p class="orig" lang="en">Let \(A[1..n]\) be an array of \(n\) distinct integers. Give an algorithm to find the length of the longest increasing subsequence of entries in \(A\). The subsequence is not required to be contiguous in the original sequence. For example, if the entries are 11, 17, 5, 8, 6, 4, 7, 12, 3, the longest increasing subsequence is 5, 6, 7, 12. Analyze the worst-case running time and space requirement of your algorithm.</p><div class="zh">\(A[1..n]\) 是 \(n\) 個相異整數，求最長遞增子序列的長度（不必連續）。例：11, 17, 5, 8, 6, 4, 7, 12, 3 的 LIS 是 5, 6, 7, 12。分析最壞情況的時間與空間。</div></div>
 <div class="a">
 <p><span class="lbl">Subproblem</span>\(L[i]\) = 以 \(A[i]\) <strong>結尾</strong>的最長遞增子序列長度。</p>
 <p><span class="lbl">Recurrence</span>\(L[i]=1+\max\bigl(\{0\}\cup\{L[j]: j\lt i,\ A[j]\lt A[i]\}\bigr)\)，answer \(=\max_i L[i]\)。</p>
@@ -89,7 +89,7 @@ return max_i L[i]       // 沿 prev 回溯可印出序列
 
 <h2 id="mwis" data-short="作業：樹上獨立集">作業 1：樹上的最大權重獨立集</h2>
 <p class="eyebrow">Homework · Lecture 14-2</p>
-<div class="note"><span class="tag">題目</span>\(G=(V,E)\) 是一棵樹（連通、無環的無向圖），每個頂點有正權重 \(w(i)\)。\(I\subseteq V\) 是 <strong>independent set</strong> 若 \(I\) 中任兩點都不相鄰；\(w(I)=\sum_{i\in I}w(i)\)。用 DP 找出最大權重獨立集。</div>
+<div class="note"><span class="tag">題目</span><p class="orig" lang="en">Please use DP to find a maximum independent set in a tree. Let \(G=(V,E)\) be an undirected finite graph where \(V\) denotes the set of vertices and \(E\) denotes the set of edges. If \(G\) is connected and acyclic, then it is called a tree. A subset \(I\) of \(V\) is called an independent set of \(G\) if no two vertices of \(I\) are adjacent in \(G\). Assume that a positive weight \(w(i)\) is associated with each vertex \(i\). We define the weight \(w(I)\) of an independent set \(I\) to be the sum of the weights of all the vertices in \(I\). That is, \(w(I)=\sum_{i\in I}w(i)\). Further, an independent set is called a maximum weight independent set if it has maximum weight.</p><div class="zh">\(G=(V,E)\) 是一棵樹（連通、無環的無向圖），每個頂點有正權重 \(w(i)\)。\(I\subseteq V\) 是 <strong>independent set</strong> 若 \(I\) 中任兩點都不相鄰；\(w(I)=\sum_{i\in I}w(i)\)。用 DP 找出最大權重獨立集。</div></div>
 <div class="a">
 <p><span class="lbl">Subproblem</span>任選 root。對每個點 \(v\)（子樹 \(T_v\)）：\(in(v)\) = 選 \(v\) 時 \(T_v\) 的最大權重；\(out(v)\) = 不選 \(v\) 時的最大權重。</p>
 <p><span class="lbl">Recurrence</span>\(C(v)\) = \(v\) 的小孩：
@@ -111,7 +111,7 @@ return (in, out)
 
 <h2 id="tiling" data-short="作業：k×n 鋪磚">作業 2：k × n 棋盤鋪 k × 1 長條</h2>
 <p class="eyebrow">Homework · Lecture 14-2</p>
-<div class="note"><span class="tag">題目</span>用 \(n\) 個 \(k\times1\) 或 \(1\times k\) 的長條完全覆蓋 \(k\times n\) 的棋盤（\(k\) 列、\(n\) 行），有幾種方法？例如 \(k=2, n=3\) 有 3 種：(a) 最左行直放、其餘兩條橫放；(b) 最右行直放、其餘橫放；(c) 每一行都直放。設計 \(O(n)\) 演算法。</div>
+<div class="note"><span class="tag">題目</span><p class="orig" lang="en">Consider a chessboard of size \(k\times n\). How many ways are there to cover the chessboard completely with \(n\) rectangular bars, each of size \(k\times1\) or \(1\times k\)? For instance, when \(k=2\), \(n=3\), there are three different ways: (a) cover the leftmost column by a vertical bar, and the remaining region by two horizontal bars; (b) cover the rightmost column by a vertical bar, and the remaining region by two horizontal bars; or (c) cover each column with a vertical bar. Design an \(O(n)\)-time algorithm to compute the desired answer for any input \(k\) and \(n\).</p><div class="zh">用 \(n\) 個 \(k\times1\) 或 \(1\times k\) 的長條完全覆蓋 \(k\times n\) 的棋盤（\(k\) 列、\(n\) 行），有幾種方法？例如 \(k=2, n=3\) 有 3 種：(a) 最左行直放、其餘兩條橫放；(b) 最右行直放、其餘橫放；(c) 每一行都直放。設計 \(O(n)\) 演算法。</div></div>
 <div class="a">
 <p class="ans">\(f(n)=f(n-1)+f(n-k)\ (n\ge k)\)，\(f(0)=\dots=f(k-1)=1\)（\(k\ge2\)）。</p>
 <p><span class="lbl">Why</span>看最左邊那一行：</p>
